@@ -1,0 +1,50 @@
+{
+  "project": {
+    "enabled": true,
+    "lastGenerated": "2026-05-05T22:01:55.731Z",
+    "observationCount": 146,
+    "skillCount": 0,
+    "domain": "project",
+    "triggerGlobs": [
+      "**/*"
+    ],
+    "description": "Project for app. 19 gotchas, 126 conventions."
+  },
+  "typescript": {
+    "enabled": true,
+    "lastGenerated": "2026-05-05T22:01:55.732Z",
+    "observationCount": 7,
+    "skillCount": 0,
+    "domain": "typescript",
+    "triggerGlobs": [
+      "**/*.ts",
+      "**/*.tsx"
+    ],
+    "description": "Typescript for app. 7 conventions."
+  },
+  "typescript-react": {
+    "enabled": true,
+    "lastGenerated": "2026-05-05T22:01:55.735Z",
+    "observationCount": 25,
+    "skillCount": 0,
+    "domain": "typescript-react",
+    "triggerGlobs": [
+      "**/*.tsx"
+    ],
+    "description": "Typescript React for app. 15 conventions."
+  },
+  "config": {
+    "enabled": true,
+    "lastGenerated": "2026-05-05T22:01:55.736Z",
+    "observationCount": 7,
+    "skillCount": 0,
+    "domain": "config",
+    "triggerGlobs": [
+      "**/*.yaml",
+      "**/*.yml",
+      "**/*.json",
+      "**/*.toml"
+    ],
+    "description": "Config for app. 4 conventions."
+  }
+}
