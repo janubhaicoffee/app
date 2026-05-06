@@ -6,19 +6,16 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-let supabaseClient: ReturnType<typeof createClient> | null = null;
+export const supabase = isSupabaseConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
-export function getSupabase() {
-  if (!isSupabaseConfigured) {
+export const getSupabase = () => {
+  if (!supabase) {
     throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
   }
-
-  if (!supabaseClient) {
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-  }
-
-  return supabaseClient;
-}
+  return supabase;
+};
 
 export interface Profile {
   id: string;

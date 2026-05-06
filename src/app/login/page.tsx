@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import { getSupabase, isSupabaseConfigured } from "../../lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
