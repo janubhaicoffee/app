@@ -1,16 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
+import { UserRole } from './roles';
 
-// Initialize the Supabase client.
-// To use your live Supabase project, add these to a .env file:
-// VITE_SUPABASE_URL=your_project_url
-// VITE_SUPABASE_ANON_KEY=your_anon_key
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder-project.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export type UserRole = 'customer' | 'employee' | 'manager' | 'superadmin';
 
 export interface Profile {
   id: string;
@@ -22,15 +16,16 @@ export interface Profile {
 export interface Outlet {
   id: string;
   name: string;
-  location: string;
-  is_active: boolean;
+  city: string;
+  address: string;
+  status: 'active' | 'suspended' | 'pending_approval';
 }
 
 export interface MenuItem {
   id: string;
   name: string;
   category: string;
-  price: number;
+  base_price: number;
   image_url: string | null;
   is_available: boolean;
 }

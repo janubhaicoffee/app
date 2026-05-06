@@ -1,0 +1,21 @@
+{
+  "name": "Janu Bhai Coffee",
+  "short_name": "Janu Bhai",
+  "description": "Modern Indian Coffee Movement",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FCF9F2",
+  "theme_color": "#FCF9F2",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
