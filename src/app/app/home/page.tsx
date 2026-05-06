@@ -57,25 +57,27 @@ export default function CustomerHome() {
       </section>
 
       {/* Quick Order Grid */}
-      <section className="space-y-4">
+      <section className="space-y-6">
         <div className="flex justify-between items-end">
           <h2 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">Bestsellers</h2>
-          <span className="text-[10px] font-bold text-accent-red">VIEW MENU</span>
+          <span className="text-[10px] font-bold text-accent-red tracking-widest cursor-pointer hover:opacity-70 transition-opacity">VIEW MENU</span>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-4 snap-x no-scrollbar -mx-6 px-6">
+        <div className="flex gap-6 overflow-x-auto pb-8 snap-x no-scrollbar -mx-6 px-6">
           {[
-            { name: 'Cold Brew', price: '180', img: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=300&q=80' },
-            { name: 'Chai Latte', price: '120', img: 'https://images.unsplash.com/photo-1544787210-2827448636b2?auto=format&fit=crop&w=300&q=80' },
-            { name: 'Latte', price: '160', img: 'https://images.unsplash.com/photo-1541167760496-162955ed8a9f?auto=format&fit=crop&w=300&q=80' }
+            { name: 'Cold Brew', price: '180', img: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=400&q=80' },
+            { name: 'Chai Latte', price: '120', img: 'https://images.unsplash.com/photo-1544787210-2827448636b2?auto=format&fit=crop&w=400&q=80' },
+            { name: 'Latte', price: '160', img: 'https://images.unsplash.com/photo-1541167760496-162955ed8a9f?auto=format&fit=crop&w=400&q=80' }
           ].map((item, i) => (
-            <Card key={i} className="min-w-[160px] snap-start p-4 space-y-3 bg-white border-black/5 rounded-[32px]">
-              <img src={item.img} alt={item.name} className="w-full h-32 object-cover rounded-2xl" />
-              <div className="space-y-1">
-                <h5 className="text-sm font-bold">{item.name}</h5>
+            <Card key={i} className="min-w-[200px] snap-start p-5 space-y-4 bg-white border-black/5 rounded-[40px] shadow-xl shadow-accent-brown/5 hover:shadow-2xl transition-all duration-500 press-effect group">
+              <div className="overflow-hidden rounded-[24px]">
+                <img src={item.img} alt={item.name} className="w-full h-40 object-cover group-hover:scale-110 transition-transform duration-700" />
+              </div>
+              <div className="space-y-2">
+                <h5 className="text-md font-heading tracking-tight">{item.name}</h5>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-number">₹{item.price}</span>
-                  <button className="p-2 bg-accent-brown text-white rounded-xl shadow-lg">
-                    <Zap size={12} />
+                  <span className="text-xl text-number">₹{item.price}</span>
+                  <button className="p-3 bg-accent-brown text-white rounded-2xl shadow-xl shadow-accent-brown/20 hover:bg-accent-red transition-colors">
+                    <Zap size={16} />
                   </button>
                 </div>
               </div>
@@ -85,21 +87,23 @@ export default function CustomerHome() {
       </section>
 
       {/* Community / Storyboard */}
-      <section className="space-y-4">
+      <section className="space-y-6">
         <h2 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">Community Board</h2>
-        <Card glass className="p-8 bg-accent-red text-white space-y-6 rounded-[40px] relative overflow-hidden group">
-          <div className="absolute right-[-20px] top-[-20px] text-white/10 group-hover:scale-125 transition-transform duration-1000">
-            <Users size={160} />
+        <Card glass className="p-10 bg-accent-red text-white space-y-8 rounded-[50px] relative overflow-hidden group border-none shadow-2xl shadow-accent-red/20">
+          <div className="absolute right-[-40px] top-[-40px] text-white/10 group-hover:scale-125 transition-transform duration-1000 rotate-12">
+            <Users size={200} />
           </div>
-          <div className="relative z-10 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="px-2 py-1 bg-white/20 rounded text-[8px] font-bold uppercase tracking-widest">Live Event</div>
-              <span className="text-[10px] font-bold opacity-60">TODAY • 6:00 PM</span>
+          <div className="relative z-10 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="px-3 py-1 bg-white/20 rounded-full text-[9px] font-bold uppercase tracking-[0.2em]">Live Event</div>
+              <span className="text-[11px] font-bold opacity-60 tracking-wider">TODAY • 6:00 PM</span>
             </div>
-            <h3 className="text-3xl font-heading leading-tight">Poetry Open Mic @ Okhla</h3>
-            <p className="text-sm opacity-80 leading-relaxed">Bring your notes, grab a brew. Real people, real stories.</p>
-            <Button className="bg-white text-accent-red font-bold uppercase tracking-widest text-[10px] py-4 px-8 rounded-2xl">
-              RSVP Now
+            <div className="space-y-2">
+              <h3 className="text-4xl font-heading leading-none tracking-tighter">Poetry Open Mic<br/>@ Okhla Hub</h3>
+              <p className="text-lg opacity-80 leading-relaxed font-medium">Bring your notes, grab a brew.<br/>Real people, real stories.</p>
+            </div>
+            <Button className="bg-white text-accent-red font-bold uppercase tracking-[0.2em] text-[10px] py-5 px-10 rounded-[20px] shadow-xl hover:scale-105 transition-transform">
+              Secure Your Spot
             </Button>
           </div>
         </Card>

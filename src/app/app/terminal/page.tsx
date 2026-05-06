@@ -16,11 +16,11 @@ import {
 } from 'lucide-react';
 
 const MENU_ITEMS = [
-  { id: '1', name: 'Signature Cold Brew', category: 'Coffee', price: 180 },
-  { id: '2', name: 'Masala Chai Latte', category: 'Tea', price: 120 },
-  { id: '3', name: 'Filter Coffee', category: 'Coffee', price: 90 },
-  { id: '4', name: 'Paneer Tikka Sandwich', category: 'Snacks', price: 220 },
-  { id: '5', name: 'Vietnamese Iced Coffee', category: 'Coffee', price: 240 },
+  { id: '1', name: 'Signature Cold Brew', category: 'Coffee', price: 180, img: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=400&q=80' },
+  { id: '2', name: 'Masala Chai Latte', category: 'Tea', price: 120, img: 'https://images.unsplash.com/photo-1544787210-2827448636b2?auto=format&fit=crop&w=400&q=80' },
+  { id: '3', name: 'Filter Coffee', category: 'Coffee', price: 90, img: 'https://images.unsplash.com/photo-1541167760496-162955ed8a9f?auto=format&fit=crop&w=400&q=80' },
+  { id: '4', name: 'Paneer Tikka Sandwich', category: 'Snacks', price: 220, img: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=400&q=80' },
+  { id: '5', name: 'Vietnamese Iced Coffee', category: 'Coffee', price: 240, img: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=400&q=80' },
 ];
 
 export default function POSTerminal() {
@@ -71,17 +71,24 @@ export default function POSTerminal() {
               <input type="text" placeholder="Search menu..." className="w-full bg-white border border-black/5 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-accent-brown/10" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {MENU_ITEMS.map((item) => (
                 <Card 
                   key={item.id} 
                   pressEffect 
-                  className="p-5 flex flex-col justify-between h-36 bg-white hover:border-accent-brown/20"
+                  className="p-0 overflow-hidden flex flex-col h-56 bg-white hover:border-accent-brown/20 group"
                   onClick={() => addToCart(item)}
                 >
-                  <span className="text-[8px] font-bold uppercase tracking-[0.2em] opacity-30">{item.category}</span>
-                  <h4 className="text-md font-heading leading-tight">{item.name}</h4>
-                  <p className="text-lg text-number">₹{item.price}</p>
+                  <div className="h-24 overflow-hidden relative">
+                    <img src={item.img} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-white/90 backdrop-blur rounded-lg text-[8px] font-bold uppercase tracking-widest text-accent-brown">
+                      {item.category}
+                    </div>
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col justify-between">
+                    <h4 className="text-sm font-heading leading-tight">{item.name}</h4>
+                    <p className="text-lg text-number">₹{item.price}</p>
+                  </div>
                 </Card>
               ))}
             </div>

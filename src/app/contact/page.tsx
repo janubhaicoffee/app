@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MessageSquare, Phone, Mail, Globe } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Phone, Mail, Globe, Target } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { SEO } from '@/components/ui/SEO';
 
@@ -28,22 +28,28 @@ export default function ContactPage() {
         </header>
 
         {/* Contact Channels */}
-        <div className="grid gap-4">
-          {[
-            { label: 'WhatsApp Support', value: '+91 98765 43210', icon: <MessageSquare className="text-accent-green" /> },
-            { label: 'Official Email', value: 'hello@janubhai.coffee', icon: <Mail className="text-accent-red" /> },
-            { label: 'Instagram', value: '@janubhaicoffee', icon: <Globe className="text-accent-brown" /> }
-          ].map((item, i) => (
-            <Card key={i} glass className="p-8 flex items-center gap-6 border-accent-brown/10 rounded-[32px] hover:bg-white transition-colors cursor-pointer group">
-              <div className="p-4 bg-bg-cream rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
-                {item.icon}
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-1">{item.label}</p>
-                <h4 className="text-xl font-heading">{item.value}</h4>
-              </div>
-            </Card>
-          ))}
+        <div className="grid gap-6">
+          <Card glass className="p-10 flex items-center gap-8 border-accent-brown/10 hover:border-accent-brown/30 transition-colors rounded-[40px]">
+            <div className="p-5 bg-accent-brown text-white rounded-3xl shadow-xl">
+              <Globe size={32} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-2xl font-heading tracking-tight">Corporate Office</h3>
+              <p className="text-md opacity-60">HQ: Okhla Phase III, New Delhi 110020</p>
+              <p className="text-md font-bold text-accent-brown">ops@janubhai.coffee</p>
+            </div>
+          </Card>
+
+          <Card glass className="p-10 flex items-center gap-8 border-accent-brown/10 hover:border-accent-brown/30 transition-colors rounded-[40px]">
+            <div className="p-5 bg-accent-red text-white rounded-3xl shadow-xl">
+              <Target size={32} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-2xl font-heading tracking-tight">Support Hotline</h3>
+              <p className="text-md opacity-60">Mon-Sat • 9 AM - 7 PM</p>
+              <p className="text-xl font-bold tracking-tighter text-number">+91 91111 22222</p>
+            </div>
+          </Card>
         </div>
 
         {/* Message Form */}

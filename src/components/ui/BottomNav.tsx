@@ -55,7 +55,7 @@ export const BottomNav = () => {
   const items = getNavItems();
 
   return (
-    <nav className="fixed bottom-6 left-6 right-6 h-20 glass rounded-[32px] flex items-center justify-around px-4 z-50 shadow-2xl">
+    <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-lg h-20 glass-card rounded-[40px] flex items-center justify-around px-4 z-50 animate-in slide-in-from-bottom-10 duration-700">
       {items.map((item) => {
         const isActive = pathname === item.path;
         return (
@@ -63,12 +63,28 @@ export const BottomNav = () => {
             key={item.label}
             href={item.path}
             className={clsx(
-              'flex flex-col items-center gap-1 transition-all duration-300 px-4 py-2 rounded-2xl',
-              isActive ? 'text-accent-brown bg-accent-brown/5' : 'text-accent-brown/40 hover:text-accent-brown/60'
+              'relative flex flex-col items-center gap-1.5 transition-all duration-300 px-6 py-3 rounded-[24px] press-effect group',
+              isActive ? 'text-accent-brown' : 'text-accent-brown/30 hover:text-accent-brown/50'
             )}
           >
-            {item.icon}
-            <span className="text-[8px] font-bold uppercase tracking-widest">{item.label}</span>
+            {isActive && (
+              <div className="absolute inset-0 bg-accent-brown/5 rounded-[24px] -z-10 animate-in fade-in zoom-in-95 duration-300" />
+            )}
+            <div className={clsx(
+              'transition-transform duration-300',
+              isActive && 'scale-110'
+            )}>
+              {item.icon}
+            </div>
+            <span className={clsx(
+              'text-[9px] font-bold uppercase tracking-[0.2em] transition-all duration-300',
+              isActive ? 'opacity-100' : 'opacity-40 group-hover:opacity-60'
+            )}>
+              {item.label}
+            </span>
+            {isActive && (
+              <div className="absolute -bottom-1 w-1 h-1 bg-accent-brown rounded-full" />
+            )}
           </Link>
         );
       })}

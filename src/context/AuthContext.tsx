@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, type Profile } from '../lib/supabase';
+import { supabase, supabaseUrl, type Profile } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -26,6 +26,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const isPlaceholder = supabaseUrl.includes('placeholder-project.supabase.co');
+    
+    if (isPlaceholder) {
+      setLoading(false);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) fetchProfile(session.user.id);

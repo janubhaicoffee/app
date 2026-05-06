@@ -1,17 +1,16 @@
 # app — Project Memory
+# Auto-synced | 185 observations
 
-> Auto-synced | 185 observations
-
-## 🛡️ GLOBAL SAFETY RULES
+# 🛡️ GLOBAL SAFETY RULES
 
 - **NEVER** run `git clean -fd` or `git reset --hard` without checking `git log` and verifying commits exist.
 - **NEVER** delete untracked files or folders blindly. Always backup or stash before bulk edits.
 
-## 🧭 ACTIVE CONTEXT
+# 🧭 ACTIVE CONTEXT
 
 > Always read `.cursor/active-context.md` for exact instructions on the specific file you are currently editing. It updates dynamically.
 
-## 🔴 STOP — READ THESE FIRST
+# 🔴 CRITICAL — DO NOT IGNORE
 
 - **Agent: follow existing project patterns — don't introduce a different style** — Agent: follow existing project patterns — don't introduce a different style
 - **Agent: don't generate code with "any" type — define proper TypeScript types** — Agent: don't generate code with "any" type — define proper TypeScript types
@@ -19,7 +18,7 @@
 - **Agent: don't use deprecated APIs — check library version, use current API** — Agent: don't use deprecated APIs — check library version, use current API
 - **Agent: check existing code before creating utility functions — avoid duplicates** — Agent: check existing code before creating utility functions — avoid duplicates
 
-## 📐 Conventions
+# 📐 Conventions
 
 - Version your API from day 1 (/api/v1/)
 - Use consistent response format across all endpoints
@@ -30,7 +29,7 @@
 - Always add empty states ("No items yet" with call-to-action)
 - Always add error states with retry button — not just blank screen
 
-## ⚡ Available Tools (ON-DEMAND only)
+# ⚡ Available Tools (ON-DEMAND only)
 - `sys_core_02(title, content, category)` — Save a note + auto-detect conflicts
 - `sys_core_03(items[])` — Save multiple notes in 1 call
 - `sys_core_01(text)` — Search memory for architecture, past fixes, decisions
