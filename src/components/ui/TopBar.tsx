@@ -1,30 +1,31 @@
-import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { LogOut, User } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import { OutletSwitcher } from './OutletSwitcher';
+import { ROLE_LABELS } from '../../lib/types';
 
-export const TopBar: React.FC = () => {
+export const TopBar = () => {
   const { profile, signOut } = useAuth();
 
   return (
-    <header className="flex items-center justify-between py-4 mb-6">
+    <header className="topbar">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 bg-[var(--accent-brown)] rounded-full flex items-center justify-center text-white font-bold">
-          {profile?.full_name?.charAt(0) || <User size={20} />}
+        <div className="topbar-avatar">
+          {profile?.full_name?.charAt(0) || '?'}
         </div>
-        <div>
-          <h2 className="text-sm font-semibold leading-tight">{profile?.full_name || 'Guest'}</h2>
-          <p className="text-xs text-[var(--text-secondary)] capitalize">{profile?.role || 'Welcome'}</p>
+        <div className="topbar-info">
+          <h2>{profile?.full_name || 'Guest'}</h2>
+          <p>{profile?.role ? ROLE_LABELS[profile.role] : 'Welcome'}</p>
         </div>
       </div>
       
-      {profile && (
-        <button 
-          onClick={signOut}
-          className="p-2 text-[var(--text-secondary)] hover:bg-black/5 rounded-full transition-colors"
-        >
-          <LogOut size={20} />
-        </button>
-      )}
+      <div className="flex items-center gap-3">
+        {profile?.role === 'superadmin' && <OutletSwitcher />}
+        {profile && (
+          <button onClick={signOut} className="topbar-action">
+            <LogOut size={20} />
+          </button>
+        )}
+      </div>
     </header>
   );
 };

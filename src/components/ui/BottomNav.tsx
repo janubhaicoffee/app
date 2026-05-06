@@ -1,39 +1,46 @@
-import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, ClipboardList, Wallet, Package, MoreHorizontal } from 'lucide-react';
+import { Home, ClipboardList, Wallet, MoreHorizontal, Plug, Package } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import clsx from 'clsx';
 
-export const BottomNav: React.FC = () => {
+export const BottomNav = () => {
   const { profile } = useAuth();
   
-  if (!profile) return null; // Only show for logged in users
+  if (!profile) return null;
 
-  // Navigation items structure based on role
   const getNavItems = () => {
     switch (profile.role) {
       case 'employee':
         return [
-          { label: 'POS', icon: <Home size={24} />, path: '/app' },
-          { label: 'Orders', icon: <ClipboardList size={24} />, path: '/app/orders' },
-          { label: 'More', icon: <MoreHorizontal size={24} />, path: '/app/settings' },
+          { label: 'POS', icon: <Home size={22} />, path: '/app' },
+          { label: 'Orders', icon: <ClipboardList size={22} />, path: '/app/orders' },
+          { label: 'More', icon: <MoreHorizontal size={22} />, path: '/app/settings' },
         ];
       case 'manager':
         return [
-          { label: 'Dashboard', icon: <Home size={24} />, path: '/app' },
-          { label: 'Finances', icon: <Wallet size={24} />, path: '/app/finances' },
-          { label: 'Inventory', icon: <Package size={24} />, path: '/app/inventory' },
-          { label: 'More', icon: <MoreHorizontal size={24} />, path: '/app/settings' },
+          { label: 'Finance', icon: <Wallet size={22} />, path: '/app' },
+          { label: 'Orders', icon: <ClipboardList size={22} />, path: '/app/orders' },
+          { label: 'Inventory', icon: <Package size={22} />, path: '/app/inventory' },
+          { label: 'More', icon: <MoreHorizontal size={22} />, path: '/app/settings' },
         ];
       case 'superadmin':
         return [
-          { label: 'HQ', icon: <Home size={24} />, path: '/app' },
-          { label: 'Outlets', icon: <Package size={24} />, path: '/app/outlets' },
-          { label: 'More', icon: <MoreHorizontal size={24} />, path: '/app/settings' },
+          { label: 'HQ', icon: <Home size={22} />, path: '/app' },
+          { label: 'Finance', icon: <Wallet size={22} />, path: '/app/finances' },
+          { label: 'Integrations', icon: <Plug size={22} />, path: '/app/integrations' },
+          { label: 'More', icon: <MoreHorizontal size={22} />, path: '/app/settings' },
+        ];
+      case 'customer':
+        return [
+          { label: 'Home', icon: <Home size={22} />, path: '/app' },
+          { label: 'Cart', icon: <ClipboardList size={22} />, path: '/app/cart' },
+          { label: 'Profile', icon: <Package size={22} />, path: '/app/profile' },
+          { label: 'More', icon: <MoreHorizontal size={22} />, path: '/app/settings' },
         ];
       default:
         return [
-          { label: 'Home', icon: <Home size={24} />, path: '/app' },
+          { label: 'Home', icon: <Home size={22} />, path: '/app' },
+          { label: 'More', icon: <MoreHorizontal size={22} />, path: '/app/settings' },
         ];
     }
   };

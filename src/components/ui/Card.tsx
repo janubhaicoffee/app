@@ -3,17 +3,27 @@ import clsx from 'clsx';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   glass?: boolean;
+  hoverLift?: boolean;
+  pressEffect?: boolean;
 }
 
-export const Card: React.FC<CardProps> = ({ children, className, glass = false, ...props }) => {
+export const Card: React.FC<CardProps> = ({ 
+  children, 
+  className, 
+  glass = false, 
+  hoverLift = false,
+  pressEffect = false,
+  ...props 
+}) => {
   return (
-    <div
+    <div 
       className={clsx(
-        'rounded-[24px] p-6 shadow-sm transition-all',
-        glass ? 'glass' : 'bg-white',
+        'card', 
+        glass && 'glass-card', 
+        hoverLift && 'hover-lift',
+        pressEffect && 'press-effect',
         className
-      )}
-      style={{ borderRadius: 'var(--radius-lg)' }}
+      )} 
       {...props}
     >
       {children}
