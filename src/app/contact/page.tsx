@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MessageSquare, Phone, Mail, Globe, Target } from 'lucide-react';
+import { ArrowLeft, Globe, Target } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { SEO } from '@/components/ui/SEO';
 

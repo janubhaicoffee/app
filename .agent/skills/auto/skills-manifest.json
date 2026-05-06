@@ -1,18 +1,18 @@
 {
   "project": {
     "enabled": true,
-    "lastGenerated": "2026-05-06T08:06:29.076Z",
-    "observationCount": 146,
+    "lastGenerated": "2026-05-06T16:28:03.894Z",
+    "observationCount": 150,
     "skillCount": 0,
     "domain": "project",
     "triggerGlobs": [
       "**/*"
     ],
-    "description": "Project for app. 19 gotchas, 126 conventions."
+    "description": "Project for app. 21 gotchas, 126 conventions, 1 fixes."
   },
   "typescript": {
     "enabled": true,
-    "lastGenerated": "2026-05-06T08:06:29.076Z",
+    "lastGenerated": "2026-05-06T16:28:03.895Z",
     "observationCount": 7,
     "skillCount": 0,
     "domain": "typescript",
@@ -24,7 +24,7 @@
   },
   "typescript-react": {
     "enabled": true,
-    "lastGenerated": "2026-05-06T08:06:29.077Z",
+    "lastGenerated": "2026-05-06T16:28:03.895Z",
     "observationCount": 25,
     "skillCount": 0,
     "domain": "typescript-react",
@@ -35,7 +35,7 @@
   },
   "config": {
     "enabled": true,
-    "lastGenerated": "2026-05-06T08:06:29.077Z",
+    "lastGenerated": "2026-05-06T16:28:03.896Z",
     "observationCount": 7,
     "skillCount": 0,
     "domain": "config",

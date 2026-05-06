@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 @theme inline {
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+
   --color-bg-cream: #FAF9F6;
   --color-accent-brown: #3E2723;
   --color-accent-brown-light: #5D4037;
@@ -60,5 +63,56 @@ body {
 
   .hero-gradient {
     @apply bg-gradient-to-b from-accent-brown/10 via-transparent to-transparent;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-3xl border border-black/5 bg-white shadow-sm transition-all duration-200;
+  }
+
+  .hover-lift:hover {
+    @apply -translate-y-0.5 shadow-lg;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center rounded-full font-semibold transition-all duration-200 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-md {
+    @apply h-12 px-6 text-sm;
+  }
+
+  .btn-lg {
+    @apply h-14 px-8 text-base;
+  }
+
+  .btn-primary {
+    @apply bg-accent-brown text-white shadow-lg shadow-accent-brown/20 hover:bg-accent-brown-light;
+  }
+
+  .btn-secondary {
+    @apply bg-accent-red text-white hover:opacity-90;
+  }
+
+  .btn-outline {
+    @apply border border-accent-brown/20 bg-transparent text-accent-brown hover:bg-accent-brown hover:text-white;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-accent-brown hover:bg-accent-brown/5;
+  }
+
+  .btn-full {
+    @apply w-full;
   }
 }

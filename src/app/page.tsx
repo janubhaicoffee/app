@@ -1,16 +1,12 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { useAuth } from '@/context/AuthContext';
 import { SEO } from '@/components/ui/SEO';
-import { Store, Coffee, User, Globe, Shield, TrendingUp, ChevronRight } from 'lucide-react';
+import { Coffee, Globe, Shield, TrendingUp, ChevronRight } from 'lucide-react';
 
 export default function LandingPage() {
-  const router = useRouter();
-
   const schemaMarkup = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -169,8 +165,8 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/demo" className="text-[10px] font-bold uppercase tracking-widest opacity-10 hover:opacity-100 transition-opacity p-4 border border-black/5 rounded-full">
-                System Demo
+              <Link href="/login" className="text-[10px] font-bold uppercase tracking-widest opacity-30 hover:opacity-100 transition-opacity p-4 border border-black/5 rounded-full">
+                Partner Sign In
               </Link>
             </div>
           </div>

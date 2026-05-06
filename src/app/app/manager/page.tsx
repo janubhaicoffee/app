@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from '@/context/AuthContext';
+import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { AIAdvisor } from '@/components/ui/AIAdvisor';
@@ -16,8 +16,6 @@ import {
 } from 'lucide-react';
 
 export default function ManagerDashboard() {
-  const { profile } = useAuth();
-
   return (
     <div className="space-y-8 pb-32 animate-in fade-in duration-700">
       <header className="flex justify-between items-start">
@@ -28,9 +26,11 @@ export default function ManagerDashboard() {
             <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">System Online • Live Metrics</p>
           </div>
         </div>
-        <Button variant="outline" className="p-4 bg-white/50 border-accent-brown/10 rounded-2xl">
-          <Plus size={20} />
-        </Button>
+        <Link href="/app/add-expense">
+          <Button variant="outline" className="p-4 bg-white/50 border-accent-brown/10 rounded-2xl">
+            <Plus size={20} />
+          </Button>
+        </Link>
       </header>
 
       {/* AI Intelligence */}
@@ -57,22 +57,24 @@ export default function ManagerDashboard() {
             <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Expenses</p>
             <h2 className="text-4xl text-number text-accent-red">₹1,250</h2>
           </div>
-          <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest">3 LOGS TODAY</p>
+          <Link href="/app/expenses" className="block text-[10px] font-bold opacity-40 uppercase tracking-widest hover:opacity-70">
+            3 LOGS TODAY
+          </Link>
         </Card>
       </section>
 
       {/* Quick Ops */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'POS Hub', icon: <Coffee />, color: 'bg-accent-brown' },
-          { label: 'Inventory', icon: <Package />, color: 'bg-accent-brown-light' },
-          { label: 'Staff', icon: <Users />, color: 'bg-accent-brown' },
-          { label: 'Reports', icon: <ClipboardList />, color: 'bg-accent-brown-light' }
+          { label: 'POS Hub', icon: <Coffee />, color: 'bg-accent-brown', href: '/app/terminal' },
+          { label: 'Inventory', icon: <Package />, color: 'bg-accent-brown-light', href: '/app/inventory' },
+          { label: 'Staff', icon: <Users />, color: 'bg-accent-brown', href: '/app/users' },
+          { label: 'Reports', icon: <ClipboardList />, color: 'bg-accent-brown-light', href: '/app/profit' }
         ].map((op, i) => (
           <div key={i} className="space-y-2 text-center">
-            <button className={`${op.color} text-white p-5 rounded-2xl shadow-lg press-effect mx-auto flex items-center justify-center w-full aspect-square`}>
-              {op.icon}
-            </button>
+            <Link href={op.href} className={`${op.color} text-white p-5 rounded-2xl shadow-lg press-effect mx-auto flex items-center justify-center w-full aspect-square`}>
+                {op.icon}
+            </Link>
             <span className="text-[8px] font-bold uppercase tracking-widest opacity-40">{op.label}</span>
           </div>
         ))}
@@ -104,7 +106,9 @@ export default function ManagerDashboard() {
       <Card glass className="p-6 space-y-6">
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-heading">Kitchen Queue</h3>
-          <Button variant="ghost" className="text-xs font-bold uppercase tracking-widest opacity-40">View All <ArrowRight size={14} className="ml-2" /></Button>
+          <Link href="/app/orders">
+            <Button variant="ghost" className="text-xs font-bold uppercase tracking-widest opacity-40">View All <ArrowRight size={14} className="ml-2" /></Button>
+          </Link>
         </div>
         <div className="space-y-4">
           {[

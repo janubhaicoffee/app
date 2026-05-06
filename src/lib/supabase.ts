@@ -1,10 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
 import { UserRole } from './roles';
 
-export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+let supabaseClient: ReturnType<typeof createClient> | null = null;
+
+export function getSupabase() {
+  if (!isSupabaseConfigured) {
+    throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+  }
+
+  if (!supabaseClient) {
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  }
+
+  return supabaseClient;
+}
 
 export interface Profile {
   id: string;
@@ -37,5 +51,15 @@ export interface Order {
   total_amount: number;
   payment_method: 'cash' | 'online';
   status: 'pending' | 'completed' | 'cancelled';
+  created_at: string;
+}
+
+export interface Expense {
+  id: string;
+  outlet_id: string;
+  user_id: string;
+  category: string;
+  amount: number;
+  note: string | null;
   created_at: string;
 }

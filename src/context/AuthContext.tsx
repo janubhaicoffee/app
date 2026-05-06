@@ -1,37 +1,60 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, supabaseUrl, type Profile } from '../lib/supabase';
+import { getSupabase, isSupabaseConfigured, type Profile } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  authError: string | null;
   signOut: () => Promise<void>;
-  devBypassRole: (role: Profile['role']) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   session: null,
   profile: null,
   loading: true,
+  authError: null,
   signOut: async () => {},
-  devBypassRole: () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [authError, setAuthError] = useState<string | null>(
+    isSupabaseConfigured ? null : 'Supabase is not configured for this deployment.'
+  );
+
+  async function fetchProfile(userId: string) {
+    try {
+      const supabase = getSupabase();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (error) throw error;
+      setProfile(data as Profile);
+      setAuthError(null);
+    } catch (error) {
+      console.error('Error loading profile', error);
+      setAuthError('Could not load your profile. Ask an administrator to verify your account record.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    const isPlaceholder = supabaseUrl.includes('placeholder-project.supabase.co');
-    
-    if (isPlaceholder) {
+    if (!isSupabaseConfigured) {
       setLoading(false);
       return;
     }
+
+    const supabase = getSupabase();
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -51,39 +74,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-        
-      if (error) throw error;
-      setProfile(data as Profile);
-    } catch (error) {
-      console.error('Error loading profile', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signOut = async () => {
+  async function signOut() {
+    const supabase = getSupabase();
     await supabase.auth.signOut();
-  };
-
-  const devBypassRole = (role: Profile['role']) => {
-    setProfile({
-      id: 'dev-bypass-id',
-      role: role,
-      outlet_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-      full_name: 'Dev User'
-    });
-    setLoading(false);
-  };
+    setSession(null);
+    setProfile(null);
+  }
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signOut, devBypassRole }}>
+    <AuthContext.Provider value={{ session, profile, loading, authError, signOut }}>
       {children}
     </AuthContext.Provider>
   );
