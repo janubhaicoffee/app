@@ -9,10 +9,23 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".vite/**",
+    "backup-vite/**",
+    "dist/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "src/legacy-App.tsx",
+    "src/legacy-main.tsx",
+    "src/legacy-layouts/**",
+    "src/legacy-pages/**",
   ]),
+  {
+    rules: {
+      "@next/next/no-img-element": "off",
+      "react/no-unescaped-entities": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

@@ -1,6 +1,7 @@
 "use client";
 
 import { BottomNav } from "@/components/ui/BottomNav";
+import { AppRouteGuard } from "@/components/ui/AppRouteGuard";
 import { TopBar } from "@/components/ui/TopBar";
 import { useAuth } from "@/context/AuthContext";
 import { Coffee } from "lucide-react";
@@ -35,7 +36,7 @@ export default function AppLayout({
         <TopBar />
       </div>
       <main className="max-w-4xl mx-auto p-6 md:p-10 pb-40">
-        {children}
+        <AppRouteGuard>{children}</AppRouteGuard>
       </main>
       <BottomNav />
     </div>

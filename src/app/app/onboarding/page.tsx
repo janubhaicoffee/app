@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { 
@@ -13,8 +12,6 @@ import {
 } from 'lucide-react';
 
 export default function FranchiseOnboarding() {
-  const { profile } = useAuth();
-
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       <header className="space-y-2">

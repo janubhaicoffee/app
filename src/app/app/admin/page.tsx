@@ -1,5 +1,6 @@
 "use client";
 
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -102,15 +103,17 @@ export default function SuperadminDashboard() {
         <h2 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">System Controls</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Global Menu', icon: <FileText /> },
-            { label: 'Pricing Tiers', icon: <TrendingUp /> },
-            { label: 'Regional Admins', icon: <Users /> },
-            { label: 'Platform Settings', icon: <ShieldCheck /> }
+            { label: 'Global Menu', icon: <FileText />, href: '/app/menu' },
+            { label: 'Pricing Tiers', icon: <TrendingUp />, href: '/app/pricing' },
+            { label: 'Regional Admins', icon: <Users />, href: '/app/users' },
+            { label: 'Platform Settings', icon: <ShieldCheck />, href: '/app/settings' }
           ].map((control, i) => (
-            <Button key={i} variant="outline" className="h-32 flex flex-col items-center justify-center gap-3 border-accent-brown/5 bg-white/30 hover:bg-white hover:border-accent-brown/20 press-effect">
-              <div className="opacity-40">{control.icon}</div>
-              <span className="text-[10px] font-bold uppercase tracking-widest">{control.label}</span>
-            </Button>
+            <Link key={i} href={control.href}>
+              <Button variant="outline" className="h-32 w-full flex flex-col items-center justify-center gap-3 border-accent-brown/5 bg-white/30 hover:bg-white hover:border-accent-brown/20 press-effect">
+                <div className="opacity-40">{control.icon}</div>
+                <span className="text-[10px] font-bold uppercase tracking-widest">{control.label}</span>
+              </Button>
+            </Link>
           ))}
         </div>
       </section>
