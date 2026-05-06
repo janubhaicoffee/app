@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
-import { ArrowLeft, Phone, MessageSquare, MapPin, CheckCircle2, Coffee, Zap, Bike, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Phone, MessageSquare, MapPin, CheckCircle2, Coffee, Bike, ChevronRight } from 'lucide-react';
 
 const TRACKING_STEPS = [
   { id: 'placed', label: 'Order Recieved', sub: 'We got your order, boss!', time: '10:30 AM', completed: true },

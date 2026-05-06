@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Coffee, Users, Globe, Target } from 'lucide-react';
+import { ArrowLeft, Globe, Target } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { SEO } from '../components/ui/SEO';
 

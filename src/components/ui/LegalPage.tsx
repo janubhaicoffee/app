@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { SEO } from '../components/ui/SEO';
+import { SEO } from './SEO';
 
 interface LegalPageProps {
   title: string;

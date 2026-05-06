@@ -3,7 +3,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { useAuth } from '../context/AuthContext';
 import { SEO } from '../components/ui/SEO';
-import { Store, BarChart3, Zap, Coffee, User, ChevronRight, Globe, Shield } from 'lucide-react';
+import { Store, Coffee, User, Globe, Shield } from 'lucide-react';
 
 export const LandingPage = () => {
   const navigate = useNavigate();

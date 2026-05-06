@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { useCountUp } from '../hooks/useCountUp';
-import { TrendingUp, TrendingDown, Plus, Package, Eye, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, Plus, Package, Eye, ArrowUpRight } from 'lucide-react';
 
 export const FinanceHome = () => {
   const navigate = useNavigate();

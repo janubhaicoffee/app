@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageSquare, Phone, Mail, MapPin, Send } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Phone, Mail, Send } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { SEO } from '../components/ui/SEO';
 
