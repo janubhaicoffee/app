@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MessageSquare, Phone, Mail, Instagram } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Phone, Mail, Globe } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { SEO } from '@/components/ui/SEO';
 
@@ -32,7 +32,7 @@ export default function ContactPage() {
           {[
             { label: 'WhatsApp Support', value: '+91 98765 43210', icon: <MessageSquare className="text-accent-green" /> },
             { label: 'Official Email', value: 'hello@janubhai.coffee', icon: <Mail className="text-accent-red" /> },
-            { label: 'Instagram', value: '@janubhaicoffee', icon: <Instagram className="text-accent-brown" /> }
+            { label: 'Instagram', value: '@janubhaicoffee', icon: <Globe className="text-accent-brown" /> }
           ].map((item, i) => (
             <Card key={i} glass className="p-8 flex items-center gap-6 border-accent-brown/10 rounded-[32px] hover:bg-white transition-colors cursor-pointer group">
               <div className="p-4 bg-bg-cream rounded-2xl shadow-inner group-hover:scale-110 transition-transform">

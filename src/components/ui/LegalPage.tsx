@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { SEO } from './SEO';
 
@@ -9,7 +9,7 @@ interface LegalPageProps {
 }
 
 export const LegalPage = ({ title, content, lastUpdated }: LegalPageProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-bg-cream text-accent-brown p-6 pb-24">
@@ -19,7 +19,7 @@ export const LegalPage = ({ title, content, lastUpdated }: LegalPageProps) => {
       />
 
       <div className="max-w-2xl mx-auto space-y-10">
-        <button onClick={() => navigate('/')} className="p-3 bg-accent-brown-muted rounded-2xl text-accent-brown press-effect">
+        <button onClick={() => router.push('/')} className="p-3 bg-accent-brown-muted rounded-2xl text-accent-brown press-effect">
           <ArrowLeft size={24} />
         </button>
 

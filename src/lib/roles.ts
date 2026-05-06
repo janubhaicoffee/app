@@ -28,3 +28,15 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   superadmin: ['all_access', 'outlet_approval', 'franchise_review', 'global_finance'],
   franchise_applicant: ['application_status_view']
 };
+
+export const ROLE_LABELS: Record<UserRole, string> = {
+  customer: 'Loyal Customer',
+  employee: 'Service Associate',
+  kitchen: 'Kitchen Ninja',
+  cashier: 'Terminal Lead',
+  manager: 'Outlet Manager',
+  outlet_owner: 'Franchise Partner',
+  regional_admin: 'Regional Admin',
+  superadmin: 'Global HQ',
+  franchise_applicant: 'Partner Applicant'
+};

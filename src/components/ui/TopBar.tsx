@@ -1,7 +1,6 @@
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { LogOut } from 'lucide-react';
-import { OutletSwitcher } from './OutletSwitcher';
-import { ROLE_LABELS } from '../../lib/types';
+import { ROLE_LABELS } from '@/lib/roles';
 
 export const TopBar = () => {
   const { profile, signOut } = useAuth();
@@ -19,7 +18,6 @@ export const TopBar = () => {
       </div>
       
       <div className="flex items-center gap-3">
-        {profile?.role === 'superadmin' && <OutletSwitcher />}
         {profile && (
           <button onClick={signOut} className="topbar-action">
             <LogOut size={20} />

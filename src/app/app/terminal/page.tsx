@@ -11,7 +11,8 @@ import {
   Search,
   Clock,
   CheckCircle2,
-  Trash2
+  Trash2,
+  Coffee
 } from 'lucide-react';
 
 const MENU_ITEMS = [
