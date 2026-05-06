@@ -14,10 +14,37 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Janu Bhai Coffee | Roz Ki Strong Kahaani",
-  description: "A decentralized, community-driven coffee network built for the real India. Premium roast, local heart, and robust operations.",
-  keywords: ["coffee india", "franchise coffee india", "janu bhai coffee", "decentralized coffee"],
+  title: {
+    default: "Janu Bhai Coffee | Roz Ki Strong Kahaani",
+    template: "%s | Janu Bhai Coffee"
+  },
+  description: "Experience the science of freshness. Sourced from Chikkamagaluru, processed without chemicals, and preserved via advanced dry vacuum technology.",
+  keywords: ["coffee india", "franchise coffee india", "janu bhai coffee", "decentralized coffee", "Chikkamagaluru coffee"],
+  authors: [{ name: "Janu Bhai Coffee Co." }],
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: "https://janubhai.com",
+    title: "Janu Bhai Coffee | Roz Ki Strong Kahaani",
+    description: "Premium AAA Grade coffee from Chikkamagaluru hills. Processed with science, delivered with heart.",
+    siteName: "Janu Bhai Coffee",
+    images: [{
+      url: "/farm.png",
+      width: 1200,
+      height: 630,
+      alt: "Janu Bhai Coffee Farm"
+    }]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Janu Bhai Coffee | Roz Ki Strong Kahaani",
+    description: "The most robust coffee in the real India.",
+    images: ["/farm.png"]
+  }
 };
+
+import { Navbar } from "@/components/ui/Navbar";
+import { Footer } from "@/components/ui/Footer";
 
 export default function RootLayout({
   children,
@@ -30,7 +57,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        <Providers>
+          <Navbar />
+          <main className="flex-grow pt-20">
+            {children}
+          </main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

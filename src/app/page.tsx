@@ -1,177 +1,268 @@
 "use client";
 
-import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import React from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { Coffee, ShieldCheck, Thermometer, Wind, Zap, ArrowRight, MapPin, CheckCircle2 } from 'lucide-react';
 import { SEO } from '@/components/ui/SEO';
-import { Coffee, Globe, Shield, TrendingUp, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import Link from 'next/link';
 
 export default function LandingPage() {
-  const schemaMarkup = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Janu Bhai Coffee",
-    "url": "https://janubhai.coffee",
-    "logo": "https://janubhai.coffee/logo.png",
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "telephone": "+91-91111-22222",
-      "contactType": "customer service"
-    }
-  };
+  const { scrollYProgress } = useScroll();
+  const opacity = useTransform(scrollYProgress, [0, 0.05], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.05], [1, 0.95]);
 
   return (
-    <div className="min-h-screen bg-bg-cream text-accent-brown selection:bg-accent-brown selection:text-white overflow-x-hidden">
+    <div className="bg-bg-cream overflow-x-hidden">
       <SEO 
-        title="Roz Ki Strong Kahaani" 
-        description="Premium Indian coffee near you. Janu Bhai Coffee is a decentralized network of high-quality coffee outlets built for the real India. Order now or start your own outlet."
-        keywords="coffee near me, affordable coffee India, start coffee outlet India, best cold brew India"
-        schema={schemaMarkup}
+        title="Janu Bhai Coffee | AAA Grade Chikkamagaluru Single Origin"
+        description="Experience the science of freshness. Sourced from Chikkamagaluru, processed without chemicals, and preserved via advanced dry vacuum technology."
+        keywords="Chikkamagaluru coffee, AAA grade beans, dry vacuum coffee, chemical free coffee, fresh roasted coffee India"
+        schema={{
+          "@context": "https://schema.org",
+          "@type": "FoodEstablishment",
+          "name": "Janu Bhai Coffee",
+          "image": "https://janubhai.com/farm.png",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Ghaffar Manzil, Jamia Nagar",
+            "addressLocality": "Delhi",
+            "postalCode": "110025",
+            "addressCountry": "IN"
+          },
+          "url": "https://janubhai.com",
+          "servesCuisine": "Coffee",
+          "priceRange": "$$"
+        }}
       />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
-        {/* Ambient Background */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        <motion.div style={{ opacity, scale }} className="relative z-10 text-center px-6 max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-red/10 border border-accent-red/20 text-accent-red text-[10px] font-bold uppercase tracking-[0.3em] mb-8"
+          >
+            <Zap size={14} />
+            Direct from Chikkamagaluru
+          </motion.div>
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-6xl md:text-8xl font-heading tracking-tighter leading-[0.9] mb-8 uppercase"
+          >
+            Roz Ki <span className="text-accent-red">Strong</span><br />Kahaani
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-lg md:text-xl font-medium opacity-60 mb-12 max-w-2xl mx-auto"
+          >
+            Experience the journey of AAA-grade beans, preserved through science, and delivered with heart.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
+            <Link href="/login">
+              <Button size="lg" className="px-12 group">
+                Enter the OS
+                <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+            <Link href="https://maps.app.goo.gl/yP6L8y2TYHkexmVj6" target="_blank">
+              <Button variant="outline" size="lg" className="px-12">
+                Visit Outlet
+              </Button>
+            </Link>
+          </motion.div>
+        </motion.div>
+
+        {/* Cinematic Background Video/Image Placeholder */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-accent-brown/5 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-red/5 rounded-full blur-[100px] animate-pulse delay-700" />
+          <div className="absolute inset-0 bg-gradient-to-b from-bg-cream/20 via-transparent to-bg-cream z-10" />
+          <img 
+            src="/farm.png" 
+            alt="Chikkamagaluru Farm" 
+            className="w-full h-full object-cover opacity-30 grayscale hover:grayscale-0 transition-all duration-1000 scale-110"
+          />
         </div>
+        
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce">
+          <div className="w-px h-20 bg-gradient-to-b from-accent-brown/20 to-transparent" />
+        </div>
+      </section>
 
-        <div className="max-w-6xl w-full mx-auto relative z-10 text-center space-y-12">
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-brown/5 border border-accent-brown/10 mb-4">
-              <div className="w-2 h-2 bg-accent-red rounded-full animate-ping" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-60">Now Live: Okhla Hub</span>
+      {/* The Origin Section */}
+      <section id="story" className="py-32 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="space-y-8"
+          >
+            <div className="space-y-2">
+              <p className="text-accent-red font-bold uppercase tracking-[0.4em] text-[10px]">Step 01: The Source</p>
+              <h2 className="text-5xl font-heading tracking-tight">Private Farms of <span className="italic">Chikkamagaluru</span></h2>
             </div>
-            <h1 className="text-7xl md:text-[120px] font-heading leading-[0.85] tracking-tighter">
-              JANU BHAI<br/>
-              <span className="text-accent-red">COFFEE OS</span>
-            </h1>
-            <p className="text-lg md:text-2xl opacity-40 font-medium tracking-tight max-w-2xl mx-auto leading-relaxed">
-              India's first decentralized coffee brand. Powered by community, scaled by technology, brewed with obsession.
+            <p className="text-xl leading-relaxed opacity-70">
+              Our journey begins in the mist-covered hills of Chikkamagaluru, where we partner with elite private estates. We don't just buy coffee; we select the top 1% of the harvest.
             </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              <div className="p-6 bg-white rounded-3xl border border-black/5 space-y-3">
+                <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
+                  <ShieldCheck size={20} />
+                </div>
+                <h4 className="font-bold uppercase tracking-widest text-xs">AAA Grade Only</h4>
+                <p className="text-sm opacity-50">Strict export-quality sorting. Only the densest, most flavorful beans make the cut.</p>
+              </div>
+              <div className="p-6 bg-white rounded-3xl border border-black/5 space-y-3">
+                <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
+                  <MapPin size={20} />
+                </div>
+                <h4 className="font-bold uppercase tracking-widest text-xs">Single Estate</h4>
+                <p className="text-sm opacity-50">Traceable to the specific patch of land. No mixing, no compromises on purity.</p>
+              </div>
+            </div>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="relative group"
+          >
+            <div className="absolute inset-0 bg-accent-brown/10 rounded-[4rem] rotate-3 group-hover:rotate-0 transition-transform duration-500" />
+            <img 
+              src="/storage.png" 
+              alt="Raw Bean Storage" 
+              className="relative z-10 rounded-[3rem] shadow-2xl w-full aspect-[4/5] object-cover"
+            />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* The Science Section - Interactive Infographic */}
+      <section className="py-32 bg-accent-brown text-bg-cream px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-24 space-y-4">
+            <p className="text-accent-gold font-bold uppercase tracking-[0.4em] text-[10px]">The Science of Freshness</p>
+            <h2 className="text-5xl md:text-7xl font-heading tracking-tight">How we <span className="text-accent-gold">Preserve</span> Time</h2>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-6 justify-center items-center animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
-            <Link href="/app">
-              <Button size="lg" className="px-12 py-8 bg-[#3E2723] text-white text-sm font-bold uppercase tracking-[0.3em] rounded-[24px] shadow-2xl shadow-accent-brown/20 hover:scale-105 transition-transform active:scale-95 group">
-                Order Coffee
-                <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-            <Link href="/franchise">
-              <Button variant="outline" size="lg" className="px-12 py-8 border-accent-brown/20 text-sm font-bold uppercase tracking-[0.3em] rounded-[24px] hover:bg-white transition-colors">
-                Start Your Hub
-              </Button>
-            </Link>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+            {/* Connection Line */}
+            <div className="hidden md:block absolute top-24 left-0 right-0 h-px bg-white/10 z-0" />
+            
+            {[
+              {
+                icon: <Thermometer />,
+                title: "Precision Roast",
+                desc: "Small-batch roasting without any chemical additives or enhancers. Pure heat, pure flavor.",
+                img: "/roast.png"
+              },
+              {
+                icon: <Wind />,
+                title: "Dry Vacuum Seal",
+                desc: "Innovative extraction of oxygen. Preserves the natural aromatic oils, color, and volatile flavor compounds.",
+                img: "/vacuum.png"
+              },
+              {
+                icon: <CheckCircle2 />,
+                title: "Airtight Raw Form",
+                desc: "Beans stay in raw, airtight storage until the moment of roasting. Freshness isn't a promise, it's physics.",
+                img: "/storage.png"
+              }
+            ].map((step, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.2 }}
+                className="relative z-10 space-y-8 group"
+              >
+                <div className="aspect-square rounded-full overflow-hidden border-4 border-white/5 relative">
+                  <img src={step.img} alt={step.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                  <div className="absolute inset-0 bg-accent-brown/40 group-hover:bg-transparent transition-colors" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
+                    {step.icon}
+                  </div>
+                </div>
+                <div className="text-center space-y-4">
+                  <h3 className="text-2xl font-bold uppercase tracking-tighter">{step.title}</h3>
+                  <p className="text-sm opacity-60 leading-relaxed max-w-[280px] mx-auto">{step.desc}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Trust & SEO Section */}
-      <section className="py-32 px-6">
-        <div className="max-w-6xl mx-auto space-y-24">
-          <div className="flex flex-col md:flex-row justify-between items-end gap-8">
-            <div className="space-y-4 max-w-xl">
-              <h2 className="text-5xl md:text-7xl font-heading tracking-tighter leading-none">Honest Growth.<br/>Local Hustle.</h2>
-              <p className="text-xl opacity-50 leading-relaxed">Scaling local impact with central intelligence. Janu Bhai Coffee is more than a chain—it's an operating system for the next generation of Indian entrepreneurs.</p>
+      {/* Freshness Cycle Section */}
+      <section className="py-32 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-bg-cream rounded-[4rem] p-12 md:p-24 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-1/2 h-full hidden lg:block">
+              <img src="/vacuum.png" alt="Fresh Pack" className="w-full h-full object-cover opacity-20" />
+              <div className="absolute inset-0 bg-gradient-to-l from-transparent to-bg-cream" />
             </div>
-            <div className="bg-accent-brown/5 p-8 rounded-[40px] border border-accent-brown/5 hidden md:block">
-              <div className="text-sm font-bold opacity-30 uppercase tracking-[0.4em] mb-4">Network Pulse</div>
-              <div className="flex items-center gap-6">
-                <div className="space-y-1">
-                  <div className="text-3xl text-number">142+</div>
-                  <div className="text-[10px] font-bold opacity-40 uppercase tracking-widest">Active Nodes</div>
-                </div>
-                <div className="w-px h-10 bg-accent-brown/10" />
-                <div className="space-y-1">
-                  <div className="text-3xl text-number">₹12.4L</div>
-                  <div className="text-[10px] font-bold opacity-40 uppercase tracking-widest">Daily Volume</div>
-                </div>
+            
+            <div className="relative z-10 max-w-2xl space-y-8">
+              <p className="text-accent-red font-bold uppercase tracking-[0.4em] text-[10px]">The Monthly Fresh Cycle</p>
+              <h2 className="text-5xl font-heading tracking-tight leading-[0.9]">Never Older Than <span className="italic">30 Days</span></h2>
+              <p className="text-xl opacity-70 leading-relaxed">
+                Large harvests are never processed all at once. We store our beans in their raw form in airtight silos, processing only what we need for the current month. Every batch you receive was roasted, packed, and shipped within a 30-day window.
+              </p>
+              
+              <ul className="space-y-4 pt-4">
+                {[
+                  "Dry Vacuum for extended shelf life without chemicals",
+                  "Natural smell, color, and taste preserved via physics",
+                  "Sent to outlets fresh every single month",
+                  "Small batch roasting for maximum quality control"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-4 text-sm font-bold uppercase tracking-widest opacity-60">
+                    <div className="w-2 h-2 bg-accent-red rounded-full" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="pt-8">
+                <Link href="https://maps.app.goo.gl/yP6L8y2TYHkexmVj6" target="_blank">
+                  <Button size="lg" className="bg-accent-brown text-white group">
+                    Find Nearest Outlet
+                    <MapPin size={18} className="ml-2" />
+                  </Button>
+                </Link>
               </div>
             </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card glass className="flex flex-col items-start gap-8 p-12 text-left border-white/50 rounded-[50px] group hover:bg-white/60 transition-all duration-500">
-              <div className="p-6 bg-accent-brown text-white rounded-[24px] shadow-2xl group-hover:scale-110 transition-transform duration-500">
-                <Globe size={32} />
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-3xl font-heading tracking-tight">Decentralized Power</h3>
-                <p className="text-lg opacity-60 leading-relaxed">Each outlet operates as an independent node, controlled by our proprietary OS. Real autonomy for real owners.</p>
-              </div>
-            </Card>
-
-            <Card glass className="flex flex-col items-start gap-8 p-12 text-left border-white/50 rounded-[50px] group hover:bg-white/60 transition-all duration-500">
-              <div className="p-6 bg-accent-red text-white rounded-[24px] shadow-2xl group-hover:scale-110 transition-transform duration-500">
-                <Shield size={32} />
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-3xl font-heading tracking-tight">Trust & Transparency</h3>
-                <p className="text-lg opacity-60 leading-relaxed">Realistic ROI expectations of ₹5,000/day daily sales. No hidden fees, no fake promises. Just raw business.</p>
-              </div>
-            </Card>
-
-            <Card glass className="flex flex-col items-start gap-8 p-12 text-left border-white/50 rounded-[50px] group hover:bg-white/60 transition-all duration-500">
-              <div className="p-6 bg-accent-gold text-white rounded-[24px] shadow-2xl group-hover:scale-110 transition-transform duration-500">
-                <TrendingUp size={32} />
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-3xl font-heading tracking-tight">Rapid Scaling</h3>
-                <p className="text-lg opacity-60 leading-relaxed">Go from survey to live in 14 days. Our plug-and-play infrastructure handles the complexity while you focus on the coffee.</p>
-              </div>
-            </Card>
           </div>
         </div>
       </section>
 
-      {/* Final CTA Footer */}
-      <footer className="pt-48 pb-24 bg-white/40 backdrop-blur-md border-t border-black/5 px-6">
-        <div className="max-w-6xl mx-auto space-y-32">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-16 md:gap-32">
-            <div className="space-y-10">
-              <h4 className="text-[12px] font-bold opacity-30 uppercase tracking-[0.4em]">Brand</h4>
-              <ul className="space-y-6 text-lg font-medium opacity-60">
-                <li><Link href="/about" className="hover:text-accent-red transition-colors">Our Story</Link></li>
-                <li><Link href="/contact" className="hover:text-accent-red transition-colors">Support</Link></li>
-                <li><Link href="/franchise" className="hover:text-accent-red transition-colors">Partners</Link></li>
-              </ul>
-            </div>
-            <div className="space-y-10">
-              <h4 className="text-[12px] font-bold opacity-30 uppercase tracking-[0.4em]">Legal</h4>
-              <ul className="space-y-6 text-lg font-medium opacity-60">
-                <li><Link href="/terms" className="hover:text-accent-red transition-colors">Terms of Use</Link></li>
-                <li><Link href="/privacy" className="hover:text-accent-red transition-colors">Privacy</Link></li>
-                <li><Link href="/refund" className="hover:text-accent-red transition-colors">Refunds</Link></li>
-                <li><Link href="/shipping" className="hover:text-accent-red transition-colors">Shipping</Link></li>
-              </ul>
-            </div>
-            <div className="col-span-2 space-y-10">
-              <h4 className="text-[12px] font-bold opacity-30 uppercase tracking-[0.4em]">Office</h4>
-              <div className="space-y-4">
-                <p className="text-xl font-heading">HQ: Okhla Phase III</p>
-                <p className="text-md opacity-40">New Delhi, 110020 • India</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-24 border-t border-black/5 flex flex-col md:flex-row justify-between items-center gap-12">
-            <div className="flex flex-col items-center md:items-start gap-4">
-              <Coffee size={56} strokeWidth={1} className="opacity-10" />
-              <div className="text-center md:text-left">
-                <p className="text-[12px] font-bold uppercase tracking-[0.6em] mb-2 opacity-20">Janu Bhai Coffee Co.</p>
-                <p className="text-[10px] font-bold opacity-20 tracking-widest">BUILT FOR REAL INDIA • SINCE 2024</p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <Link href="/login" className="text-[10px] font-bold uppercase tracking-widest opacity-30 hover:opacity-100 transition-opacity p-4 border border-black/5 rounded-full">
-                Partner Sign In
-              </Link>
-            </div>
+      {/* CTA Section */}
+      <section className="py-32 text-center px-6">
+        <div className="max-w-3xl mx-auto space-y-12">
+          <h2 className="text-6xl md:text-8xl font-heading tracking-tighter uppercase leading-[0.8]">Join the <span className="text-accent-red italic">Brotherhood</span></h2>
+          <p className="text-xl opacity-60">Whether you're a coffee lover or a potential franchise partner, the Janu Bhai OS is ready for you.</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button size="lg" fullWidth className="px-12 py-8 text-xl">Sign In to Dashboard</Button>
+            </Link>
+            <Link href="/franchise" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" fullWidth className="px-12 py-8 text-xl border-accent-brown text-accent-brown">Partner With Us</Button>
+            </Link>
           </div>
         </div>
-      </footer>
+      </section>
     </div>
   );
 }

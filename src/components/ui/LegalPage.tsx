@@ -30,7 +30,7 @@ export const LegalPage = ({ title, content, lastUpdated }: LegalPageProps) => {
           <p className="text-[10px] font-bold opacity-40 uppercase tracking-[0.2em]">Last Updated: {lastUpdated}</p>
         </header>
 
-        <article className="prose prose-accent-brown max-w-none prose-sm opacity-80 leading-relaxed space-y-8">
+        <article className="max-w-none text-sm opacity-80 leading-relaxed space-y-8">
           {content}
         </article>
 
