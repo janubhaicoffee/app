@@ -1,3 +1,5 @@
+"use client";
+
 import { useAuth } from '@/context/AuthContext';
 import { LogOut } from 'lucide-react';
 import { ROLE_LABELS } from '@/lib/roles';
