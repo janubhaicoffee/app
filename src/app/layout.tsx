@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Janu Bhai Coffee | Roz Ki Strong Kahaani",
-  description: "A decentralized, community-driven coffee network built for the real India. Premium roast, local heart, and cinematic operations.",
+  description: "A decentralized, community-driven coffee network built for the real India. Premium roast, local heart, and robust operations.",
   keywords: ["coffee india", "franchise coffee india", "janu bhai coffee", "decentralized coffee"],
 };
 

@@ -31,7 +31,7 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
-        {/* Cinematic Ambient Background */}
+        {/* Ambient Background */}
         <div className="absolute inset-0 z-0">
           <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-accent-brown/5 rounded-full blur-[120px] animate-pulse" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-red/5 rounded-full blur-[100px] animate-pulse delay-700" />

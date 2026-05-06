@@ -1,10 +1,16 @@
 # Notes Index — app
-> 185 total notes
+> 191 total notes
 
 ### 2026-05-06
 
 | # | Title | ~Tok |
 |---|---|---|
+| 25 | Git Commit: u | ~9 |
+| 24 | what-changed in tsconfig.tsbuildinfo | ~143.5 |
+| 23 | Low cohesion detected in Domain Cluster 7 | ~49 |
+| 22 | Surprising bridge detected: appdata.ts → supaba... | ~52 |
+| 21 | 9 potentially unused files detected | ~84 |
+| 20 | problem-fix in .gitignore | ~141.25 |
 | 166 | [.windsurfrules] NEVER use TailwindCSS. Only us... | ~23 |
 | 165 | [CLAUDE.md] NEVER use TailwindCSS. Only use van... | ~20 |
 | 164 | Version your API from day 1 (/api/v1/) | ~38 |
