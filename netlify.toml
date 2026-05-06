@@ -1,20 +1,17 @@
 [build]
   command = "npm run build"
-  publish = "dist"
+  publish = ".next"
   functions = "netlify/functions"
 
 [dev]
   command = "npm run dev"
-  targetPort = 5173
+  port = 3000
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 # Redirect function calls to /.netlify/functions/catalog -> /api/catalog for cleaner URLs
 [[redirects]]
   from = "/api/catalog"
   to = "/.netlify/functions/catalog"
-  status = 200
-
-# SPA fallback — all non-file routes go to index.html
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
   status = 200
