@@ -26,13 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const isPlaceholder = supabaseUrl.includes('placeholder-project.supabase.co');
-    
-    if (isPlaceholder) {
-      setLoading(false);
-      return;
-    }
-
+    // Real Supabase auth flow - no placeholder bypass
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) fetchProfile(session.user.id);
@@ -72,7 +66,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
+  // Development role override for testing - requires explicit environment flag
   const devBypassRole = (role: Profile['role']) => {
+    if (process.env.NEXT_PUBLIC_DEV_MODE !== 'true') {
+      console.warn('Dev bypass disabled in production. Use real Supabase auth.');
+      return;
+    }
     setProfile({
       id: 'dev-bypass-id',
       role: role,

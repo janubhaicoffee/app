@@ -4,20 +4,47 @@ import { useCart } from '../context/CartContext';
 import { useCountUp } from '../hooks/useCountUp';
 import { MapPin, Star, ChevronRight, Plus, Repeat, Coffee, Zap, Gift } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { MenuItem } from '../lib/supabase';
-
-const QUICK_ITEMS: MenuItem[] = [
-  { id: 'q1', name: 'Masala Chai', category: 'Hot', price: 40, image_url: null, is_available: true },
-  { id: 'q2', name: 'Cold Coffee', category: 'Cold', price: 90, image_url: null, is_available: true },
-  { id: 'q3', name: 'Paneer Patties', category: 'Snacks', price: 60, image_url: null, is_available: true },
-  { id: 'q4', name: 'Bun Maska', category: 'Snacks', price: 45, image_url: null, is_available: true },
-];
+import type { MenuItem, Outlet } from '../lib/supabase';
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 export const CustomerHome = () => {
   const { profile } = useAuth();
   const { addItem } = useCart();
   const navigate = useNavigate();
-  const animatedPoints = useCountUp(140);
+  const [nearbyOutlets, setNearbyOutlets] = useState<Outlet[]>([]);
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const animatedPoints = useCountUp(loyaltyPoints);
+
+  useEffect(() => {
+    fetchCustomerData();
+  }, [profile]);
+
+  const fetchCustomerData = async () => {
+    if (!profile) return;
+
+    // Fetch real loyalty points from Supabase
+    const { data: pointsData } = await supabase
+      .from('loyalty_points')
+      .select('points')
+      .eq('user_id', profile.id)
+      .single();
+    
+    if (pointsData) {
+      setLoyaltyPoints(pointsData.points || 0);
+    }
+
+    // Fetch real nearby outlets
+    try {
+      const res = await fetch('/api/catalog?type=outlets');
+      if (res.ok) {
+        const data = await res.json();
+        setNearbyOutlets(data.slice(0, 3)); // Show first 3 outlets
+      }
+    } catch (error) {
+      console.error('Failed to fetch outlets:', error);
+    }
+  };
 
   return (
     <div className="animate-fade-in space-y-8 pb-32">
@@ -81,69 +108,172 @@ export const CustomerHome = () => {
           <h3 className="text-sm font-bold opacity-40 uppercase tracking-widest">Find Us Near You</h3>
           <button className="text-[10px] font-bold text-accent-brown underline tracking-widest">VIEW ALL</button>
         </div>
-        <Card glass hoverLift pressEffect className="p-4 flex gap-4 items-center"
-          onClick={() => navigate('/app/outlet/demo-cp')}
-        >
-          <div className="w-16 h-16 rounded-2xl bg-accent-brown-muted flex items-center justify-center text-accent-brown">
-            <MapPin size={28} />
-          </div>
-          <div className="flex-1">
-            <h4 className="text-lg font-heading leading-tight">Connaught Place</h4>
-            <div className="flex items-center gap-2 text-xs opacity-60 mt-1">
-              <span>1.2 km away</span>
-              <span>•</span>
-              <div className="flex items-center gap-1">
-                <Star size={10} className="fill-current text-amber-500" />
-                <span className="font-bold text-black opacity-100">4.8</span>
+        {nearbyOutlets.length > 0 ? (
+          nearbyOutlets.map((outlet) => (
+            <Card 
+              key={outlet.id} 
+              glass 
+              hoverLift 
+              pressEffect 
+              className="p-4 flex gap-4 items-center"
+              onClick={() => navigate(`/app/outlet/${outlet.id}`)}
+            >
+              <div className="w-16 h-16 rounded-2xl bg-accent-brown-muted flex items-center justify-center text-accent-brown">
+                <MapPin size={28} />
               </div>
-            </div>
-          </div>
-          <ChevronRight size={18} className="opacity-20" />
-        </Card>
+              <div className="flex-1">
+                <h4 className="text-lg font-heading leading-tight">{outlet.name}</h4>
+                <div className="flex items-center gap-2 text-xs opacity-60 mt-1">
+                  <span>{outlet.city}</span>
+                  <span>•</span>
+                  <div className="flex items-center gap-1">
+                    <Star size={10} className="fill-current text-amber-500" />
+                    <span className="font-bold text-black opacity-100">4.8</span>
+                  </div>
+                </div>
+              </div>
+              <ChevronRight size={18} className="opacity-20" />
+            </Card>
+          ))
+        ) : (
+          <Card glass className="p-6 text-center">
+            <p className="text-sm opacity-60">No outlets nearby. Check back soon!</p>
+          </Card>
+        )}
       </section>
 
-      {/* Quick Order */}
+      {/* Quick Order - Fetch from real menu */}
+      <QuickOrderSection addItem={addItem} />
+
+      {/* Recent / Reorder - Fetch from real order history */}
+      <RecentOrdersSection />
+    </div>
+  );
+};
+
+// Quick Order Section Component - fetches real menu items
+const QuickOrderSection: React.FC<{ addItem: (item: MenuItem) => void }> = ({ addItem }) => {
+  const [quickItems, setQuickItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchQuickItems = async () => {
+      try {
+        const res = await fetch('/api/catalog?type=menu');
+        if (res.ok) {
+          const data = await res.json();
+          setQuickItems(data.slice(0, 4)); // Show first 4 available items
+        }
+      } catch (error) {
+        console.error('Failed to fetch menu items:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuickItems();
+  }, []);
+
+  if (loading) {
+    return (
       <section className="space-y-4">
         <h3 className="text-sm font-bold opacity-40 uppercase tracking-widest px-1">Tappable Quick Picks</h3>
         <div className="grid grid-cols-2 gap-4">
-          {QUICK_ITEMS.map((item, i) => (
-            <Card key={item.id} glass hoverLift className={`p-4 flex flex-col gap-4 animate-fade-in-up stagger-${i+1}`}>
-              <div className="h-28 w-full bg-accent-brown-muted rounded-2xl flex items-center justify-center text-4xl text-accent-brown/20 group-hover:scale-110 transition-transform">
-                {item.category === 'Hot' ? <Coffee size={40} /> : <Zap size={40} />}
-              </div>
-              <div>
-                <p className="font-bold text-sm leading-tight mb-2 h-8 line-clamp-2">{item.name}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-lg text-number">₹{item.price}</span>
-                  <button 
-                    onClick={() => addItem(item)}
-                    className="p-2 bg-accent-brown text-white rounded-xl press-effect shadow-md"
-                  >
-                    <Plus size={18} />
-                  </button>
-                </div>
-              </div>
-            </Card>
+          {[1, 2, 3, 4].map(i => (
+            <Card key={i} glass className="h-48 animate-pulse" />
           ))}
         </div>
       </section>
+    );
+  }
 
-      {/* Recent / Reorder */}
+  if (quickItems.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-4">
+      <h3 className="text-sm font-bold opacity-40 uppercase tracking-widest px-1">Tappable Quick Picks</h3>
+      <div className="grid grid-cols-2 gap-4">
+        {quickItems.map((item, i) => (
+          <Card key={item.id} glass hoverLift className={`p-4 flex flex-col gap-4 animate-fade-in-up stagger-${i+1}`}>
+            <div className="h-28 w-full bg-accent-brown-muted rounded-2xl flex items-center justify-center text-4xl text-accent-brown/20 group-hover:scale-110 transition-transform">
+              {item.category.includes('Hot') || item.category.includes('Coffee') ? <Coffee size={40} /> : <Zap size={40} />}
+            </div>
+            <div>
+              <p className="font-bold text-sm leading-tight mb-2 h-8 line-clamp-2">{item.name}</p>
+              <div className="flex justify-between items-center">
+                <span className="text-lg text-number">₹{item.base_price || item.price}</span>
+                <button 
+                  onClick={() => addItem({...item, price: item.base_price || item.price})}
+                  className="p-2 bg-accent-brown text-white rounded-xl press-effect shadow-md"
+                >
+                  <Plus size={18} />
+                </button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+// Recent Orders Section Component - fetches real order history
+const RecentOrdersSection: React.FC = () => {
+  const { profile } = useAuth();
+  const [recentOrder, setRecentOrder] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchRecentOrder = async () => {
+      if (!profile) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*, order_items(*)')
+          .eq('user_id', profile.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (!error && data) {
+          setRecentOrder(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch recent order:', error);
+      }
+    };
+    fetchRecentOrder();
+  }, [profile]);
+
+  if (!recentOrder) {
+    return (
       <section className="space-y-4">
         <h3 className="text-sm font-bold opacity-40 uppercase tracking-widest px-1">One-Tap Reorder</h3>
-        <Card glass pressEffect className="p-4 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-accent-green/10 text-accent-green flex items-center justify-center">
-            <Repeat size={24} />
-          </div>
-          <div className="flex-1">
-            <p className="font-bold text-sm leading-tight">Large Cappuccino + Bun Maska</p>
-            <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">2 days ago • ₹180</p>
-          </div>
-          <button className="text-[10px] font-bold bg-accent-brown text-white py-2 px-4 rounded-full press-effect">
-            REORDER
-          </button>
+        <Card glass className="p-6 text-center">
+          <p className="text-sm opacity-60">No recent orders. Try something new!</p>
         </Card>
       </section>
-    </div>
+    );
+  }
+
+  return (
+    <section className="space-y-4">
+      <h3 className="text-sm font-bold opacity-40 uppercase tracking-widest px-1">One-Tap Reorder</h3>
+      <Card glass pressEffect className="p-4 flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl bg-accent-green/10 text-accent-green flex items-center justify-center">
+          <Repeat size={24} />
+        </div>
+        <div className="flex-1">
+          <p className="font-bold text-sm leading-tight">Previous Order</p>
+          <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">
+            {new Date(recentOrder.created_at).toLocaleDateString()} • ₹{recentOrder.total_amount}
+          </p>
+        </div>
+        <button className="text-[10px] font-bold bg-accent-brown text-white py-2 px-4 rounded-full press-effect">
+          REORDER
+        </button>
+      </Card>
+    </section>
   );
 };

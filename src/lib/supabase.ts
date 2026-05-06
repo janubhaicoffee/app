@@ -1,9 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 import { UserRole } from './roles';
 
-export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+// Enforce real Supabase configuration - no placeholders allowed
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Missing Supabase configuration. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.'
+  );
+}
+
+export { supabaseUrl };
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export interface Profile {

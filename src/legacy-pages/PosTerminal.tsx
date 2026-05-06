@@ -23,29 +23,34 @@ export const PosTerminal = () => {
   }, []);
 
   const fetchMenu = async () => {
-    // Simulate cinematic delay
-    await new Promise(r => setTimeout(r, 600));
-    
     try {
       const response = await fetch('/api/catalog?type=menu');
       if (response.ok) {
         const data = await response.json();
         setMenu(data as MenuItem[]);
-        setLoading(false);
         return;
       }
-    } catch {
-      console.warn("Netlify API unavailable, using fallback.");
+    } catch (error) {
+      console.error("Failed to fetch menu from API:", error);
     }
     
-    setMenu([
-      { id: '1', name: 'Strong Filter Kaapi', category: 'Hot Coffee', price: 45, is_available: true, image_url: null },
-      { id: '2', name: 'Classic Adrak Chai', category: 'Tea', price: 30, is_available: true, image_url: null },
-      { id: '3', name: 'Cold Coffee (Thick)', category: 'Cold Beverages', price: 80, is_available: true, image_url: null },
-      { id: '4', name: 'Bun Maska', category: 'Snacks', price: 40, is_available: true, image_url: null },
-      { id: '5', name: 'Vada Pav', category: 'Snacks', price: 35, is_available: true, image_url: null },
-    ]);
-    setLoading(false);
+    // Fallback: Try direct Supabase query
+    try {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('is_available', true)
+        .limit(20);
+      
+      if (!error && data) {
+        setMenu(data as MenuItem[]);
+      } else {
+        setMenu([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch menu from Supabase:", error);
+      setMenu([]);
+    }
   };
 
   const addToOrder = (item: MenuItem) => {
@@ -65,25 +70,44 @@ export const PosTerminal = () => {
   const confirmOrder = async (method: 'cash' | 'online') => {
     if (orderItems.length === 0) return;
     
-    try {
-      if (profile?.outlet_id && profile.id !== 'dev-bypass-id') {
-         await supabase.from('orders').insert({
-            outlet_id: profile.outlet_id,
-            user_id: profile.id,
-            total_amount: total,
-            payment_method: method,
-            status: 'completed'
-         });
-      }
-    } catch {
-      console.warn("Order insert skipped for demo.");
+    if (!profile?.outlet_id) {
+      console.error('No outlet associated with this user');
+      return;
     }
-    
-    setSuccess(true);
-    setTimeout(() => {
-      setOrderItems([]);
-      setSuccess(false);
-    }, 2000);
+
+    try {
+      // Insert order into Supabase
+      const { data, error } = await supabase.from('orders').insert({
+        outlet_id: profile.outlet_id,
+        user_id: profile.id,
+        total_amount: total,
+        payment_method: method,
+        status: 'completed'
+      }).select().single();
+
+      if (error) throw error;
+
+      // Insert order items
+      if (data && data.id) {
+        const orderItemsData = orderItems.map(({ item, qty }) => ({
+          order_id: data.id,
+          menu_item_id: item.id,
+          quantity: qty,
+          price_at_purchase: item.base_price || item.price
+        }));
+
+        await supabase.from('order_items').insert(orderItemsData);
+      }
+
+      setSuccess(true);
+      setTimeout(() => {
+        setOrderItems([]);
+        setSuccess(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to create order:', error);
+      alert('Failed to create order. Please try again.');
+    }
   };
 
   if (loading) {

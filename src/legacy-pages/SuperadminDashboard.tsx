@@ -15,19 +15,13 @@ interface OutletInfo {
   location: string;
 }
 
-const DEMO_REVENUE: RevenueBySource[] = [
-  { source: 'pos', label: 'POS', amount: 34500, color: '#4A3022', orders: 245 },
-  { source: 'zomato', label: 'Zomato', amount: 22800, color: '#E23744', orders: 134 },
-  { source: 'swiggy', label: 'Swiggy', amount: 18200, color: '#FC8019', orders: 98 },
-  { source: 'uengage', label: 'Uengage', amount: 9000, color: '#6C5CE7', orders: 42 },
-];
-
 export const SuperadminDashboard = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [outletsCount, setOutletsCount] = useState(0);
   const [outletsList, setOutletsList] = useState<OutletInfo[]>([]);
+  const [revenueData, setRevenueData] = useState<RevenueBySource[]>([]);
   const [loading, setLoading] = useState(true);
 
   const animatedRevenue = useCountUp(totalRevenue);
@@ -39,40 +33,35 @@ export const SuperadminDashboard = () => {
 
   const fetchNetworkStats = async () => {
     if (!profile) return;
-    
-    // Simulate delay for cinematic feel
-    await new Promise(r => setTimeout(r, 800));
-
-    if (profile.id === 'dev-bypass-id') {
-      setTotalRevenue(84500);
-      setOutletsCount(12);
-      setOutletsList([
-        { id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', name: 'Connaught Place', location: 'Inner Circle, CP, New Delhi' },
-        { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', name: 'Hauz Khas Village', location: 'HKV Main Road, New Delhi' },
-        { id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', name: 'Koramangala', location: '1st Block, Bangalore' },
-      ]);
-      setLoading(false);
-      return;
-    }
 
     try {
+      // Fetch real outlets data from API
       const res = await fetch('/api/catalog?type=outlets');
       if (res.ok) {
         const data = await res.json();
         setOutletsCount(data.length);
         setOutletsList(data);
       }
-    } catch {
-      setOutletsCount(3);
-      setOutletsList([
-        { name: 'Connaught Place', location: 'New Delhi' },
-        { name: 'Hauz Khas Village', location: 'New Delhi' },
-        { name: 'Koramangala', location: 'Bangalore' },
-      ]);
+      
+      // Fetch real revenue breakdown by source
+      const revenueRes = await fetch('/api/catalog?type=revenue');
+      if (revenueRes.ok) {
+        const revenueData = await revenueRes.json();
+        setRevenueData(revenueData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch outlets:', error);
+      setOutletsCount(0);
+      setOutletsList([]);
+      setRevenueData([]);
     }
 
-    const { data: orders } = await supabase.from('orders').select('total_amount').eq('status', 'completed');
-    if (orders) {
+    // Fetch real revenue data from Supabase
+    const { data: orders, error } = await supabase.from('orders').select('total_amount').eq('status', 'completed');
+    if (error) {
+      console.error('Failed to fetch orders:', error);
+      setTotalRevenue(0);
+    } else if (orders) {
       setTotalRevenue(orders.reduce((sum, o) => sum + Number(o.total_amount), 0));
     }
     
@@ -134,7 +123,7 @@ export const SuperadminDashboard = () => {
           <h3 className="text-lg font-heading">Revenue Streams</h3>
           <span className="text-[10px] font-bold px-2 py-1 bg-accent-brown-muted rounded text-accent-brown uppercase tracking-wider">Live</span>
         </div>
-        <RevenueBar data={DEMO_REVENUE} />
+        <RevenueBar data={revenueData} />
       </Card>
 
       {/* Quick Actions */}
@@ -177,7 +166,7 @@ export const SuperadminDashboard = () => {
             <button
               key={i}
               className="w-full outlet-row px-4 py-4 flex items-center gap-4 hover:bg-black/5 transition-colors text-left"
-              onClick={() => navigate(`/app/outlet/${outlet.id || 'demo'}`)}
+              onClick={() => outlet.id ? navigate(`/app/outlet/${outlet.id}`) : null}
             >
               <div className="w-10 h-10 rounded-xl bg-accent-brown-muted text-accent-brown flex items-center justify-center font-bold">
                 {outlet.name.charAt(0)}

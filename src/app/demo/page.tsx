@@ -26,7 +26,7 @@ export default function DemoAccessPage() {
 
         <header className="space-y-2 text-center">
           <h1 className="text-4xl font-heading tracking-tighter">Janu Bhai OS</h1>
-          <p className="text-sm opacity-50 font-medium uppercase tracking-widest text-accent-brown">Internal Demo Access</p>
+          <p className="text-sm opacity-50 font-medium uppercase tracking-widest text-accent-brown">Internal Access Portal</p>
         </header>
 
         <Card glass className="p-8 border-accent-brown/10 space-y-6 rounded-[40px] shadow-2xl">
@@ -66,8 +66,8 @@ export default function DemoAccessPage() {
 
           <div className="pt-4 border-t border-black/5">
             <p className="text-[10px] text-center opacity-30 leading-relaxed">
-              This page is for demonstration purposes only.<br/>
-              In production, access is gated via Supabase Auth.
+              Development access portal for testing different user roles.<br/>
+              In production, access is gated via Supabase Auth with proper credentials.
             </p>
           </div>
         </Card>

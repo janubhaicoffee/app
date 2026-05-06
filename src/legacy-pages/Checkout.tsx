@@ -1,21 +1,78 @@
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { useCart } from '../context/CartContext';
 import { useCountUp } from '../hooks/useCountUp';
-import { ArrowLeft, MapPin, Truck, ShoppingBag, Minus, Plus, Trash2, Ticket, Coffee, Zap, ChevronRight } from 'lucide-react';
+import { ArrowLeft, MapPin, Truck, ShoppingBag, Minus, Plus, Trash2, Ticket, Coffee, Zap, ChevronRight, CheckCircle } from 'lucide-react';
 
 export const Checkout = () => {
   const navigate = useNavigate();
-  const { items, updateQuantity, totalPrice } = useCart();
+  const { items, updateQuantity, totalPrice, clearCart } = useCart();
+  const { profile } = useAuth();
+  const [processing, setProcessing] = useState(false);
   const [orderType, setOrderType] = useState<'delivery' | 'pickup'>('pickup');
   const [discountApplied, setDiscountApplied] = useState(false);
 
   const finalTotal = discountApplied ? totalPrice - 50 : totalPrice;
   const animatedTotal = useCountUp(finalTotal + (orderType === 'delivery' ? 40 : 0));
 
-  const handlePlaceOrder = () => {
-    navigate('/app/track/demo-order');
+  const handlePlaceOrder = async () => {
+    if (!profile) {
+      navigate('/');
+      return;
+    }
+
+    setProcessing(true);
+    
+    try {
+      // Calculate final amount with delivery fee
+      const deliveryFee = orderType === 'delivery' ? 40 : 0;
+      const discount = discountApplied ? 50 : 0;
+      const amountToPay = totalPrice + deliveryFee - discount;
+
+      // Create order in Supabase
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: profile.id,
+          outlet_id: profile.outlet_id || 'default-outlet-id',
+          total_amount: amountToPay,
+          payment_method: 'online',
+          status: 'pending',
+          delivery_address: orderType === 'delivery' ? 'Sector 4, Rohini, New Delhi' : null,
+          order_type: orderType,
+          discount_applied: discount,
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = items.map(item => ({
+        order_id: orderData.id,
+        menu_item_id: item.id,
+        quantity: item.quantity,
+        unit_price: item.price,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Clear cart and redirect to tracking
+      clearCart();
+      navigate(`/app/track/${orderData.id}`);
+    } catch (error) {
+      console.error('Error placing order:', error);
+      alert('Failed to place order. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   if (items.length === 0) {
@@ -167,12 +224,22 @@ export const Checkout = () => {
 
       {/* Bottom Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 z-50 bg-gradient-to-t from-bg-cream via-bg-cream to-transparent pb-nav">
-        <button 
+        <button
           onClick={handlePlaceOrder}
-          className="w-full bg-accent-brown text-white p-5 rounded-3xl shadow-2xl flex justify-center items-center gap-3 press-effect border border-white/10"
+          disabled={processing}
+          className="w-full bg-accent-brown text-white p-5 rounded-3xl shadow-2xl flex justify-center items-center gap-3 press-effect border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <span className="text-sm font-bold uppercase tracking-[0.2em]">Confirm & Place Order</span>
-          <ArrowLeft size={20} className="rotate-180" />
+          {processing ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm font-bold uppercase tracking-[0.2em]">Processing...</span>
+            </>
+          ) : (
+            <>
+              <span className="text-sm font-bold uppercase tracking-[0.2em]">Confirm & Place Order</span>
+              <ArrowLeft size={20} className="rotate-180" />
+            </>
+          )}
         </button>
       </div>
     </div>

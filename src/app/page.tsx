@@ -169,8 +169,8 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/demo" className="text-[10px] font-bold uppercase tracking-widest opacity-10 hover:opacity-100 transition-opacity p-4 border border-black/5 rounded-full">
-                System Demo
+              <Link href="/app" className="text-[10px] font-bold uppercase tracking-widest opacity-10 hover:opacity-100 transition-opacity p-4 border border-black/5 rounded-full">
+                Launch App
               </Link>
             </div>
           </div>
