@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://janubhai.com"),
   title: {
     default: "Janu Bhai Coffee | Roz Ki Strong Kahaani",
     template: "%s | Janu Bhai Coffee"

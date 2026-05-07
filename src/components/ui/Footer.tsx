@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Coffee, Mail, MapPin } from 'lucide-react';
+import { Mail, MapPin } from 'lucide-react';
 
 export const Footer = () => {
   return (
@@ -76,7 +76,7 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-12 border-t border-black/5 flex flex-col md:flex-row justify-between items-center gap-8">
           <p className="text-[10px] font-bold opacity-20 uppercase tracking-[0.6em]">
-            © 2024 Janu Bhai Coffee Co. • Built for the Real India
+            © 2026 Janu Bhai Coffee Co. • Built for the Real India
           </p>
           <div className="flex gap-8 opacity-20 text-[10px] font-bold uppercase tracking-widest">
             <span>FSSAI Certified</span>

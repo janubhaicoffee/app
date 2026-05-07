@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Coffee, MapPin, Menu, X } from 'lucide-react';
+import { MapPin, Menu, X } from 'lucide-react';
 import { Button } from './Button';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
