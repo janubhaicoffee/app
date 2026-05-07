@@ -4,13 +4,13 @@
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
 
-  --color-bg-cream: #FAF9F6;
-  --color-accent-brown: #3E2723;
-  --color-accent-brown-light: #5D4037;
-  --color-accent-brown-muted: #EFEBE9;
-  --color-accent-red: #8D1C12;
+  --color-bg-cream: #FDFCF8;
+  --color-accent-brown: #2D1B18;
+  --color-accent-brown-light: #4A322E;
+  --color-accent-brown-muted: #F5F1E9;
+  --color-accent-red: #C41E11;
   --color-accent-green: #2E7D32;
-  --color-accent-gold: #D4AF37;
+  --color-accent-gold: #FFB300;
   
   --font-heading: "Inter", system-ui, sans-serif;
   --font-number: "Satoshi", "Inter", system-ui, sans-serif;
@@ -97,15 +97,15 @@ body {
   }
 
   .btn-primary {
-    @apply bg-accent-brown text-white shadow-lg shadow-accent-brown/20 hover:bg-accent-brown-light;
+    @apply bg-accent-brown text-white shadow-lg shadow-accent-brown/20 hover:scale-[1.02] active:scale-[0.98] transition-all;
   }
 
   .btn-secondary {
-    @apply bg-accent-red text-white hover:opacity-90;
+    @apply bg-accent-red text-white hover:bg-accent-red/90 hover:scale-[1.02] active:scale-[0.98] transition-all;
   }
 
   .btn-outline {
-    @apply border border-accent-brown/20 bg-transparent text-accent-brown hover:bg-accent-brown hover:text-white;
+    @apply border-2 border-accent-brown/10 bg-transparent text-accent-brown hover:border-accent-brown hover:bg-accent-brown hover:text-white transition-all;
   }
 
   .btn-ghost {
@@ -115,4 +115,22 @@ body {
   .btn-full {
     @apply w-full;
   }
+
+  /* Legal Prose */
+  .prose-legal p {
+    @apply mb-6;
+  }
+  .prose-legal h3 {
+    @apply text-xl font-bold uppercase tracking-widest text-accent-brown mt-12 mb-4;
+  }
+  .prose-legal ul {
+    @apply list-disc list-inside space-y-3 mb-8 pl-4;
+  }
+  .prose-legal li {
+    @apply opacity-80;
+  }
+}
+
+::selection {
+  @apply bg-accent-red/10 text-accent-red;
 }
