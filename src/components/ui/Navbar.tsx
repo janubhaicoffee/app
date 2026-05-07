@@ -17,7 +17,6 @@ export const Navbar = () => {
     { name: 'Our Story', href: '/#story' },
     { name: 'About', href: '/about' },
     { name: 'Franchise', href: '/franchise' },
-    { name: 'Menu', href: '/#menu' },
   ];
 
   const isApp = pathname.startsWith('/app');
@@ -27,12 +26,7 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 bg-accent-brown rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform">
-            <Coffee size={24} />
-          </div>
-          <span className="font-heading text-xl tracking-tighter uppercase">
-            Janu Bhai <span className="text-accent-red">Coffee</span>
-          </span>
+          <img src="/logo.png" alt="Janu Bhai Coffee Logo" className="h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-500" />
         </Link>
 
         {/* Desktop Links */}

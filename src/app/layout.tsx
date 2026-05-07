@@ -40,6 +40,15 @@ export const metadata: Metadata = {
     title: "Janu Bhai Coffee | Roz Ki Strong Kahaani",
     description: "The most robust coffee in the real India.",
     images: ["/farm.png"]
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icon-192.png' },
+    ],
   }
 };
 

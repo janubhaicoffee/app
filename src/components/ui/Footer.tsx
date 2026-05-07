@@ -12,12 +12,7 @@ export const Footer = () => {
           {/* Brand & Contact */}
           <div className="space-y-8">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 bg-accent-brown text-white rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                <Coffee size={24} />
-              </div>
-              <span className="font-heading text-xl tracking-tighter uppercase">
-                Janu Bhai <span className="text-accent-red">Coffee</span>
-              </span>
+              <img src="/logo.png" alt="Janu Bhai Coffee Logo" className="h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-500" />
             </Link>
             
             <div className="space-y-6">

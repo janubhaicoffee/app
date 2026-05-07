@@ -18,7 +18,7 @@ export const BottomNav = () => {
       case 'cashier':
       case 'kitchen':
         return [
-          { label: 'POS', icon: <Coffee size={22} />, path: '/app/terminal' },
+          { label: 'POS', icon: <img src="/favicon.png" alt="POS" className="w-5 h-5 object-contain" />, path: '/app/terminal' },
           { label: 'Orders', icon: <ClipboardList size={22} />, path: '/app/orders' },
           { label: 'More', icon: <MoreHorizontal size={22} />, path: '/app/settings' },
         ];

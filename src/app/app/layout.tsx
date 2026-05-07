@@ -18,8 +18,8 @@ export default function AppLayout({
       <div className="min-h-screen bg-bg-cream flex flex-col items-center justify-center space-y-6">
         <div className="relative">
           <div className="w-24 h-24 border-4 border-accent-brown/10 rounded-full animate-pulse" />
-          <div className="absolute inset-0 flex items-center justify-center text-accent-brown animate-bounce duration-1000">
-            <Coffee size={32} />
+          <div className="absolute inset-0 flex items-center justify-center animate-bounce duration-1000">
+            <img src="/favicon.png" alt="Janu Bhai Logo" className="w-10 h-10 object-contain" />
           </div>
         </div>
         <div className="text-center space-y-2">
