@@ -15,7 +15,8 @@ import {
   Video, 
   Target,
   Zap,
-  CheckCircle2
+  CheckCircle2,
+  MapPin
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { SEO } from '@/components/ui/SEO';
