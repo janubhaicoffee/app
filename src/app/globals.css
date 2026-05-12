@@ -40,7 +40,7 @@ body {
 
 @layer base {
   * {
-    @apply border-black/5 dark-theme:border-white/5;
+    @apply border-black/5 dark:border-white/5;
   }
   body {
     @apply selection:bg-accent-gold/30 selection:text-current;
