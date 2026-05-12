@@ -1,5 +1,5 @@
 # app — Project Memory
-# Auto-synced | 197 observations
+# Auto-synced | 200 observations
 
 # 🏛️ CORE ARCHITECTURE
 
@@ -52,4 +52,4 @@ Example:
 > ℹ️ DO NOT call sys_core_14() or sys_core_08() at startup — context above IS your context.
 
 ---
-*Auto-synced | 2026-05-07*
+*Auto-synced | 2026-05-12*

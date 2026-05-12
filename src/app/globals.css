@@ -12,13 +12,22 @@
   --color-accent-green: #2E7D32;
   --color-accent-gold: #FFB300;
   
+  --color-espresso-900: #120A08;
+  --color-espresso-800: #1A0F0D;
+  --color-espresso-700: #2D1B18;
+  
   --font-heading: "Inter", system-ui, sans-serif;
   --font-number: "Satoshi", "Inter", system-ui, sans-serif;
 }
 
 :root {
-  --background: #FAF9F6;
-  --foreground: #3E2723;
+  --background: #FDFCF8;
+  --foreground: #120A08;
+}
+
+.dark-theme {
+  --background: #120A08;
+  --foreground: #FDFCF8;
 }
 
 body {
@@ -26,20 +35,31 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
 @layer base {
   * {
-    @apply border-black/5;
+    @apply border-black/5 dark-theme:border-white/5;
   }
   body {
-    @apply bg-bg-cream text-accent-brown selection:bg-accent-brown selection:text-white;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
-    background-attachment: fixed;
+    @apply selection:bg-accent-gold/30 selection:text-current;
   }
 }
 
 @layer utilities {
+  .grain-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+
   .text-number {
     font-family: var(--font-number);
     font-variant-numeric: tabular-nums;
@@ -61,8 +81,23 @@ body {
     @apply bg-white/40 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(62,39,35,0.08)];
   }
 
+  .glass-espresso {
+    @apply bg-espresso-900/60 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+  }
+
   .hero-gradient {
-    @apply bg-gradient-to-b from-accent-brown/10 via-transparent to-transparent;
+    @apply bg-gradient-to-b from-espresso-900 via-espresso-800 to-transparent;
+  }
+
+  .glow-effect {
+    @apply relative;
+  }
+  .glow-effect::before {
+    content: "";
+    @apply absolute inset-0 -z-10 rounded-full blur-xl bg-accent-gold/20 transition-opacity duration-500 opacity-0;
+  }
+  .glow-effect:hover::before {
+    @apply opacity-100;
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -77,15 +112,19 @@ body {
 
 @layer components {
   .card {
-    @apply rounded-3xl border border-black/5 bg-white shadow-sm transition-all duration-200;
+    @apply rounded-3xl border border-black/5 bg-white shadow-sm transition-all duration-300;
+  }
+
+  .dark-theme .card {
+    @apply border-white/5 bg-espresso-800;
   }
 
   .hover-lift:hover {
-    @apply -translate-y-0.5 shadow-lg;
+    @apply -translate-y-1 shadow-2xl;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center rounded-full font-semibold transition-all duration-200 disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-full font-semibold transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden;
   }
 
   .btn-md {
@@ -97,19 +136,31 @@ body {
   }
 
   .btn-primary {
-    @apply bg-accent-brown text-white shadow-lg shadow-accent-brown/20 hover:scale-[1.02] active:scale-[0.98] transition-all;
+    @apply bg-accent-brown text-white shadow-lg shadow-accent-brown/20 hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .dark-theme .btn-primary {
+    @apply bg-white text-espresso-900 shadow-white/10;
   }
 
   .btn-secondary {
-    @apply bg-accent-red text-white hover:bg-accent-red/90 hover:scale-[1.02] active:scale-[0.98] transition-all;
+    @apply bg-accent-red text-white hover:bg-accent-red/90 hover:scale-[1.02] active:scale-[0.98];
   }
 
   .btn-outline {
-    @apply border-2 border-accent-brown/10 bg-transparent text-accent-brown hover:border-accent-brown hover:bg-accent-brown hover:text-white transition-all;
+    @apply border-2 border-accent-brown/20 bg-transparent text-accent-brown hover:border-accent-brown hover:bg-accent-brown hover:text-white;
+  }
+
+  .dark-theme .btn-outline {
+    @apply border-white/20 text-white hover:border-white hover:bg-white hover:text-espresso-900;
   }
 
   .btn-ghost {
     @apply bg-transparent text-accent-brown hover:bg-accent-brown/5;
+  }
+
+  .dark-theme .btn-ghost {
+    @apply text-white hover:bg-white/10;
   }
 
   .btn-full {
@@ -123,6 +174,9 @@ body {
   .prose-legal h3 {
     @apply text-xl font-bold uppercase tracking-widest text-accent-brown mt-12 mb-4;
   }
+  .dark-theme .prose-legal h3 {
+    @apply text-white;
+  }
   .prose-legal ul {
     @apply list-disc list-inside space-y-3 mb-8 pl-4;
   }
@@ -131,6 +185,3 @@ body {
   }
 }
 
-::selection {
-  @apply bg-accent-red/10 text-accent-red;
-}

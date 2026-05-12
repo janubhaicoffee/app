@@ -1,10 +1,23 @@
 # Notes Index — app
-> 197 total notes
+> 200 total notes
+
+### 2026-05-13
+
+| # | Title | ~Tok |
+|---|---|---|
+| 34 | what-changed in task.md | ~45.75 |
+
+### 2026-05-10
+
+| # | Title | ~Tok |
+|---|---|---|
+| 33 | 10 potentially unused files detected | ~87 |
 
 ### 2026-05-07
 
 | # | Title | ~Tok |
 |---|---|---|
+| 32 | Git Commit: u | ~9 |
 | 31 | Git Commit: u | ~9 |
 | 30 | Git Commit: u | ~9 |
 | 29 | Git Commit: u | ~9 |

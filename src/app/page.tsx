@@ -1,268 +1,262 @@
 "use client";
 
-import React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Coffee, ShieldCheck, Thermometer, Wind, Zap, ArrowRight, MapPin, CheckCircle2 } from 'lucide-react';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { Coffee, ShieldCheck, Thermometer, Wind, Zap, ArrowRight, MapPin, CheckCircle2, BarChart3, Users, Network } from 'lucide-react';
 import { SEO } from '@/components/ui/SEO';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 
+// Motion Components
+import { FadeIn } from '@/components/ui/motion/FadeIn';
+import { Parallax } from '@/components/ui/motion/Parallax';
+import { AnimatedCounter } from '@/components/ui/motion/AnimatedCounter';
+import { MagneticButton } from '@/components/ui/motion/MagneticButton';
+
 export default function LandingPage() {
-  const { scrollYProgress } = useScroll();
-  const opacity = useTransform(scrollYProgress, [0, 0.05], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.05], [1, 0.95]);
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"]
+  });
+
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.9]);
+  const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 150]);
 
   return (
-    <div className="bg-bg-cream overflow-x-hidden">
+    <div className="bg-espresso-900 text-bg-cream overflow-x-hidden min-h-screen" ref={containerRef}>
       <SEO 
-        title="Janu Bhai Coffee | AAA Grade Chikkamagaluru Single Origin"
+        title="Janu Bhai Coffee | India's Decentralized Coffee Movement"
         description="Experience the science of freshness. Sourced from Chikkamagaluru, processed without chemicals, and preserved via advanced dry vacuum technology."
-        keywords="Chikkamagaluru coffee, AAA grade beans, dry vacuum coffee, chemical free coffee, fresh roasted coffee India"
-        schema={{
-          "@context": "https://schema.org",
-          "@type": "FoodEstablishment",
-          "name": "Janu Bhai Coffee",
-          "image": "https://janubhai.com/farm.png",
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "Ghaffar Manzil, Jamia Nagar",
-            "addressLocality": "Delhi",
-            "postalCode": "110025",
-            "addressCountry": "IN"
-          },
-          "url": "https://janubhai.com",
-          "servesCuisine": "Coffee",
-          "priceRange": "$$"
-        }}
+        keywords="Chikkamagaluru coffee, decentralized coffee, Gen Z coffee brand, dry vacuum coffee, fresh roasted coffee India"
       />
 
-      {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <motion.div style={{ opacity, scale }} className="relative z-10 text-center px-6 max-w-4xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-red/10 border border-accent-red/20 text-accent-red text-[10px] font-bold uppercase tracking-[0.3em] mb-8"
-          >
-            <Zap size={14} />
-            Direct from Chikkamagaluru
-          </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-6xl md:text-8xl font-heading tracking-tighter leading-[0.9] mb-8 uppercase"
-          >
-            Roz Ki <span className="text-accent-red">Strong</span><br />Kahaani
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-lg md:text-xl font-medium opacity-60 mb-12 max-w-2xl mx-auto"
-          >
-            Experience the journey of AAA-grade beans, preserved through science, and delivered with heart.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-          >
-            <Link href="/login">
-              <Button size="lg" className="px-12 group">
-                Enter the OS
-                <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-            <Link href="https://maps.app.goo.gl/yP6L8y2TYHkexmVj6" target="_blank">
-              <Button variant="outline" size="lg" className="px-12">
-                Visit Outlet
-              </Button>
-            </Link>
-          </motion.div>
-        </motion.div>
+      <div className="grain-overlay" />
 
-        {/* Cinematic Background Video/Image Placeholder */}
+      {/* Cinematic Hero Section */}
+      <section className="relative h-[100svh] flex flex-col justify-center overflow-hidden">
+        {/* Background Parallax Image */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-bg-cream/20 via-transparent to-bg-cream z-10" />
-          <img 
-            src="/farm.png" 
-            alt="Chikkamagaluru Farm" 
-            className="w-full h-full object-cover opacity-30 grayscale hover:grayscale-0 transition-all duration-1000 scale-110"
-          />
+          <Parallax speed={0.4} className="h-full">
+            <div className="absolute inset-0 bg-gradient-to-b from-espresso-900/60 via-espresso-900/40 to-espresso-900 z-10" />
+            <img 
+              src="/farm.png" 
+              alt="Chikkamagaluru Farm Cinematic" 
+              className="w-full h-full object-cover scale-110 opacity-40 mix-blend-luminosity"
+            />
+          </Parallax>
+        </div>
+
+        {/* Floating Steam Particles (CSS driven) */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-30 mix-blend-screen">
+          <div className="absolute w-[800px] h-[800px] bg-accent-gold/20 rounded-full blur-[120px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" style={{ animationDuration: '8s' }} />
         </div>
         
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce">
-          <div className="w-px h-20 bg-gradient-to-b from-accent-brown/20 to-transparent" />
-        </div>
-      </section>
-
-      {/* The Origin Section */}
-      <section id="story" className="py-32 px-6">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-          <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="space-y-8"
-          >
-            <div className="space-y-2">
-              <p className="text-accent-red font-bold uppercase tracking-[0.4em] text-[10px]">Step 01: The Source</p>
-              <h2 className="text-5xl font-heading tracking-tight">Private Farms of <span className="italic">Chikkamagaluru</span></h2>
+        <motion.div 
+          style={{ opacity: heroOpacity, scale: heroScale, y: heroY }} 
+          className="relative z-10 px-6 max-w-7xl mx-auto w-full pt-20"
+        >
+          <FadeIn delay={0.2} direction="down">
+            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-espresso text-accent-gold text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] mb-8 border-accent-gold/30">
+              <Zap size={14} className="animate-pulse" />
+              India's First Decentralized Coffee Movement
             </div>
-            <p className="text-xl leading-relaxed opacity-70">
-              Our journey begins in the mist-covered hills of Chikkamagaluru, where we partner with elite private estates. We don't just buy coffee; we select the top 1% of the harvest.
+          </FadeIn>
+          
+          <FadeIn delay={0.4} direction="up">
+            <h1 className="text-6xl sm:text-8xl md:text-[9rem] font-heading tracking-tighter leading-[0.85] mb-8 uppercase text-white drop-shadow-2xl">
+              Roz Ki <span className="text-accent-red italic pr-4">Strong</span><br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-bg-cream to-accent-gold">Kahaani</span>
+            </h1>
+          </FadeIn>
+
+          <FadeIn delay={0.6} direction="up">
+            <p className="text-lg md:text-2xl font-medium opacity-80 mb-12 max-w-2xl text-bg-cream/90 leading-relaxed">
+              We are not just a coffee chain. We are an operating system for the culture. AAA-grade Chikkamagaluru beans, completely decentralized.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-              <div className="p-6 bg-white rounded-3xl border border-black/5 space-y-3">
-                <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                  <ShieldCheck size={20} />
-                </div>
-                <h4 className="font-bold uppercase tracking-widest text-xs">AAA Grade Only</h4>
-                <p className="text-sm opacity-50">Strict export-quality sorting. Only the densest, most flavorful beans make the cut.</p>
-              </div>
-              <div className="p-6 bg-white rounded-3xl border border-black/5 space-y-3">
-                <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                  <MapPin size={20} />
-                </div>
-                <h4 className="font-bold uppercase tracking-widest text-xs">Single Estate</h4>
-                <p className="text-sm opacity-50">Traceable to the specific patch of land. No mixing, no compromises on purity.</p>
-              </div>
+          </FadeIn>
+
+          <FadeIn delay={0.8} direction="up" className="flex flex-col sm:flex-row items-center gap-6">
+            <Link href="/login">
+              <MagneticButton intensity={0.3}>
+                <Button size="lg" className="bg-white text-espresso-900 px-10 h-16 rounded-full text-lg shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] group">
+                  Enter the OS
+                  <ArrowRight size={20} className="ml-3 group-hover:translate-x-2 transition-transform" />
+                </Button>
+              </MagneticButton>
+            </Link>
+            <Link href="/franchise">
+              <MagneticButton intensity={0.2}>
+                <Button variant="outline" size="lg" className="px-10 h-16 rounded-full text-lg border-white/30 text-white hover:bg-white hover:text-espresso-900">
+                  Own an Outlet
+                </Button>
+              </MagneticButton>
+            </Link>
+          </FadeIn>
+        </motion.div>
+
+        {/* Live Ecosystem Metrics Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-white/10 glass-espresso">
+          <div className="max-w-7xl mx-auto px-6 py-6 md:py-8 flex flex-wrap justify-between gap-8 md:gap-4">
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase tracking-[0.3em] opacity-50 mb-1 text-accent-gold">Active Outlets</span>
+              <div className="text-3xl md:text-4xl font-heading font-bold text-white"><AnimatedCounter value={24} /></div>
             </div>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="relative group"
-          >
-            <div className="absolute inset-0 bg-accent-brown/10 rounded-[4rem] rotate-3 group-hover:rotate-0 transition-transform duration-500" />
-            <img 
-              src="/storage.png" 
-              alt="Raw Bean Storage" 
-              className="relative z-10 rounded-[3rem] shadow-2xl w-full aspect-[4/5] object-cover"
-            />
-          </motion.div>
+            <div className="h-12 w-px bg-white/10 hidden md:block" />
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase tracking-[0.3em] opacity-50 mb-1 text-accent-gold">Cups Served</span>
+              <div className="text-3xl md:text-4xl font-heading font-bold text-white"><AnimatedCounter value={120500} suffix="+" /></div>
+            </div>
+            <div className="h-12 w-px bg-white/10 hidden md:block" />
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase tracking-[0.3em] opacity-50 mb-1 text-accent-gold">Cities</span>
+              <div className="text-3xl md:text-4xl font-heading font-bold text-white"><AnimatedCounter value={5} /></div>
+            </div>
+            <div className="h-12 w-px bg-white/10 hidden md:block" />
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase tracking-[0.3em] opacity-50 mb-1 text-accent-gold">Network APY</span>
+              <div className="text-3xl md:text-4xl font-heading font-bold text-accent-green"><AnimatedCounter value={18} suffix="%" /></div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* The Science Section - Interactive Infographic */}
-      <section className="py-32 bg-accent-brown text-bg-cream px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-24 space-y-4">
-            <p className="text-accent-gold font-bold uppercase tracking-[0.4em] text-[10px]">The Science of Freshness</p>
-            <h2 className="text-5xl md:text-7xl font-heading tracking-tight">How we <span className="text-accent-gold">Preserve</span> Time</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
-            {/* Connection Line */}
-            <div className="hidden md:block absolute top-24 left-0 right-0 h-px bg-white/10 z-0" />
-            
-            {[
-              {
-                icon: <Thermometer />,
-                title: "Precision Roast",
-                desc: "Small-batch roasting without any chemical additives or enhancers. Pure heat, pure flavor.",
-                img: "/roast.png"
-              },
-              {
-                icon: <Wind />,
-                title: "Dry Vacuum Seal",
-                desc: "Innovative extraction of oxygen. Preserves the natural aromatic oils, color, and volatile flavor compounds.",
-                img: "/vacuum.png"
-              },
-              {
-                icon: <CheckCircle2 />,
-                title: "Airtight Raw Form",
-                desc: "Beans stay in raw, airtight storage until the moment of roasting. Freshness isn't a promise, it's physics.",
-                img: "/storage.png"
-              }
-            ].map((step, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.2 }}
-                className="relative z-10 space-y-8 group"
-              >
-                <div className="aspect-square rounded-full overflow-hidden border-4 border-white/5 relative">
-                  <img src={step.img} alt={step.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
-                  <div className="absolute inset-0 bg-accent-brown/40 group-hover:bg-transparent transition-colors" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
-                    {step.icon}
+      {/* Dashboard Preview Section (OS View) */}
+      <section className="py-32 px-6 relative z-10 bg-espresso-800">
+        <div className="max-w-7xl mx-auto text-center space-y-16">
+          <FadeIn direction="up">
+            <p className="text-accent-gold font-bold uppercase tracking-[0.4em] text-[10px] mb-4">The Command Center</p>
+            <h2 className="text-4xl md:text-6xl font-heading tracking-tight text-white leading-[1.1]">
+              Manage Your Outlet Like <br/>
+              <span className="italic text-white/50">A Tech Startup</span>
+            </h2>
+          </FadeIn>
+          
+          <FadeIn delay={0.2} direction="up" className="relative max-w-5xl mx-auto">
+            <div className="absolute inset-0 bg-accent-gold/20 blur-[100px] rounded-full" />
+            <div className="relative glass-espresso rounded-3xl border border-white/20 p-2 md:p-4 shadow-2xl overflow-hidden aspect-video flex flex-col">
+              {/* Mock Dashboard Topbar */}
+              <div className="flex items-center justify-between p-4 border-b border-white/10 mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-full bg-accent-red flex items-center justify-center text-[10px] font-bold">JB</div>
+                  <div className="text-sm font-bold uppercase tracking-widest text-white/80">Okhla Terminal</div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-accent-green animate-pulse" />
+                  <span className="text-xs uppercase tracking-widest text-accent-green font-bold">Live</span>
+                </div>
+              </div>
+              
+              {/* Mock Dashboard Content */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 flex-grow">
+                <div className="col-span-2 glass-espresso rounded-2xl border border-white/5 p-6 flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-[10px] uppercase tracking-[0.3em] text-white/40">Today's Revenue</h4>
+                    <p className="text-4xl font-number font-bold mt-2">₹14,500</p>
+                  </div>
+                  <div className="h-32 mt-8 flex items-end gap-2">
+                    {[40, 70, 45, 90, 60, 100, 80].map((h, i) => (
+                      <div key={i} className="flex-1 bg-accent-gold/50 rounded-t-sm transition-all duration-1000 hover:bg-accent-gold" style={{ height: `${h}%` }} />
+                    ))}
                   </div>
                 </div>
-                <div className="text-center space-y-4">
-                  <h3 className="text-2xl font-bold uppercase tracking-tighter">{step.title}</h3>
-                  <p className="text-sm opacity-60 leading-relaxed max-w-[280px] mx-auto">{step.desc}</p>
+                <div className="space-y-4">
+                  <div className="glass-espresso rounded-2xl border border-white/5 p-6">
+                    <h4 className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-2">Cups Pulled</h4>
+                    <p className="text-3xl font-number font-bold">142</p>
+                  </div>
+                  <div className="glass-espresso rounded-2xl border border-white/5 p-6">
+                    <h4 className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-2">Bean Supply</h4>
+                    <p className="text-3xl font-number font-bold text-accent-red">12 kg</p>
+                  </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
+              </div>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
-      {/* Freshness Cycle Section */}
-      <section className="py-32 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-bg-cream rounded-[4rem] p-12 md:p-24 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-1/2 h-full hidden lg:block">
-              <img src="/vacuum.png" alt="Fresh Pack" className="w-full h-full object-cover opacity-20" />
-              <div className="absolute inset-0 bg-gradient-to-l from-transparent to-bg-cream" />
-            </div>
-            
-            <div className="relative z-10 max-w-2xl space-y-8">
-              <p className="text-accent-red font-bold uppercase tracking-[0.4em] text-[10px]">The Monthly Fresh Cycle</p>
-              <h2 className="text-5xl font-heading tracking-tight leading-[0.9]">Never Older Than <span className="italic">30 Days</span></h2>
-              <p className="text-xl opacity-70 leading-relaxed">
-                Large harvests are never processed all at once. We store our beans in their raw form in airtight silos, processing only what we need for the current month. Every batch you receive was roasted, packed, and shipped within a 30-day window.
+      {/* The Origin Section - Transition to Cream */}
+      <section id="story" className="py-32 px-6 bg-bg-cream text-espresso-900 rounded-t-[4rem] -mt-10 relative z-20 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+          <div className="space-y-8">
+            <FadeIn direction="right">
+              <p className="text-accent-red font-bold uppercase tracking-[0.4em] text-[10px]">Step 01: The Source</p>
+              <h2 className="text-5xl font-heading tracking-tight mt-2">Private Farms of <br/><span className="italic">Chikkamagaluru</span></h2>
+            </FadeIn>
+            <FadeIn delay={0.2} direction="up">
+              <p className="text-xl leading-relaxed opacity-80 font-medium">
+                Our journey begins in the mist-covered hills of Chikkamagaluru, where we partner with elite private estates. We don't just buy coffee; we select the top 1% of the harvest.
               </p>
-              
-              <ul className="space-y-4 pt-4">
-                {[
-                  "Dry Vacuum for extended shelf life without chemicals",
-                  "Natural smell, color, and taste preserved via physics",
-                  "Sent to outlets fresh every single month",
-                  "Small batch roasting for maximum quality control"
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-4 text-sm font-bold uppercase tracking-widest opacity-60">
-                    <div className="w-2 h-2 bg-accent-red rounded-full" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="pt-8">
-                <Link href="https://maps.app.goo.gl/yP6L8y2TYHkexmVj6" target="_blank">
-                  <Button size="lg" className="bg-accent-brown text-white group">
-                    Find Nearest Outlet
-                    <MapPin size={18} className="ml-2" />
-                  </Button>
-                </Link>
-              </div>
+            </FadeIn>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              <FadeIn delay={0.4} direction="up" className="p-8 bg-white rounded-3xl border border-black/5 shadow-xl hover:-translate-y-2 transition-transform duration-500">
+                <div className="w-12 h-12 bg-espresso-900 rounded-xl flex items-center justify-center text-white mb-6">
+                  <ShieldCheck size={24} />
+                </div>
+                <h4 className="font-bold uppercase tracking-widest text-xs mb-3 text-espresso-900">AAA Grade Only</h4>
+                <p className="text-sm opacity-60 leading-relaxed">Strict export-quality sorting. Only the densest, most flavorful beans make the cut.</p>
+              </FadeIn>
+              <FadeIn delay={0.6} direction="up" className="p-8 bg-white rounded-3xl border border-black/5 shadow-xl hover:-translate-y-2 transition-transform duration-500">
+                <div className="w-12 h-12 bg-espresso-900 rounded-xl flex items-center justify-center text-white mb-6">
+                  <MapPin size={24} />
+                </div>
+                <h4 className="font-bold uppercase tracking-widest text-xs mb-3 text-espresso-900">Single Estate</h4>
+                <p className="text-sm opacity-60 leading-relaxed">Traceable to the specific patch of land. No mixing, no compromises on purity.</p>
+              </FadeIn>
             </div>
           </div>
+          
+          <FadeIn direction="left" className="relative group h-[700px]">
+            <div className="absolute inset-0 bg-accent-brown/5 rounded-[4rem] rotate-3 group-hover:rotate-0 transition-transform duration-700" />
+            <div className="relative z-10 w-full h-full rounded-[3rem] overflow-hidden shadow-2xl">
+              <Parallax speed={0.1}>
+                <img 
+                  src="/storage.png" 
+                  alt="Raw Bean Storage" 
+                  className="w-full h-[120%] object-cover scale-110"
+                />
+              </Parallax>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-32 text-center px-6">
-        <div className="max-w-3xl mx-auto space-y-12">
-          <h2 className="text-6xl md:text-8xl font-heading tracking-tighter uppercase leading-[0.8]">Join the <span className="text-accent-red italic">Brotherhood</span></h2>
-          <p className="text-xl opacity-60">Whether you're a coffee lover or a potential franchise partner, the Janu Bhai OS is ready for you.</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+      <section className="py-40 text-center px-6 bg-espresso-900 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/roast.png')] opacity-10 bg-cover bg-center mix-blend-overlay" />
+        <div className="absolute inset-0 bg-gradient-to-t from-espresso-900 via-transparent to-transparent" />
+        
+        <div className="max-w-4xl mx-auto space-y-12 relative z-10">
+          <FadeIn direction="up">
+            <h2 className="text-6xl md:text-[8rem] font-heading tracking-tighter uppercase leading-[0.8] mb-8 drop-shadow-2xl">
+              Join the <br/><span className="text-accent-red italic">Brotherhood</span>
+            </h2>
+            <p className="text-xl md:text-2xl opacity-60 font-medium max-w-2xl mx-auto leading-relaxed">
+              Whether you're a coffee lover or a potential franchise partner, the Janu Bhai OS is ready for you.
+            </p>
+          </FadeIn>
+          
+          <FadeIn delay={0.2} direction="up" className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10">
             <Link href="/login" className="w-full sm:w-auto">
-              <Button size="lg" fullWidth className="px-12 py-8 text-xl">Sign In to Dashboard</Button>
+              <MagneticButton intensity={0.4}>
+                <Button size="lg" className="w-full sm:w-auto bg-white text-espresso-900 px-14 py-8 text-xl rounded-full shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] transition-shadow">
+                  Sign In to Dashboard
+                </Button>
+              </MagneticButton>
             </Link>
             <Link href="/franchise" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" fullWidth className="px-12 py-8 text-xl border-accent-brown text-accent-brown">Partner With Us</Button>
+              <MagneticButton intensity={0.2}>
+                <Button variant="outline" size="lg" className="w-full sm:w-auto px-14 py-8 text-xl rounded-full border-white/30 text-white hover:bg-white hover:text-espresso-900">
+                  Partner With Us
+                </Button>
+              </MagneticButton>
             </Link>
-          </div>
+          </FadeIn>
         </div>
       </section>
     </div>
   );
 }
+
