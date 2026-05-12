@@ -2,85 +2,113 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Mail, MapPin } from 'lucide-react';
+import { Mail, MapPin, Smartphone, CreditCard, ShieldCheck } from 'lucide-react';
+import { Mascot } from './motion/Mascot';
 
 export const Footer = () => {
   return (
-    <footer className="bg-espresso-900 text-white border-t border-white/5 pt-24 pb-12 px-6">
+    <footer className="bg-espresso-brown text-bg-cream pt-32 pb-16 px-6 border-t-[12px] border-saffron-yellow relative overflow-hidden">
+      {/* Top Hook Section */}
+      <div className="max-w-7xl mx-auto mb-24 text-center">
+        <h2 className="text-5xl md:text-8xl font-heading font-black uppercase tracking-tighter text-saffron-yellow mb-6 drop-shadow-[4px_4px_0_0_rgba(0,0,0,0.5)]">
+          Join The Revolution.
+          <br /> Drink <span className="text-vibrant-red">Poshtik.</span>
+        </h2>
+        <p className="text-xl md:text-2xl font-bold opacity-90 max-w-2xl mx-auto">
+          India runs on Janu Bhai. No corporate bullshit, just strong coffee.
+        </p>
+      </div>
+
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mb-24">
-          {/* Brand & Contact */}
-          <div className="space-y-8">
-            <Link href="/" className="flex items-center gap-2 group">
-              <img src="/logo.png" alt="Janu Bhai Coffee Logo" className="h-14 w-auto object-contain group-hover:scale-105 transition-transform duration-500" />
+          
+          {/* Column 1: Brand Manifesto */}
+          <div className="space-y-8 bg-black/20 p-8 rounded-3xl border border-white/10">
+            <Link href="/" className="flex items-center gap-4 group">
+              <Mascot size={60} />
+              <span className="font-heading font-black text-3xl uppercase tracking-tighter text-bg-cream">Janu Bhai</span>
             </Link>
-            
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-white/5 rounded-lg text-white mt-1">
-                  <MapPin size={18} />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-bold uppercase tracking-widest opacity-40">Our Headquarters</p>
-                  <p className="text-sm font-medium leading-relaxed opacity-80">
-                    Ghaffar Manzil, Jamia Nagar,<br />
-                    Delhi - 110025, India
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-white/5 rounded-lg text-white mt-1">
-                  <Mail size={18} />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-bold uppercase tracking-widest opacity-40">Inquiries</p>
-                  {/* SVG Email Protection */}
-                  <div className="h-6 flex items-center">
-                    <svg width="140" height="20" viewBox="0 0 140 20" className="opacity-80">
-                      <text x="0" y="15" font-family="monospace" font-size="14" fill="currentColor" font-weight="bold">
-                        hello@janubhai.com
-                      </text>
-                    </svg>
-                  </div>
-                </div>
-              </div>
+            <p className="text-lg font-medium leading-relaxed opacity-90">
+              Born in Old Delhi, built for the real India. We are taking back the coffee culture from overpriced minimalist cafes and returning it to the streets. 
+            </p>
+            <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+              <ShieldCheck size={24} className="text-saffron-yellow" />
+              <p className="font-black uppercase tracking-widest text-saffron-yellow">100% Indian Owned</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="bg-white text-espresso-brown px-3 py-1 font-bold text-xs uppercase rounded">FSSAI Lic.</div>
+              <p className="font-bold opacity-60 text-sm">#12345678901234</p>
             </div>
           </div>
 
-          {/* Site Links */}
+          {/* Column 2: Quick Links */}
           <div className="space-y-8 md:pl-12">
-            <h4 className="text-[12px] font-bold opacity-40 uppercase tracking-[0.4em]">Navigation</h4>
+            <h4 className="text-2xl font-black text-saffron-yellow uppercase tracking-tight">Quick Links</h4>
             <ul className="space-y-4">
-              <li><Link href="/" className="text-sm font-medium hover:text-accent-gold transition-colors opacity-80 hover:opacity-100">Home</Link></li>
-              <li><Link href="/about" className="text-sm font-medium hover:text-accent-gold transition-colors opacity-80 hover:opacity-100">About Us</Link></li>
-              <li><Link href="/#story" className="text-sm font-medium hover:text-accent-gold transition-colors opacity-80 hover:opacity-100">Our Story</Link></li>
-              <li><Link href="/franchise" className="text-sm font-medium hover:text-accent-gold transition-colors opacity-80 hover:opacity-100">Partner Program</Link></li>
-              <li><Link href="/app" className="text-sm font-medium hover:text-accent-gold transition-colors opacity-80 hover:opacity-100">App Dashboard</Link></li>
+              {['Home', 'The ₹20/₹50 Menu', 'Our Story', 'Adda Locations', 'App', 'Franchise OS'].map((link) => (
+                <li key={link}>
+                  <Link href={`/${link.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} className="text-lg font-bold uppercase tracking-widest hover:text-saffron-yellow transition-colors hover:translate-x-2 inline-block">
+                    {link}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Legal Links */}
-          <div className="space-y-8 md:pl-12">
-            <h4 className="text-[12px] font-bold opacity-40 uppercase tracking-[0.4em]">Legal</h4>
-            <ul className="space-y-4">
-              <li><Link href="/terms" className="text-sm font-medium hover:text-accent-gold transition-colors opacity-80 hover:opacity-100">Terms of Service</Link></li>
-              <li><Link href="/privacy" className="text-sm font-medium hover:text-accent-gold transition-colors opacity-80 hover:opacity-100">Privacy Policy</Link></li>
-              <li><Link href="/shipping" className="text-sm font-medium hover:text-accent-gold transition-colors opacity-80 hover:opacity-100">Shipping & Delivery</Link></li>
-              <li><Link href="/returns" className="text-sm font-medium hover:text-accent-gold transition-colors opacity-80 hover:opacity-100">Returns & Refunds</Link></li>
-              <li><Link href="/disclosure" className="text-sm font-medium hover:text-accent-gold transition-colors opacity-80 hover:opacity-100">Disclosures</Link></li>
-            </ul>
+          {/* Column 3: Legal & App Stores */}
+          <div className="space-y-12">
+            <div className="space-y-6">
+              <h4 className="text-2xl font-black text-saffron-yellow uppercase tracking-tight">Get The App</h4>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button className="flex items-center justify-center gap-3 bg-bg-cream text-espresso-brown rounded-2xl px-6 py-4 font-black uppercase tracking-widest hover:bg-saffron-yellow hover:scale-105 transition-all shadow-[4px_4px_0_0_#000]">
+                  <Smartphone size={24} />
+                  iOS
+                </button>
+                <button className="flex items-center justify-center gap-3 bg-bg-cream text-espresso-brown rounded-2xl px-6 py-4 font-black uppercase tracking-widest hover:bg-saffron-yellow hover:scale-105 transition-all shadow-[4px_4px_0_0_#000]">
+                  <Smartphone size={24} />
+                  Android
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-sm font-bold opacity-50 uppercase tracking-[0.2em]">Legal Hub</h4>
+              <ul className="flex flex-wrap gap-x-6 gap-y-2">
+                <li><Link href="/privacy" className="text-sm font-bold hover:text-saffron-yellow underline underline-offset-4 decoration-white/30">Privacy</Link></li>
+                <li><Link href="/terms" className="text-sm font-bold hover:text-saffron-yellow underline underline-offset-4 decoration-white/30">Terms</Link></li>
+                <li><Link href="/refund" className="text-sm font-bold hover:text-saffron-yellow underline underline-offset-4 decoration-white/30">Refund</Link></li>
+                <li><Link href="/shipping" className="text-sm font-bold hover:text-saffron-yellow underline underline-offset-4 decoration-white/30">Shipping</Link></li>
+                <li><Link href="/disclosure" className="text-sm font-bold hover:text-saffron-yellow underline underline-offset-4 decoration-white/30">Disclosure</Link></li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Payment Trust Banner */}
+        <div className="mb-16 bg-white/5 border border-white/10 rounded-[2rem] p-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3 text-saffron-yellow">
+              <CreditCard size={28} />
+              <span className="font-black uppercase tracking-widest">100% Secure Payments</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-6 opacity-80">
+              {['UPI', 'Paytm', 'PhonePe', 'Google Pay', 'Razorpay', 'RuPay', 'Visa', 'Mastercard'].map((method) => (
+                <span key={method} className="font-heading font-black text-xl italic tracking-tighter text-bg-cream px-3 py-1 bg-white/10 rounded-md">
+                  {method}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
-          <p className="text-[10px] font-bold opacity-30 uppercase tracking-[0.6em]">
-            © 2026 Janu Bhai Coffee Co. • Built for the Real India
+        <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
+          <p className="text-sm font-bold opacity-50 uppercase tracking-[0.2em]">
+            © {new Date().getFullYear()} Janu Bhai Coffee. Ekdum Jhakaas.
           </p>
-          <div className="flex gap-8 opacity-30 text-[10px] font-bold uppercase tracking-widest">
-            <span>FSSAI Certified</span>
-            <span>Premium AAA Grade</span>
+          <div className="flex items-center gap-4 text-sm font-bold opacity-50 uppercase tracking-widest">
+            <span>Made in Delhi</span>
           </div>
         </div>
       </div>

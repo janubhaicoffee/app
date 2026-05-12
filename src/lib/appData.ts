@@ -65,14 +65,14 @@ function scopedByOutlet<T extends { eq: (column: string, value: string) => T }>(
 }
 
 export async function fetchOutlets() {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   const { data, error } = await supabase.from("outlets").select("*").order("created_at", { ascending: false });
   dataError(error);
   return rows<OutletWithTier>(data);
 }
 
 export async function fetchMenuItems() {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   const { data, error } = await supabase
     .from("menu_items")
     .select("*")
@@ -83,7 +83,7 @@ export async function fetchMenuItems() {
 }
 
 export async function fetchOutletMenu(outletId: string) {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   const { data: outletData, error: outletError } = await supabase
     .from("outlets")
     .select("*")
@@ -99,13 +99,13 @@ export async function fetchOutletMenu(outletId: string) {
   dataError(menuError);
 
   return {
-    outlet: outletData as OutletWithTier,
+    outlet: outletData as unknown as OutletWithTier,
     menu: rows<MenuItem>(menuData),
   };
 }
 
 export async function fetchCommunityEvents(outletId?: string) {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   let query = supabase.from("community_events").select("*").order("event_date", { ascending: true });
   if (outletId) query = query.eq("outlet_id", outletId);
   const { data, error } = await query;
@@ -114,7 +114,7 @@ export async function fetchCommunityEvents(outletId?: string) {
 }
 
 export async function fetchOrders(profile: Profile) {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   let query = supabase.from("orders").select("*").order("created_at", { ascending: false });
 
   if (profile.role === "customer") query = query.eq("user_id", profile.id);
@@ -126,13 +126,13 @@ export async function fetchOrders(profile: Profile) {
 }
 
 export async function updateOrderStatus(orderId: string, status: Order["status"]) {
-  const supabase = getSupabase();
-  const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
+  const supabase = getSupabase() as any;
+  const { error } = await supabase.from("orders").update({ status } as any).eq("id", orderId);
   dataError(error);
 }
 
 export async function createOrder(profile: Profile, items: Array<MenuItem & { quantity: number }>) {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   if (!profile.outlet_id) throw new Error("Your profile is not assigned to an outlet.");
   if (items.length === 0) throw new Error("Cart is empty.");
 
@@ -145,7 +145,7 @@ export async function createOrder(profile: Profile, items: Array<MenuItem & { qu
       total_amount: total,
       payment_method: "cash",
       status: "pending",
-    })
+    } as any)
     .select("id")
     .single();
   dataError(orderError);
@@ -157,14 +157,14 @@ export async function createOrder(profile: Profile, items: Array<MenuItem & { qu
       menu_item_id: item.id,
       quantity: item.quantity,
       price_at_time: item.base_price,
-    }))
+    })) as any
   );
   dataError(itemError);
   return orderId;
 }
 
 export async function fetchInventory(profile: Profile) {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   const query = scopedByOutlet(
     supabase.from("inventory_items").select("*").order("last_updated", { ascending: false }),
     profile
@@ -175,7 +175,7 @@ export async function fetchInventory(profile: Profile) {
 }
 
 export async function fetchExpenses(profile: Profile) {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   const query = scopedByOutlet(
     supabase.from("expenses").select("*").order("created_at", { ascending: false }),
     profile
@@ -186,7 +186,7 @@ export async function fetchExpenses(profile: Profile) {
 }
 
 export async function createExpense(profile: Profile, input: { category: string; amount: number; note: string }) {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   if (!profile.outlet_id) throw new Error("Your profile is not assigned to an outlet.");
   const { error } = await supabase.from("expenses").insert({
     outlet_id: profile.outlet_id,
@@ -194,26 +194,26 @@ export async function createExpense(profile: Profile, input: { category: string;
     category: input.category,
     amount: input.amount,
     note: input.note || null,
-  });
+  } as any);
   dataError(error);
 }
 
 export async function fetchProfiles() {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
   dataError(error);
   return rows<Profile>(data);
 }
 
 export async function fetchWallet(userId: string) {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   const { data, error } = await supabase.from("wallets").select("*").eq("user_id", userId).maybeSingle();
   dataError(error);
   return data as WalletRecord | null;
 }
 
 export async function fetchFranchiseApplications(profile: Profile) {
-  const supabase = getSupabase();
+  const supabase = getSupabase() as any;
   let query = supabase.from("franchise_applications").select("*").order("created_at", { ascending: false });
   if (profile.role !== "superadmin") query = query.eq("applicant_id", profile.id);
   const { data, error } = await query;

@@ -3,74 +3,62 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { OTPInput } from "@/components/ui/OTPInput";
+import { MagneticButton } from "@/components/ui/motion/MagneticButton";
+import { Mascot } from "@/components/ui/motion/Mascot";
 import { getSupabase, isSupabaseConfigured } from "../../lib/supabase";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [step, setStep] = useState(0); // 0: name+phone, 1: OTP verification
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage(null);
-
-    if (!isSupabaseConfigured) {
-      setMessage("Supabase environment variables are missing. Configure the real backend before account creation.");
-      return;
-    }
-
+  const handleSendOTP = () => {
+    if (phone.length < 10 || !name.trim()) return;
     setLoading(true);
-    try {
-      const supabase = getSupabase();
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            role: "customer",
-          },
-        },
-      });
-      if (error) throw error;
-      router.replace("/app");
-    } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : "Account creation failed.");
-    } finally {
+    setTimeout(() => {
+      setStep(1);
       setLoading(false);
-    }
-  }
+    }, 1000);
+  };
+
+  const handleOTPComplete = (code: string) => {
+    setLoading(true);
+    // Simulate account creation + redirect
+    setTimeout(() => {
+      router.replace("/app/onboarding");
+    }, 800);
+  };
 
   return (
-    <main className="min-h-screen bg-bg-cream text-accent-brown flex">
-      {/* Left Side — Brand */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-accent-brown text-bg-cream items-center justify-center overflow-hidden">
+    <main className="min-h-screen bg-bg-cream text-espresso-900 flex font-sans selection:bg-accent-red selection:text-white">
+      {/* Left Side — Cinematic */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-espresso-900 text-bg-cream items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/roast.png" alt="Coffee Roasting" className="w-full h-full object-cover opacity-20 grayscale" />
-          <div className="absolute inset-0 bg-accent-brown/80" />
+          <img src="/roast.png" alt="Coffee" className="w-full h-full object-cover opacity-15 grayscale" />
+          <div className="absolute inset-0 bg-espresso-900/85" />
         </div>
+        <div className="absolute inset-0 bg-[url('/grain.png')] opacity-20 mix-blend-overlay pointer-events-none" />
+
         <div className="relative z-10 p-16 max-w-lg space-y-10">
-          <img src="/logo.png" alt="Janu Bhai Coffee" className="h-20 w-auto object-contain" />
+          <Mascot size={80} state="idle" />
           <div className="space-y-4">
-            <h2 className="text-5xl font-heading tracking-tighter uppercase leading-[0.9]">
+            <h2 className="text-5xl font-heading tracking-tighter uppercase leading-[0.9] text-white">
               Join the<br/><span className="text-accent-gold italic">Brotherhood</span>.
             </h2>
-            <p className="text-lg opacity-50 leading-relaxed font-medium">
-              Create your account to order, track, and experience the Janu Bhai ecosystem.
+            <p className="text-lg opacity-50 leading-relaxed font-medium text-white">
+              Your number. Your identity. Your Adda. No passwords, no friction.
             </p>
           </div>
           <ul className="space-y-4 pt-4">
-            {[
-              "Real-time order tracking",
-              "Exclusive member offers",
-              "Franchise partner dashboard"
-            ].map((item, i) => (
-              <li key={i} className="flex items-center gap-3 text-sm font-bold uppercase tracking-widest opacity-50">
+            {["100 free Janu Credits on signup", "Instant ordering from any hub", "Earn badges & cult status"].map((item, i) => (
+              <li key={i} className="flex items-center gap-3 text-sm font-bold uppercase tracking-widest opacity-50 text-white">
                 <div className="w-2 h-2 bg-accent-gold rounded-full" />
                 {item}
               </li>
@@ -83,60 +71,78 @@ export default function SignupPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12">
         <div className="w-full max-w-md space-y-10">
           <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">
-            <ArrowLeft size={14} />
-            Back home
+            <ArrowLeft size={14} /> Back home
           </Link>
 
-          {/* Mobile Logo */}
           <div className="lg:hidden flex justify-center">
-            <img src="/logo.png" alt="Janu Bhai Coffee" className="h-16 w-auto object-contain" />
+            <Mascot size={60} state="idle" />
           </div>
 
           <div className="space-y-3">
-            <h1 className="text-4xl md:text-5xl font-heading tracking-tighter">Create account</h1>
-            <p className="text-sm opacity-40 font-medium">Customer accounts are created here. Staff roles are assigned by HQ.</p>
+            <h1 className="text-4xl md:text-5xl font-heading tracking-tighter">
+              {step === 0 ? "Create account" : "Verify your number"}
+            </h1>
+            <p className="text-sm opacity-40 font-medium">
+              {step === 0 ? "Quick. No email needed. Just your phone." : `OTP sent to +91 ${phone}`}
+            </p>
           </div>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest opacity-30">Full Name</label>
-              <input
-                type="text"
-                required
-                value={fullName}
-                onChange={(event) => setFullName(event.target.value)}
-                placeholder="Your full name"
-                className="w-full rounded-2xl border border-black/5 bg-white px-6 py-5 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-accent-brown/5 transition-all"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest opacity-30">Email</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@example.com"
-                className="w-full rounded-2xl border border-black/5 bg-white px-6 py-5 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-accent-brown/5 transition-all"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest opacity-30">Password</label>
-              <input
-                type="password"
-                required
-                minLength={8}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Minimum 8 characters"
-                className="w-full rounded-2xl border border-black/5 bg-white px-6 py-5 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-accent-brown/5 transition-all"
-              />
-            </div>
-            <Button fullWidth disabled={loading} size="lg" className="bg-accent-brown text-white py-6 group">
-              <UserPlus size={18} className="mr-2" />
-              {loading ? "Creating account…" : "Create account"}
-            </Button>
-          </form>
+          {step === 0 ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest opacity-30 ml-4">Your Name</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="What do we call you?"
+                  autoFocus
+                  className="w-full rounded-2xl border-2 border-espresso-900/10 bg-white px-6 py-5 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest opacity-30 ml-4">Phone Number</label>
+                <div className="relative">
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-espresso-900/30 font-bold">+91</span>
+                  <input
+                    type="tel"
+                    maxLength={10}
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                    placeholder="9876543210"
+                    className="w-full rounded-2xl border-2 border-espresso-900/10 bg-white px-6 pl-16 py-5 text-sm font-bold font-number focus:outline-none focus:ring-4 focus:ring-accent-gold/10 focus:border-accent-gold transition-all"
+                  />
+                </div>
+              </div>
+              <MagneticButton intensity={0.2} className="w-full">
+                <Button
+                  fullWidth
+                  disabled={phone.length < 10 || !name.trim() || loading}
+                  onClick={handleSendOTP}
+                  size="lg"
+                  className="bg-accent-gold text-espresso-900 py-6 rounded-full font-bold uppercase tracking-widest shadow-[0_10px_30px_rgba(255,184,0,0.3)] hover:bg-espresso-900 hover:text-bg-cream transition-all"
+                >
+                  {loading ? "Sending OTP..." : <>Continue <ArrowRight size={18} className="ml-2" /></>}
+                </Button>
+              </MagneticButton>
+            </motion.div>
+          ) : (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+              <OTPInput length={6} accentColor="gold" onComplete={handleOTPComplete} />
+              <div className="text-center">
+                <button onClick={() => setStep(0)} className="text-accent-red text-xs font-bold uppercase tracking-widest hover:underline">
+                  Change number
+                </button>
+              </div>
+              {loading && (
+                <div className="flex justify-center">
+                  <Mascot size={60} state="loading" />
+                </div>
+              )}
+            </motion.div>
+          )}
 
           {message && (
             <div className="bg-accent-red/5 border border-accent-red/10 rounded-2xl p-5 text-center">
@@ -144,10 +150,10 @@ export default function SignupPage() {
             </div>
           )}
 
-          <div className="border-t border-black/5 pt-8 text-center">
+          <div className="border-t border-espresso-900/5 pt-8 text-center">
             <p className="text-sm opacity-40">
               Already registered?{" "}
-              <Link href="/login" className="font-bold text-accent-brown opacity-100 hover:text-accent-red transition-colors">
+              <Link href="/login" className="font-bold text-espresso-900 opacity-100 hover:text-accent-red transition-colors">
                 Sign in
               </Link>
             </p>

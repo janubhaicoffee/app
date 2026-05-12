@@ -5,25 +5,25 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { 
   ShoppingBag, 
-  ChevronRight, 
-  Search,
-  Clock,
-  CheckCircle2,
   Trash2,
-  Coffee
+  Coffee,
+  CheckCircle2,
+  Wallet,
+  QrCode,
+  Banknote
 } from 'lucide-react';
+import { RoleGuard } from '@/components/ui/RoleGuard';
+import { motion, AnimatePresence } from 'framer-motion';
+import { formatINR } from '@/lib/utils/currency';
 
 const MENU_ITEMS = [
-  { id: '1', name: 'Signature Cold Brew', category: 'Coffee', price: 180, img: 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=400&q=80' },
-  { id: '2', name: 'Masala Chai Latte', category: 'Tea', price: 120, img: 'https://images.unsplash.com/photo-1544787210-2827448636b2?auto=format&fit=crop&w=400&q=80' },
-  { id: '3', name: 'Filter Coffee', category: 'Coffee', price: 90, img: 'https://images.unsplash.com/photo-1541167760496-162955ed8a9f?auto=format&fit=crop&w=400&q=80' },
-  { id: '4', name: 'Paneer Tikka Sandwich', category: 'Snacks', price: 220, img: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=400&q=80' },
-  { id: '5', name: 'Vietnamese Iced Coffee', category: 'Coffee', price: 240, img: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=400&q=80' },
+  { id: 'hot-coffee', name: 'HOT COFFEE', price: 20, type: 'hot', color: 'bg-accent-red', text: 'text-white' },
+  { id: 'cold-coffee', name: 'COLD COFFEE', price: 50, type: 'cold', color: 'bg-accent-yellow', text: 'text-accent-brown' },
 ];
 
 export default function POSTerminal() {
   const [cart, setCart] = useState<{id: string, name: string, price: number, qty: number}[]>([]);
-  const [view, setView] = useState<'pos' | 'kds'>('pos');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const addToCart = (item: typeof MENU_ITEMS[0]) => {
     setCart(prev => {
@@ -33,144 +33,157 @@ export default function POSTerminal() {
     });
   };
 
+  const updateQty = (id: string, delta: number) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQty = Math.max(0, item.qty + delta);
+        return { ...item, qty: newQty };
+      }
+      return item;
+    }).filter(item => item.qty > 0));
+  };
+
+  const clearCart = () => setCart([]);
+
+  const handleCheckout = (method: string) => {
+    if (cart.length === 0) return;
+    
+    // Simulate checkout
+    setIsSuccess(true);
+    setTimeout(() => {
+      setIsSuccess(false);
+      clearCart();
+    }, 1500);
+  };
+
   const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
 
   return (
-    <div className="h-[calc(100vh-120px)] flex flex-col gap-6 animate-in fade-in duration-500">
-      <header className="flex justify-between items-center bg-white p-4 rounded-3xl shadow-sm border border-black/5">
-        <div className="flex gap-2">
-          <Button 
-            variant={view === 'pos' ? 'primary' : 'ghost'} 
-            className="text-[10px] font-bold uppercase tracking-widest rounded-xl"
-            onClick={() => setView('pos')}
-          >
-            Terminal
-          </Button>
-          <Button 
-            variant={view === 'kds' ? 'primary' : 'ghost'} 
-            className="text-[10px] font-bold uppercase tracking-widest rounded-xl"
-            onClick={() => setView('kds')}
-          >
-            Kitchen Display
-          </Button>
-        </div>
-        <div className="text-right">
-          <p className="text-[8px] font-bold opacity-30 uppercase tracking-widest">Okhla Terminal A</p>
-          <p className="text-xs font-bold">10:42 AM</p>
-        </div>
-      </header>
+    <RoleGuard allowedRoles={["cashier", "manager", "outlet_owner", "superadmin"]}>
+      <div className="h-[calc(100vh-140px)] flex gap-6 relative">
+        
+        {/* Success Overlay Animation */}
+        <AnimatePresence>
+          {isSuccess && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.1 }}
+              className="absolute inset-0 z-50 bg-accent-green text-white rounded-[40px] flex flex-col items-center justify-center shadow-2xl"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.2 }}
+              >
+                <CheckCircle2 size={120} strokeWidth={3} className="mb-6 drop-shadow-xl" />
+              </motion.div>
+              <h1 className="text-6xl font-heading font-black tracking-tighter uppercase drop-shadow-lg">Order Paid</h1>
+              <p className="text-xl font-bold mt-4 opacity-80 uppercase tracking-widest">Clearing Terminal...</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {view === 'pos' ? (
-        <div className="flex-1 flex gap-6 overflow-hidden">
-          {/* Menu Selection */}
-          <div className="flex-1 space-y-6 overflow-y-auto pr-2">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 opacity-20" size={18} />
-              <input type="text" placeholder="Search menu..." className="w-full bg-white border border-black/5 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-accent-brown/10" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {MENU_ITEMS.map((item) => (
-                <Card 
-                  key={item.id} 
-                  pressEffect 
-                  className="p-0 overflow-hidden flex flex-col h-56 bg-white hover:border-accent-brown/20 group"
-                  onClick={() => addToCart(item)}
-                >
-                  <div className="h-24 overflow-hidden relative">
-                    <img src={item.img} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-white/90 backdrop-blur rounded-lg text-[8px] font-bold uppercase tracking-widest text-accent-brown">
-                      {item.category}
-                    </div>
-                  </div>
-                  <div className="p-4 flex-1 flex flex-col justify-between">
-                    <h4 className="text-sm font-heading leading-tight">{item.name}</h4>
-                    <p className="text-lg text-number">₹{item.price}</p>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Cart Sidebar */}
-          <div className="w-80 flex flex-col gap-4">
-            <Card glass className="flex-1 flex flex-col p-6 border-accent-brown/10 rounded-[32px]">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-heading">Order Info</h3>
-                <ShoppingBag className="opacity-20" size={20} />
-              </div>
-
-              <div className="flex-1 space-y-4 overflow-y-auto">
-                {cart.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center opacity-20 gap-3 text-center">
-                    <Coffee size={40} />
-                    <p className="text-[10px] font-bold uppercase tracking-widest">Cart is Empty</p>
-                  </div>
-                ) : (
-                  cart.map((item) => (
-                    <div key={item.id} className="flex justify-between items-center animate-in slide-in-from-right-4">
-                      <div className="space-y-0.5">
-                        <h5 className="text-xs font-bold">{item.name}</h5>
-                        <p className="text-[10px] opacity-40">₹{item.price} × {item.qty}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button className="p-1 hover:bg-black/5 rounded" onClick={() => setCart(prev => prev.filter(i => i.id !== item.id))}>
-                          <Trash2 size={12} className="text-accent-red opacity-40" />
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="pt-6 mt-6 border-t border-black/5 space-y-4">
-                <div className="flex justify-between items-end">
-                  <span className="text-[10px] font-bold opacity-30 uppercase tracking-[0.3em]">Total Amount</span>
-                  <span className="text-3xl text-number">₹{total}</span>
+        {/* LEFT: Menu Board */}
+        <div className="flex-[2] flex flex-col gap-6">
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">Menu Board</h2>
+          <div className="flex-1 grid grid-cols-1 gap-6">
+            {MENU_ITEMS.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => addToCart(item)}
+                className={`w-full flex-1 rounded-[40px] flex flex-col items-center justify-center transition-transform hover:scale-[1.02] active:scale-95 shadow-xl border-4 border-black/10 ${item.color} ${item.text}`}
+              >
+                <Coffee size={80} strokeWidth={3} className="mb-6 opacity-80" />
+                <h2 className="text-5xl md:text-7xl font-heading font-black tracking-tighter leading-none mb-4">{item.name}</h2>
+                <div className="bg-white/20 px-6 py-2 rounded-full backdrop-blur-md">
+                  <span className="text-3xl font-bold tracking-widest">{formatINR(item.price)}</span>
                 </div>
-                <Button fullWidth size="lg" className="py-5 bg-accent-brown text-white shadow-xl rounded-2xl flex justify-between items-center px-6">
-                  Checkout
-                  <ChevronRight size={18} />
-                </Button>
-              </div>
-            </Card>
+              </button>
+            ))}
           </div>
         </div>
-      ) : (
-        <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-6 overflow-y-auto">
-          {[
-            { id: '#892', type: 'DINE-IN', time: '4m', items: ['2x Cold Brew', '1x Paneer Sandwich'], status: 'preparing' },
-            { id: '#891', type: 'TAKEAWAY', time: '12m', items: ['1x Hot Latte'], status: 'ready' },
-            { id: '#890', type: 'ONLINE', time: '15m', items: ['3x Cold Brew'], status: 'preparing' },
-          ].map((order, i) => (
-            <Card key={i} glass className={`p-6 flex flex-col h-fit border-l-4 ${order.status === 'ready' ? 'border-l-accent-green' : 'border-l-accent-brown'} rounded-[32px]`}>
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h4 className="text-2xl font-heading leading-none">{order.id}</h4>
-                  <span className="text-[8px] font-bold opacity-40 uppercase tracking-widest">{order.type}</span>
+
+        {/* CENTER: Order Ledger */}
+        <div className="flex-[1.5] flex flex-col gap-6">
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">Order Ledger</h2>
+          <Card className="flex-1 flex flex-col bg-white border-4 border-accent-brown shadow-[8px_8px_0_0_#4A3022] rounded-[32px] overflow-hidden">
+            <div className="bg-accent-brown text-white p-6 flex justify-between items-center">
+              <h3 className="text-2xl font-heading uppercase">Current Ticket</h3>
+              <ShoppingBag size={24} className="opacity-50" />
+            </div>
+
+            <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-bg-cream">
+              {cart.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center opacity-30 gap-4">
+                  <Coffee size={64} />
+                  <p className="font-bold uppercase tracking-widest">Ticket Empty</p>
                 </div>
-                <div className="flex items-center gap-1 opacity-40">
-                  <Clock size={12} />
-                  <span className="text-[10px] font-bold">{order.time}</span>
-                </div>
+              ) : (
+                cart.map((item) => (
+                  <div key={item.id} className="flex flex-col bg-white p-4 rounded-2xl border-2 border-black/5 shadow-sm">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="text-lg font-bold uppercase tracking-tight">{item.name}</h4>
+                      <span className="text-lg font-bold">{formatINR(item.price * item.qty)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-4 bg-bg-cream rounded-xl p-1 border border-black/5">
+                        <button onClick={() => updateQty(item.id, -1)} className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm font-bold text-xl hover:bg-accent-red hover:text-white transition-colors">-</button>
+                        <span className="w-6 text-center font-bold text-xl">{item.qty}</span>
+                        <button onClick={() => updateQty(item.id, 1)} className="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm font-bold text-xl hover:bg-accent-green hover:text-white transition-colors">+</button>
+                      </div>
+                      <button onClick={() => updateQty(item.id, -item.qty)} className="p-3 text-accent-red hover:bg-accent-red/10 rounded-xl transition-colors">
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-6 bg-white border-t-4 border-black/5">
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-xs font-bold uppercase tracking-widest opacity-40">Grand Total</span>
+                <span className="text-5xl font-black tracking-tighter text-accent-brown">{formatINR(total)}</span>
               </div>
-
-              <ul className="flex-1 space-y-3 mb-8">
-                {order.items.map((item, j) => (
-                  <li key={j} className="text-sm font-medium flex items-center gap-2">
-                    <div className="w-1 h-1 bg-black/20 rounded-full" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <Button fullWidth className={order.status === 'ready' ? 'bg-accent-green/10 text-accent-green' : 'bg-accent-brown text-white'}>
-                {order.status === 'ready' ? <CheckCircle2 size={18} /> : 'Mark as Ready'}
-              </Button>
-            </Card>
-          ))}
+            </div>
+          </Card>
         </div>
-      )}
-    </div>
+
+        {/* RIGHT: Payment Actions */}
+        <div className="flex-[1] flex flex-col gap-6">
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">Payment</h2>
+          <div className="flex-1 flex flex-col gap-4">
+            <button 
+              onClick={() => handleCheckout('CASH')}
+              disabled={cart.length === 0}
+              className="flex-1 flex flex-col items-center justify-center bg-accent-green text-white rounded-[32px] border-4 border-black/10 shadow-[4px_4px_0_0_#000] disabled:opacity-50 disabled:grayscale transition-transform hover:translate-y-1 hover:shadow-none"
+            >
+              <Banknote size={48} className="mb-4" />
+              <span className="text-3xl font-heading font-black uppercase">CASH</span>
+            </button>
+
+            <button 
+              onClick={() => handleCheckout('UPI')}
+              disabled={cart.length === 0}
+              className="flex-1 flex flex-col items-center justify-center bg-white text-accent-brown rounded-[32px] border-4 border-accent-brown shadow-[4px_4px_0_0_#4A3022] disabled:opacity-50 transition-transform hover:translate-y-1 hover:shadow-none"
+            >
+              <QrCode size={48} className="mb-4 text-accent-brown" />
+              <span className="text-2xl font-heading font-black uppercase">UPI / QR</span>
+            </button>
+
+            <button 
+              onClick={() => handleCheckout('WALLET')}
+              disabled={cart.length === 0}
+              className="flex-1 flex flex-col items-center justify-center bg-accent-yellow text-accent-brown rounded-[32px] border-4 border-accent-brown shadow-[4px_4px_0_0_#4A3022] disabled:opacity-50 transition-transform hover:translate-y-1 hover:shadow-none"
+            >
+              <Wallet size={48} className="mb-4" />
+              <span className="text-2xl font-heading font-black uppercase text-center">LOYALTY<br/>WALLET</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </RoleGuard>
   );
 }

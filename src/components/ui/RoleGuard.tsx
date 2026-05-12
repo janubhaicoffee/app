@@ -1,46 +1,50 @@
 "use client";
 
-import React from 'react';
-import { useAuth } from '@/context/AuthContext';
-import type { UserRole } from '@/lib/roles';
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import type { UserRole } from "@/lib/roles";
+import { ShieldAlert } from "lucide-react";
 
 interface RoleGuardProps {
-  children: React.ReactNode;
   allowedRoles: UserRole[];
-  fallback?: React.ReactNode;
+  children: React.ReactNode;
+  fallbackRoute?: string;
 }
 
-export const RoleGuard: React.FC<RoleGuardProps> = ({ children, allowedRoles, fallback }) => {
-  const { profile } = useAuth();
+export function RoleGuard({ allowedRoles, children, fallbackRoute = "/app/home" }: RoleGuardProps) {
+  const { profile, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && profile) {
+      if (!allowedRoles.includes(profile.role)) {
+        router.replace(fallbackRoute);
+      }
+    }
+  }, [loading, profile, allowedRoles, fallbackRoute, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-accent-brown/20 border-t-accent-red rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!profile || !allowedRoles.includes(profile.role)) {
     return (
-      fallback || (
-        <div className="error-screen animate-fade-in">
-          <div className="error-icon">🔒</div>
-          <h2 className="error-title">Access Restricted</h2>
-          <p className="error-desc">
-            You don't have permission to view this section. 
-            Please contact your administrator if you think this is a mistake.
-          </p>
-          <button 
-            className="btn btn-primary"
-            onClick={() => window.history.back()}
-          >
-            Go Back
-          </button>
+      <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4 text-center p-6">
+        <div className="w-16 h-16 bg-accent-red/10 text-accent-red rounded-full flex items-center justify-center">
+          <ShieldAlert size={32} />
         </div>
-      )
+        <h2 className="text-2xl font-heading text-accent-brown">Access Restricted</h2>
+        <p className="text-sm opacity-60 max-w-sm">
+          Redirecting to your authorized workspace...
+        </p>
+      </div>
     );
   }
 
   return <>{children}</>;
-};
-
-export const AccessRestricted = () => (
-  <div className="error-screen animate-fade-in">
-    <div className="error-icon">🚫</div>
-    <h2 className="error-title">Unauthorized</h2>
-    <p className="error-desc">This action is not allowed for your role.</p>
-  </div>
-);
+}

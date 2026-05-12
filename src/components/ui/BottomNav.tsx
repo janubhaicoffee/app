@@ -40,7 +40,7 @@ export const BottomNav = () => {
       case 'customer':
         return [
           { label: 'Home', icon: <Home size={22} />, path: '/app/home' },
-          { label: 'Cart', icon: <ClipboardList size={22} />, path: '/app/cart' },
+          { label: 'Wallet', icon: <Wallet size={22} />, path: '/app/wallet' },
           { label: 'Profile', icon: <Package size={22} />, path: '/app/profile' },
           { label: 'More', icon: <MoreHorizontal size={22} />, path: '/app/settings' },
         ];

@@ -1,19 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MapPin, Menu, X } from 'lucide-react';
-import { Button } from './Button';
-import { useAuth } from '@/context/AuthContext';
+import { Menu, X, User, Lock } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
 import { MagneticButton } from './motion/MagneticButton';
 import { Mascot } from './motion/Mascot';
 
 export const Navbar = () => {
   const pathname = usePathname();
-  const { session } = useAuth();
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const { scrollY } = useScroll();
   const [hidden, setHidden] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -29,10 +26,11 @@ export const Navbar = () => {
   });
 
   const navLinks = [
-    { name: 'Our Story', href: '/#story' },
-    { name: 'About', href: '/about' },
-    { name: 'Our Source', href: '/source' },
-    { name: 'Franchise', href: '/franchise' },
+    { name: 'Home', href: '/' },
+    { name: 'The ₹20/₹50 Menu', href: '/#menu' },
+    { name: 'Our Story', href: '/about' },
+    { name: 'Adda Locations', href: '/locations' },
+    { name: 'App', href: '/app-download' },
   ];
 
   return (
@@ -43,103 +41,106 @@ export const Navbar = () => {
       }}
       animate={hidden ? "hidden" : "visible"}
       transition={{ duration: 0.35, ease: "easeInOut" }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled ? "py-4" : "py-6"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled ? "py-2" : "py-4"
       }`}
     >
-      <div className={`max-w-7xl mx-auto px-6 flex items-center justify-between rounded-full transition-all duration-500 ${
-        isScrolled ? "bg-espresso-900/80 backdrop-blur-xl border border-white/10 shadow-2xl py-3 px-8 text-white" : "bg-transparent text-current"
+      <div className={`max-w-[95%] mx-auto px-6 flex items-center justify-between rounded-full border-4 border-espresso-brown transition-all duration-300 ${
+        isScrolled ? "bg-bg-cream/95 backdrop-blur-md shadow-[8px_8px_0_0_#4A3022] py-2" : "bg-bg-cream shadow-[4px_4px_0_0_#4A3022] py-3"
       }`}>
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group relative z-50">
-          <Mascot size={isScrolled ? 48 : 64} floating={!isScrolled} className="transition-all duration-500" />
+        
+        {/* Left: Logo */}
+        <Link href="/" className="flex items-center gap-3 group relative z-50">
+          <Mascot size={isScrolled ? 40 : 50} state="idle" className="transition-all duration-300 drop-shadow-md" />
+          <span className="font-heading font-black text-2xl uppercase tracking-tighter text-espresso-brown hidden sm:block">Janu Bhai</span>
         </Link>
 
-        {/* Desktop Links */}
-        <div className="hidden md:flex items-center gap-8">
+        {/* Center: Desktop Links */}
+        <div className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
             <Link 
               key={link.name} 
               href={link.href}
-              className="text-xs font-bold uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-opacity"
+              className="text-sm font-bold uppercase tracking-widest text-espresso-brown hover:text-saffron-yellow hover:-translate-y-1 transition-all duration-200"
             >
               {link.name}
             </Link>
           ))}
-          
-          <div className={`h-4 w-px mx-2 ${isScrolled ? 'bg-white/20' : 'bg-black/10'}`} />
+        </div>
 
-          {session ? (
-            <Link 
-              href="/app"
-              className="text-xs font-bold uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-opacity"
-            >
-              Dashboard
+        {/* Right: Dual Ecosystem Login */}
+        <div className="hidden lg:flex items-center gap-3">
+          <MagneticButton intensity={0.1}>
+            <Link href="/login" className="flex items-center gap-2 bg-saffron-yellow text-espresso-brown font-black uppercase tracking-widest px-6 h-12 border-2 border-espresso-brown rounded-full hover:bg-espresso-brown hover:text-saffron-yellow transition-colors shadow-[2px_2px_0_0_#4A3022]">
+              <User size={18} strokeWidth={3} />
+              Customer Login
             </Link>
-          ) : (
-            <Link 
-              href="/login"
-              className="text-xs font-bold uppercase tracking-[0.2em] opacity-60 hover:opacity-100 transition-opacity"
-            >
-              Sign In
-            </Link>
-          )}
+          </MagneticButton>
 
-          <Link href="https://maps.app.goo.gl/yP6L8y2TYHkexmVj6" target="_blank">
-            <MagneticButton intensity={0.2}>
-              <Button variant="secondary" className="bg-accent-red text-white gap-2 px-6 shadow-xl shadow-accent-red/20">
-                <MapPin size={16} />
-                Get Directions
-              </Button>
-            </MagneticButton>
-          </Link>
+          <MagneticButton intensity={0.1}>
+            <Link href="/franchise-login" className="flex items-center gap-2 bg-vibrant-red text-white font-black uppercase tracking-widest px-6 h-12 border-2 border-espresso-brown rounded-full hover:bg-espresso-brown hover:text-vibrant-red transition-colors shadow-[2px_2px_0_0_#4A3022]">
+              <Lock size={18} strokeWidth={3} />
+              Franchise OS
+            </Link>
+          </MagneticButton>
         </div>
 
         {/* Mobile Toggle */}
         <button 
-          className="md:hidden p-2 opacity-60 hover:opacity-100 transition-opacity z-50 relative"
+          className="lg:hidden p-2 text-espresso-brown hover:text-vibrant-red transition-colors z-50 relative"
           onClick={() => setIsOpen(!isOpen)}
         >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
+          {isOpen ? <X size={32} strokeWidth={3} /> : <Menu size={32} strokeWidth={3} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu (Full Screen Vibrant Yellow) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="md:hidden fixed inset-0 z-40 bg-espresso-900/95 backdrop-blur-2xl text-white flex items-center justify-center p-6"
+            initial={{ opacity: 0, y: "-100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "-100%" }}
+            transition={{ type: "spring", damping: 20, stiffness: 100 }}
+            className="lg:hidden fixed inset-0 z-40 bg-saffron-yellow flex flex-col pt-32 px-6 pb-12 overflow-y-auto"
           >
-            <div className="flex flex-col items-center gap-10 w-full max-w-sm">
-              <Mascot size={100} />
-              
-              <div className="flex flex-col items-center gap-8 w-full">
-                {navLinks.map((link) => (
+            <div className="flex flex-col gap-6 w-full">
+              {navLinks.map((link, i) => (
+                <motion.div
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  key={link.name}
+                >
                   <Link 
-                    key={link.name} 
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className="text-xl font-heading font-bold uppercase tracking-[0.2em] opacity-80 hover:opacity-100"
+                    className="text-4xl sm:text-5xl font-heading font-black uppercase tracking-tighter text-espresso-brown hover:text-vibrant-red transition-colors"
                   >
                     {link.name}
                   </Link>
-                ))}
-                <div className="h-px w-full bg-white/10" />
+                </motion.div>
+              ))}
+              
+              <div className="h-2 w-16 bg-espresso-brown my-8" />
+              
+              <div className="flex flex-col gap-4">
                 <Link 
-                  href={session ? "/app" : "/login"}
+                  href="/login"
                   onClick={() => setIsOpen(false)}
-                  className="text-xl font-heading font-bold uppercase tracking-[0.2em] opacity-80 hover:opacity-100"
+                  className="flex items-center justify-center gap-3 bg-bg-cream text-espresso-brown font-black uppercase tracking-widest py-5 border-4 border-espresso-brown shadow-[8px_8px_0_0_#4A3022] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
                 >
-                  {session ? "Dashboard" : "Sign In"}
+                  <User size={24} strokeWidth={3} />
+                  Customer Login
                 </Link>
-                <Link href="https://maps.app.goo.gl/yP6L8y2TYHkexmVj6" target="_blank" className="w-full mt-4">
-                  <Button variant="secondary" className="w-full bg-accent-red text-white gap-2 py-6 text-lg rounded-2xl">
-                    <MapPin size={20} />
-                    Get Directions
-                  </Button>
+
+                <Link 
+                  href="/franchise-login"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-center gap-3 bg-vibrant-red text-white font-black uppercase tracking-widest py-5 border-4 border-espresso-brown shadow-[8px_8px_0_0_#4A3022] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all"
+                >
+                  <Lock size={24} strokeWidth={3} />
+                  Franchise OS
                 </Link>
               </div>
             </div>

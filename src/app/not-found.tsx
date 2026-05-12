@@ -1,35 +1,49 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/Button";
+"use client";
+
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Mascot } from '@/components/ui/motion/Mascot';
+import { MagneticButton } from '@/components/ui/motion/MagneticButton';
+import { Button } from '@/components/ui/Button';
+import { ArrowLeft } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <main className="min-h-screen bg-bg-cream text-accent-brown flex flex-col items-center justify-center gap-8 p-6 text-center">
-      <div className="space-y-6">
-        <div className="relative mx-auto w-32 h-32">
-          <div className="absolute inset-0 rounded-full bg-accent-brown/5 animate-pulse" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img src="/favicon.png" alt="Janu Bhai Logo" className="w-16 h-16 object-contain" />
-          </div>
-        </div>
-        
-        <div className="space-y-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.4em] opacity-30">Error 404</p>
-          <h1 className="text-5xl md:text-6xl font-heading tracking-tighter uppercase">Page Not <span className="text-accent-red italic">Found</span></h1>
-        </div>
-        
-        <p className="max-w-sm text-sm opacity-40 font-medium mx-auto">
-          This route doesn't exist in the Janu Bhai ecosystem. It might have been moved or never existed.
+    <div className="min-h-screen bg-espresso-900 flex flex-col items-center justify-center p-8 font-sans selection:bg-accent-red selection:text-white text-center relative overflow-hidden">
+      {/* Grain overlay */}
+      <div className="absolute inset-0 bg-[url('/grain.png')] opacity-20 mix-blend-overlay pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 flex flex-col items-center gap-8 max-w-lg"
+      >
+        <Mascot size={160} state="peek" />
+
+        <h1 className="text-7xl md:text-9xl font-heading tracking-tighter uppercase text-accent-gold leading-none">
+          404
+        </h1>
+
+        <h2 className="text-2xl md:text-3xl font-heading tracking-tighter uppercase text-bg-cream leading-tight">
+          Adda Not Found.
+        </h2>
+
+        <p className="text-bg-cream/50 font-bold uppercase tracking-widest text-sm max-w-sm leading-relaxed">
+          Looks like you wandered into the wrong gully. Let's get you back to the coffee.
         </p>
-      </div>
-      
-      <div className="flex gap-4">
-        <Link href="/">
-          <Button className="bg-accent-brown text-white px-10">Back Home</Button>
-        </Link>
-        <Link href="/contact">
-          <Button variant="outline" className="px-10">Contact Us</Button>
-        </Link>
-      </div>
-    </main>
+
+        <MagneticButton intensity={0.3}>
+          <Link href="/">
+            <Button
+              size="lg"
+              className="bg-accent-gold text-espresso-900 hover:bg-white px-12 py-6 rounded-full font-bold uppercase tracking-widest shadow-[0_10px_40px_rgba(255,184,0,0.4)] transition-all flex items-center gap-3"
+            >
+              <ArrowLeft size={18} /> Back to the Adda
+            </Button>
+          </Link>
+        </MagneticButton>
+      </motion.div>
+    </div>
   );
 }

@@ -1,71 +1,45 @@
-"use client";
+import { LegalLayout } from '@/components/ui/LegalLayout';
 
-import { LegalPage } from '@/components/ui/LegalPage';
-import { Eye, Database, ShieldCheck, Cookie } from 'lucide-react';
-
-export default function PrivacyPage() {
+export default function PrivacyPolicy() {
   return (
-    <LegalPage
-      title="Privacy Policy"
-      lastUpdated="May 07, 2026"
-      content={
-        <div className="space-y-12">
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <Eye size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">1. Information Collection</h3>
-            </div>
-            <p>We collect information from you when you register on our site, place an order, or subscribe to our newsletter. This includes your name, email address, and phone number.</p>
-            <p>We may also collect device information, IP addresses, and browsing patterns to improve your experience on the Janu Bhai platform.</p>
-          </section>
+    <LegalLayout title="Privacy Policy" lastUpdated="April 1, 2026">
+      <p>
+        Welcome to Janu Bhai Coffee. This Privacy Policy describes how we collect, use, and handle your information when you use our website, mobile application, and services.
+      </p>
 
-          <div className="h-px bg-accent-brown/5" />
+      <h2>1. Information We Collect</h2>
+      <p>
+        When you use the Janu Bhai Coffee platform or app, we may collect:
+      </p>
+      <ul>
+        <li><strong>Personal Information:</strong> Name, phone number, email address, and delivery address.</li>
+        <li><strong>Financial Information:</strong> Payment details (processed securely via our payment gateways, not stored by us).</li>
+        <li><strong>Device Information:</strong> IP address, browser type, and operating system for security and analytics.</li>
+      </ul>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <Database size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">2. Data Usage</h3>
-            </div>
-            <p>The information we collect may be used to:</p>
-            <ul className="space-y-2 pl-6 list-disc marker:text-accent-red">
-              <li>Personalize your experience and respond to your individual needs</li>
-              <li>Improve our website based on your feedback</li>
-              <li>Process transactions securely through our payment partners</li>
-              <li>Send periodic emails regarding your order or other products and services</li>
-            </ul>
-          </section>
+      <h2>2. How We Use Your Information</h2>
+      <p>We use your data to:</p>
+      <ul>
+        <li>Process your coffee orders and maintain your wallet balance.</li>
+        <li>Communicate with you regarding orders, support, and promotional offers.</li>
+        <li>Improve our Adda experiences and app performance.</li>
+        <li>Prevent fraud and ensure compliance with our terms.</li>
+      </ul>
 
-          <div className="h-px bg-accent-brown/5" />
+      <h2>3. Data Sharing and Security</h2>
+      <p>
+        We do not sell your personal data to third parties. We may share information with trusted service providers (e.g., delivery partners, payment processors) solely to fulfill our services. We use industry-standard encryption to protect your data.
+      </p>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <ShieldCheck size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">3. Information Protection</h3>
-            </div>
-            <p>We implement a variety of security measures to maintain the safety of your personal information. Your private information (credit cards, socials, etc.) will not be stored on our servers.</p>
-            <p>All sensitive data is encrypted in transit using industry-standard TLS encryption. We do not sell, trade, or otherwise transfer your personally identifiable information to outside parties.</p>
-          </section>
+      <h2>4. Your Rights</h2>
+      <p>
+        You have the right to access, update, or delete your personal information. To exercise these rights, please contact our support team.
+      </p>
 
-          <div className="h-px bg-accent-brown/5" />
-
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <Cookie size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">4. Cookies</h3>
-            </div>
-            <p>We use cookies to help us remember and process the items in your shopping cart and understand and save your preferences for future visits.</p>
-            <p>You can choose to have your computer warn you each time a cookie is being sent, or you can choose to turn off all cookies via your browser settings.</p>
-          </section>
-        </div>
-      }
-    />
+      <h2>5. Contact Us</h2>
+      <p>
+        For any privacy-related concerns, email us at <a href="mailto:privacy@janubhai.com">privacy@janubhai.com</a>.
+      </p>
+    </LegalLayout>
   );
 }

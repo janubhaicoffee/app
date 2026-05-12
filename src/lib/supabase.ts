@@ -1,13 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 import { UserRole } from './roles';
+import type { Database } from './database.types';
 
 export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
+// Use a singleton instance to prevent multiple client creations
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient<Database>(supabaseUrl, supabaseAnonKey)
   : null;
 
 export const getSupabase = () => {
@@ -17,38 +19,18 @@ export const getSupabase = () => {
   return supabase;
 };
 
+// Re-export specific Row types for convenience
+export type Outlet = Database['public']['Tables']['outlets']['Row'];
+export type MenuItem = Database['public']['Tables']['menu_items']['Row'];
+export type InventoryItem = Database['public']['Tables']['inventory_items']['Row'];
+export type Wallet = Database['public']['Tables']['wallets']['Row'];
+export type Order = Database['public']['Tables']['orders']['Row'];
+
 export interface Profile {
   id: string;
   role: UserRole;
   outlet_id: string | null;
   full_name: string;
-}
-
-export interface Outlet {
-  id: string;
-  name: string;
-  city: string;
-  address: string;
-  status: 'active' | 'suspended' | 'pending_approval';
-}
-
-export interface MenuItem {
-  id: string;
-  name: string;
-  category: string;
-  base_price: number;
-  image_url: string | null;
-  is_available: boolean;
-}
-
-export interface Order {
-  id: string;
-  outlet_id: string;
-  user_id: string;
-  total_amount: number;
-  payment_method: 'cash' | 'online';
-  status: 'pending' | 'completed' | 'cancelled';
-  created_at: string;
 }
 
 export interface Expense {

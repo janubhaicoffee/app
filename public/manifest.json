@@ -1,11 +1,12 @@
 {
   "name": "Janu Bhai Coffee",
   "short_name": "Janu Bhai",
-  "description": "Modern Indian Coffee Movement",
-  "start_url": "/",
+  "description": "Roz Ki Strong Kahaani. Order Poshtik Coffee instantly.",
+  "start_url": "/app/home",
   "display": "standalone",
-  "background_color": "#FCF9F2",
-  "theme_color": "#FCF9F2",
+  "background_color": "#FDFBF7",
+  "theme_color": "#FFB800",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -13,7 +14,7 @@
       "type": "image/png"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/favicon.png",
       "sizes": "512x512",
       "type": "image/png"
     }

@@ -1,41 +1,110 @@
-import React, { useState, useEffect } from 'react';
-import { Card } from './Card';
-import { Bell, X } from 'lucide-react';
+"use client";
 
-interface NotificationProps {
-  title: string;
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle2, AlertTriangle, X } from "lucide-react";
+import { twMerge } from "tailwind-merge";
+import React, { useEffect } from "react";
+
+export type ToastType = 'success' | 'alert';
+
+export interface ToastMessage {
+  id: string;
+  type: ToastType;
   message: string;
-  type?: 'success' | 'info' | 'promo';
-  onClose: () => void;
 }
 
-export const NotificationToast: React.FC<NotificationProps> = ({ title, message, onClose }) => {
-  const [visible, setVisible] = useState(true);
+interface NotificationToastProps {
+  toasts: ToastMessage[];
+  onDismiss: (id: string) => void;
+}
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setVisible(false);
-      setTimeout(onClose, 300);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  if (!visible) return null;
-
+export function NotificationToast({ toasts, onDismiss }: NotificationToastProps) {
+  // Auto-dismiss logic inside the component using effects on individual items
   return (
-    <div className="fixed top-20 left-4 right-4 z-[100] animate-slide-down">
-      <Card glass className="p-4 border-l-4 border-l-coffee-brown flex items-start gap-3 shadow-2xl">
-        <div className="p-2 bg-cream rounded-full text-coffee-brown">
-          <Bell size={18} />
-        </div>
-        <div className="flex-1">
-          <h4 className="font-bold text-sm">{title}</h4>
-          <p className="text-xs opacity-60 mt-0.5">{message}</p>
-        </div>
-        <button onClick={() => setVisible(false)} className="opacity-30 hover:opacity-100 transition-opacity">
-          <X size={16} />
-        </button>
-      </Card>
+    <div className="fixed inset-0 pointer-events-none z-[100] flex flex-col justify-between p-6">
+      
+      {/* Top Container for Success */}
+      <div className="flex flex-col gap-3 items-center">
+        <AnimatePresence>
+          {toasts.filter(t => t.type === 'success').map((toast) => (
+            <ToastItem 
+              key={toast.id} 
+              toast={toast} 
+              onDismiss={onDismiss} 
+              position="top"
+            />
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {/* Bottom Right Container for Alerts */}
+      <div className="flex flex-col gap-3 items-end">
+        <AnimatePresence>
+          {toasts.filter(t => t.type === 'alert').map((toast) => (
+            <ToastItem 
+              key={toast.id} 
+              toast={toast} 
+              onDismiss={onDismiss} 
+              position="bottom"
+            />
+          ))}
+        </AnimatePresence>
+      </div>
+
     </div>
   );
-};
+}
+
+function ToastItem({ toast, onDismiss, position }: { toast: ToastMessage; onDismiss: (id: string) => void; position: 'top' | 'bottom' }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onDismiss(toast.id);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [toast.id, onDismiss]);
+
+  const isSuccess = toast.type === 'success';
+
+  return (
+    <motion.div
+      initial={
+        position === 'top' 
+          ? { opacity: 0, y: -50, scale: 0.9 } 
+          : { opacity: 0, y: 50, scale: 0.9, x: 20 }
+      }
+      animate={
+        position === 'top'
+          ? { opacity: 1, y: 0, scale: 1 }
+          : { opacity: 1, y: 0, scale: 1, x: 0 }
+      }
+      exit={
+        position === 'top'
+          ? { opacity: 0, y: -20, scale: 0.9 }
+          : { opacity: 0, y: 20, scale: 0.9, x: 20 }
+      }
+      transition={
+        toast.type === 'alert' 
+          ? { type: "spring", stiffness: 500, damping: 15, mass: 1 } // Vibrating snap
+          : { type: "spring", stiffness: 400, damping: 25 } // Smooth snap
+      }
+      className={twMerge(
+        "pointer-events-auto flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl border",
+        isSuccess 
+          ? "bg-accent-gold text-espresso-900 border-espresso-900/10 shadow-[0_10px_40px_rgba(255,184,0,0.4)]" 
+          : "bg-accent-red text-white border-white/20 shadow-[0_10px_40px_rgba(226,55,68,0.5)]"
+      )}
+    >
+      {isSuccess ? <CheckCircle2 size={24} /> : <AlertTriangle size={24} className="animate-pulse" />}
+      <span className="font-bold tracking-widest uppercase text-sm">{toast.message}</span>
+      <button 
+        onClick={() => onDismiss(toast.id)}
+        className={twMerge(
+          "ml-4 p-1 rounded-full transition-colors",
+          isSuccess ? "hover:bg-espresso-900/10" : "hover:bg-white/20"
+        )}
+      >
+        <X size={16} />
+      </button>
+    </motion.div>
+  );
+}

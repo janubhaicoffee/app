@@ -15,6 +15,7 @@ const menu: MenuItem[] = [
     base_price: 180,
     image_url: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=500&q=80",
     is_available: true,
+    created_at: new Date().toISOString(),
   },
   {
     id: "chai-latte",
@@ -23,6 +24,7 @@ const menu: MenuItem[] = [
     base_price: 120,
     image_url: "https://images.unsplash.com/photo-1544787210-2827448636b2?auto=format&fit=crop&w=500&q=80",
     is_available: true,
+    created_at: new Date().toISOString(),
   },
   {
     id: "filter-coffee",
@@ -31,6 +33,7 @@ const menu: MenuItem[] = [
     base_price: 90,
     image_url: "https://images.unsplash.com/photo-1541167760496-162955ed8a9f?auto=format&fit=crop&w=500&q=80",
     is_available: true,
+    created_at: new Date().toISOString(),
   },
 ];
 

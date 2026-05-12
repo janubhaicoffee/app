@@ -1,72 +1,43 @@
-"use client";
+import { LegalLayout } from '@/components/ui/LegalLayout';
 
-import { LegalPage } from '@/components/ui/LegalPage';
-import { Shield, FileText, UserCheck, Landmark } from 'lucide-react';
-
-export default function TermsPage() {
+export default function TermsOfService() {
   return (
-    <LegalPage
-      title="Terms of Service"
-      lastUpdated="May 07, 2026"
-      content={
-        <div className="space-y-12">
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <FileText size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">1. Agreement to Terms</h3>
-            </div>
-            <p>By accessing or using the Janu Bhai Coffee website and platform, you agree to be bound by these Terms of Service and all applicable laws and regulations in India.</p>
-            <p>If you do not agree with any of these terms, you are prohibited from using or accessing this site. The materials contained in this website are protected by applicable copyright and trademark law.</p>
-          </section>
+    <LegalLayout title="Terms of Service" lastUpdated="April 1, 2026">
+      <p>
+        Welcome to Janu Bhai Coffee. By accessing our website, mobile app, or visiting our Addas, you agree to comply with and be bound by the following terms and conditions.
+      </p>
 
-          <div className="h-px bg-accent-brown/5" />
+      <h2>1. Use of Service</h2>
+      <p>
+        You must be at least 18 years old to use our digital wallet services. You agree to provide accurate information when creating an account and to keep your login credentials secure.
+      </p>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <Shield size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">2. Use License</h3>
-            </div>
-            <p>Permission is granted to temporarily download one copy of the materials (information or software) on Janu Bhai Coffee's website for personal, non-commercial transitory viewing only.</p>
-            <p>This is the grant of a license, not a transfer of title, and under this license you may not:</p>
-            <ul className="space-y-2 pl-6 list-disc marker:text-accent-red">
-              <li>Modify or copy the materials</li>
-              <li>Use the materials for any commercial purpose</li>
-              <li>Attempt to reverse-engineer any software contained on the website</li>
-              <li>Remove any copyright or other proprietary notations from the materials</li>
-            </ul>
-          </section>
+      <h2>2. Orders and Pricing</h2>
+      <ul>
+        <li>All prices are listed in Indian Rupees (INR) and are inclusive of applicable taxes unless stated otherwise.</li>
+        <li>We reserve the right to modify prices, though our core menu aims to remain accessible.</li>
+        <li>Orders placed via the app are final once prepared by the outlet.</li>
+      </ul>
 
-          <div className="h-px bg-accent-brown/5" />
+      <h2>3. Digital Wallet & Payments</h2>
+      <p>
+        The Janu Bhai digital wallet is a closed-loop system intended solely for purchases within our ecosystem. Wallet balances cannot be redeemed for cash, transferred to bank accounts, or used outside of our platform.
+      </p>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <UserCheck size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">3. Account Responsibility</h3>
-            </div>
-            <p>Users are responsible for maintaining the confidentiality of their account and password. You agree to accept responsibility for all activities that occur under your account.</p>
-            <p>You must notify Janu Bhai Coffee immediately upon becoming aware of any breach of security or unauthorized use of your account.</p>
-          </section>
+      <h2>4. Franchise Partners</h2>
+      <p>
+        Franchise owners operating under the Janu Bhai Coffee brand are subject to separate, binding franchise agreements. These Terms of Service apply primarily to end consumers.
+      </p>
 
-          <div className="h-px bg-accent-brown/5" />
+      <h2>5. Limitation of Liability</h2>
+      <p>
+        Janu Bhai Coffee Co. shall not be liable for any indirect, incidental, or consequential damages arising from the use of our services or products.
+      </p>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <Landmark size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">4. Governing Law</h3>
-            </div>
-            <p>These terms and conditions are governed by and construed in accordance with the laws of India and you irrevocably submit to the exclusive jurisdiction of the courts in New Delhi.</p>
-            <p>Any claim relating to Janu Bhai Coffee's website shall be governed by the laws of the Republic of India without regard to its conflict of law provisions.</p>
-          </section>
-        </div>
-      }
-    />
+      <h2>6. Contact</h2>
+      <p>
+        Questions about the Terms of Service should be sent to us at <a href="mailto:legal@janubhai.com">legal@janubhai.com</a>.
+      </p>
+    </LegalLayout>
   );
 }

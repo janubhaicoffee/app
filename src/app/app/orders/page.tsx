@@ -1,76 +1,104 @@
 "use client";
 
-import { useState } from "react";
+import { RoleGuard } from "@/components/ui/RoleGuard";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { ClipboardList, Clock, CheckCircle2, Truck, XCircle } from "lucide-react";
+import { Coffee, MapPin, Store } from "lucide-react";
 
-const initialOrders = [
-  { id: "#892", source: "POS", items: "2x Cold Brew, 1x Sandwich", total: 580, status: "preparing" },
-  { id: "#891", source: "Swiggy", items: "1x Hot Latte", total: 160, status: "ready" },
-  { id: "#890", source: "Zomato", items: "3x Cold Brew", total: 540, status: "new" },
+// Mock data representing omnichannel orders
+const LIVE_ORDERS = [
+  { id: "#890", source: "Walk-in", time: "2m", items: ["2x Hot Coffee", "1x Cold Coffee"], status: "NEW", customer: "Rahul T." },
+  { id: "#891", source: "Zomato", time: "5m", items: ["4x Cold Coffee"], status: "PREPARING", customer: "Sneha M." },
+  { id: "#892", source: "Swiggy", time: "8m", items: ["1x Hot Coffee"], status: "PREPARING", customer: "Karan P." },
+  { id: "#893", source: "Walk-in", time: "12m", items: ["3x Hot Coffee"], status: "READY", customer: "Anita D." },
+  { id: "#894", source: "Zomato", time: "1m", items: ["1x Cold Coffee"], status: "NEW", customer: "Vikram S." },
 ];
 
-export default function OrdersPage() {
-  const [orders, setOrders] = useState(initialOrders);
+const SOURCE_COLORS: Record<string, string> = {
+  "Walk-in": "bg-accent-brown text-white",
+  "Zomato": "bg-accent-red text-white",
+  "Swiggy": "bg-[#FC8019] text-white", // Swiggy Orange
+};
 
-  const advanceOrder = (id: string) => {
-    setOrders((current) =>
-      current.map((order) =>
-        order.id === id
-          ? { ...order, status: order.status === "new" ? "preparing" : "ready" }
-          : order
-      )
-    );
-  };
+const STATUS_COLUMNS = ["NEW", "PREPARING", "READY"];
 
+export default function OmnichannelOrders() {
+  
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-heading tracking-tight">Unified Orders</h1>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">
-          POS, delivery, and counter queue
-        </p>
-      </header>
+    <RoleGuard allowedRoles={["cashier", "manager", "outlet_owner", "superadmin"]}>
+      <div className="flex flex-col h-[calc(100vh-140px)] space-y-6">
+        <header className="flex justify-between items-end">
+          <div>
+            <h1 className="text-4xl font-heading font-black uppercase tracking-tighter drop-shadow-[2px_2px_0_0_#FFB800]">
+              Omnichannel Feed
+            </h1>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-40 mt-2">
+              Live Order Synchronization
+            </p>
+          </div>
+        </header>
 
-      <section className="grid gap-4">
-        {orders.map((order) => (
-          <Card key={order.id} className="p-5 bg-white border-black/5 space-y-4">
-            <div className="flex justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <ClipboardList size={16} className="opacity-40" />
-                  <h2 className="text-lg font-heading">{order.id}</h2>
-                  <span className="rounded-full bg-accent-brown/5 px-2 py-1 text-[9px] font-bold uppercase tracking-widest opacity-60">
-                    {order.source}
-                  </span>
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden">
+          {STATUS_COLUMNS.map(status => {
+            const columnOrders = LIVE_ORDERS.filter(o => o.status === status);
+            return (
+              <div key={status} className="flex flex-col bg-white border-4 border-accent-brown shadow-[8px_8px_0_0_#4A3022] rounded-[32px] overflow-hidden">
+                <div className={`p-4 border-b-4 border-accent-brown flex justify-between items-center ${status === 'READY' ? 'bg-accent-green text-white' : 'bg-accent-brown text-bg-cream'}`}>
+                  <h2 className="font-heading text-2xl tracking-tight uppercase">{status}</h2>
+                  <div className="bg-white/20 px-3 py-1 rounded-full text-sm font-bold">
+                    {columnOrders.length}
+                  </div>
                 </div>
-                <p className="text-sm opacity-60">{order.items}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xl text-number">Rs {order.total}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-30">4m ago</p>
-              </div>
-            </div>
 
-            <div className="flex items-center justify-between border-t border-black/5 pt-4">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
-                {order.status === "ready" ? <CheckCircle2 size={16} className="text-accent-green" /> : <Clock size={16} className="opacity-40" />}
-                <span className={order.status === "ready" ? "text-accent-green" : "opacity-50"}>{order.status}</span>
+                <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-bg-cream">
+                  {columnOrders.map(order => (
+                    <Card key={order.id} className="p-0 overflow-hidden border-2 border-black/10 bg-white hover:border-accent-brown transition-colors cursor-pointer group">
+                      <div className="p-4 flex justify-between items-start border-b border-black/5">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-black text-xl">{order.id}</span>
+                            <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${SOURCE_COLORS[order.source]}`}>
+                              {order.source}
+                            </span>
+                          </div>
+                          <span className="text-xs font-bold opacity-60 uppercase">{order.customer}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-bold text-accent-red block">{order.time}</span>
+                        </div>
+                      </div>
+                      <div className="p-4 bg-black/[0.02]">
+                        <ul className="space-y-2">
+                          {order.items.map((item, idx) => (
+                            <li key={idx} className="text-sm font-bold flex items-center gap-2 text-accent-brown">
+                              <Coffee size={14} className="opacity-40" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      {/* Action Bar */}
+                      <div className="p-3 bg-white border-t border-black/5 text-center group-hover:bg-accent-yellow transition-colors">
+                        <span className="text-[10px] font-bold uppercase tracking-widest">
+                          {status === 'NEW' && 'Start Preparing →'}
+                          {status === 'PREPARING' && 'Mark Ready →'}
+                          {status === 'READY' && 'Complete Order ✓'}
+                        </span>
+                      </div>
+                    </Card>
+                  ))}
+                  
+                  {columnOrders.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center opacity-30 text-center p-6">
+                      <Store size={48} className="mb-4" />
+                      <p className="font-bold uppercase tracking-widest">No {status} Orders</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="ghost" className="px-3 text-accent-red">
-                  <XCircle size={16} />
-                </Button>
-                <Button className="px-4 bg-accent-brown text-white" onClick={() => advanceOrder(order.id)}>
-                  <Truck size={16} className="mr-2" />
-                  Update
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </section>
-    </div>
+            );
+          })}
+        </div>
+      </div>
+    </RoleGuard>
   );
 }

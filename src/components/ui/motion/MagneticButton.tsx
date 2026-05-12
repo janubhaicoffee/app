@@ -26,6 +26,9 @@ export function MagneticButton({
   const springX = useSpring(x, springConfig);
   const springY = useSpring(y, springConfig);
 
+  // Add rotation based on X distance for a more visceral feeling
+  const rotate = useTransform(springX, [-50, 50], [-5, 5]);
+
   const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
@@ -46,12 +49,12 @@ export function MagneticButton({
   return (
     <motion.button
       ref={ref}
-      style={{ x: springX, y: springY }}
+      style={{ x: springX, y: springY, rotate }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
       className={twMerge("relative inline-block", className)}
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.95, rotate: 0 }}
     >
       {children}
     </motion.button>

@@ -1,72 +1,39 @@
-"use client";
+import { LegalLayout } from '@/components/ui/LegalLayout';
 
-import { LegalPage } from '@/components/ui/LegalPage';
-import { Truck, Clock, IndianRupee, MapPin } from 'lucide-react';
-
-export default function ShippingPage() {
+export default function ShippingPolicy() {
   return (
-    <LegalPage
-      title="Shipping & Delivery"
-      lastUpdated="May 07, 2026"
-      content={
-        <div className="space-y-12">
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <MapPin size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">1. Shipping Coverage</h3>
-            </div>
-            <p>Janu Bhai Coffee currently delivers fresh roasted beans and merchandise across major cities in India. Delivery for prepared beverages is restricted to the local vicinity of our outlets.</p>
-            <p>We are actively expanding our delivery network. Check our platform for the most up-to-date serviceable areas.</p>
-          </section>
+    <LegalLayout title="Shipping & Delivery" lastUpdated="April 1, 2026">
+      <p>
+        Janu Bhai Coffee operates primarily through physical Addas (outlets) and localized app-based ordering.
+      </p>
 
-          <div className="h-px bg-accent-brown/5" />
+      <h2>1. In-Store Pickup</h2>
+      <p>
+        Orders placed via the Janu Bhai app for "Pickup" will be prepared at your selected Adda. Please ensure you arrive within a reasonable timeframe. Uncollected orders will not be refunded.
+      </p>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <Clock size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">2. Delivery Timeline</h3>
-            </div>
-            <p>Orders for roasted beans are typically processed within 24-48 hours. Estimated delivery time is 3-5 business days depending on the location.</p>
-            <div className="bg-accent-brown/[0.03] rounded-2xl p-6 border border-accent-brown/5">
-              <p className="text-[11px] font-bold uppercase tracking-widest opacity-40 mb-3">Delivery Estimates</p>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><span className="font-bold">Metro Cities:</span> 2-3 days</div>
-                <div><span className="font-bold">Tier 2 Cities:</span> 3-5 days</div>
-                <div><span className="font-bold">Rural Areas:</span> 5-7 days</div>
-                <div><span className="font-bold">Express (Delhi NCR):</span> Same day</div>
-              </div>
-            </div>
-          </section>
+      <h2>2. Local Delivery</h2>
+      <p>
+        We partner with third-party delivery platforms (e.g., Swiggy, Zomato) for local delivery. Delivery times and fees are governed by the respective platform's policies.
+      </p>
+      <p>
+        If an issue occurs during delivery (e.g., spilled or delayed order), please report it directly through the delivery partner's app for the fastest resolution.
+      </p>
 
-          <div className="h-px bg-accent-brown/5" />
+      <h2>3. Merchandise Shipping</h2>
+      <p>
+        For Janu Bhai merchandise (e.g., hoodies, mugs) ordered through our app:
+      </p>
+      <ul>
+        <li><strong>Processing Time:</strong> 1-2 business days.</li>
+        <li><strong>Shipping Time:</strong> 3-5 business days across India.</li>
+        <li><strong>Tracking:</strong> A tracking link will be provided via SMS/Email once dispatched.</li>
+      </ul>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <IndianRupee size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">3. Shipping Charges</h3>
-            </div>
-            <p>Shipping charges are calculated based on the weight of the order and the delivery destination. Standard shipping is free for orders above ₹999.</p>
-          </section>
-
-          <div className="h-px bg-accent-brown/5" />
-
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <Truck size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">4. Tracking</h3>
-            </div>
-            <p>Once your order is shipped, you will receive a tracking link via email or SMS to monitor the status of your delivery in real-time.</p>
-          </section>
-        </div>
-      }
-    />
+      <h2>4. Contact Us</h2>
+      <p>
+        For merchandise shipping inquiries, contact <a href="mailto:support@janubhai.com">support@janubhai.com</a>.
+      </p>
+    </LegalLayout>
   );
 }

@@ -1,10 +1,12 @@
 # Notes Index — app
-> 201 total notes
+> 203 total notes
 
 ### 2026-05-13
 
 | # | Title | ~Tok |
 |---|---|---|
+| 37 | Git Commit: u | ~9 |
+| 36 | Git Commit: u | ~9 |
 | 35 | Git Commit: u | ~9 |
 | 34 | what-changed in task.md | ~45.75 |
 

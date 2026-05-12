@@ -1,62 +1,40 @@
-"use client";
+import { LegalLayout } from '@/components/ui/LegalLayout';
 
-import { LegalPage } from '@/components/ui/LegalPage';
-import { Building2, ShieldCheck, CreditCard, Leaf } from 'lucide-react';
-
-export default function DisclosurePage() {
+export default function Disclosure() {
   return (
-    <LegalPage
-      title="Disclosures"
-      lastUpdated="May 07, 2026"
-      content={
-        <div className="space-y-12">
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <Building2 size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">1. Corporate Information</h3>
-            </div>
-            <p>Janu Bhai Coffee is a registered entity operating under the legal framework of India. Our primary base of operations is Ghaffar Manzil, Jamia Nagar, Delhi - 110025.</p>
-          </section>
+    <LegalLayout title="Disclosures" lastUpdated="April 1, 2026">
+      <p>
+        This page outlines important disclosures and disclaimers regarding the operations of Janu Bhai Coffee.
+      </p>
 
-          <div className="h-px bg-accent-brown/5" />
+      <h2>1. Food Safety & Standards</h2>
+      <p>
+        Janu Bhai Coffee operates in strict compliance with the Food Safety and Standards Authority of India (FSSAI). All ingredients, including our AAA-grade Chikkamagaluru beans, are sourced from certified vendors.
+      </p>
+      <ul>
+        <li><strong>Allergens:</strong> Our beverages contain dairy unless a plant-based alternative is explicitly requested. We cannot guarantee a completely allergen-free environment.</li>
+        <li><strong>Caffeine Content:</strong> Our Poshtik coffee is highly caffeinated. Consumers with sensitivities or medical conditions should consult a physician before consumption.</li>
+      </ul>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <ShieldCheck size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">2. FSSAI Compliance</h3>
-            </div>
-            <p>Our processing facility and outlets are compliant with the Food Safety and Standards Authority of India (FSSAI) guidelines. We maintain strict hygiene and safety standards across all operations.</p>
-          </section>
+      <h2>2. Franchise Operations</h2>
+      <p>
+        Janu Bhai Coffee locations are a mix of company-owned and independently operated franchises. While we enforce strict quality standards globally, independent franchise owners are responsible for local compliance and day-to-day operations.
+      </p>
 
-          <div className="h-px bg-accent-brown/5" />
+      <h2>3. App Metrics & Data</h2>
+      <p>
+        Metrics displayed on our website (e.g., "Active Outlets", "Cups Served") are updated periodically and represent internal estimates for marketing purposes. They do not constitute financial reporting or legally binding figures.
+      </p>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <CreditCard size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">3. Payment Partners</h3>
-            </div>
-            <p>We use Razorpay and other secure gateways for processing payments. Janu Bhai Coffee does not store any sensitive card or banking data on its own servers.</p>
-          </section>
+      <h2>4. Intellectual Property</h2>
+      <p>
+        "Janu Bhai", "Poshtik Coffee", and our mascot are registered trademarks. Unauthorized use is strictly prohibited.
+      </p>
 
-          <div className="h-px bg-accent-brown/5" />
-
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <Leaf size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">4. Product Representation</h3>
-            </div>
-            <p>We strive to represent our coffee beans and origins as accurately as possible. However, natural variations in flavor profile, color, and aroma are expected in single-origin agricultural products.</p>
-          </section>
-        </div>
-      }
-    />
+      <h2>5. Contact Us</h2>
+      <p>
+        For legal inquiries regarding these disclosures, contact <a href="mailto:legal@janubhai.com">legal@janubhai.com</a>.
+      </p>
+    </LegalLayout>
   );
 }

@@ -1,53 +1,31 @@
-"use client";
+import { LegalLayout } from '@/components/ui/LegalLayout';
 
-import { LegalPage } from '@/components/ui/LegalPage';
-import { Ban, CreditCard, AlertCircle } from 'lucide-react';
-
-export default function RefundPage() {
+export default function RefundPolicy() {
   return (
-    <LegalPage 
-      title="Refund & Cancellation"
-      lastUpdated="May 07, 2026"
-      content={
-        <div className="space-y-12">
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <Ban size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">1. Cancellation</h3>
-            </div>
-            <p>Orders can be cancelled within 2 minutes of placement. Once the kitchen starts preparing your coffee, cancellations are not possible.</p>
-            <div className="bg-accent-brown/[0.03] rounded-2xl p-6 border border-accent-brown/5">
-              <p className="text-sm font-medium"><span className="font-bold">Note:</span> For bulk or subscription orders, please contact support@janubhai.com for cancellation assistance.</p>
-            </div>
-          </section>
+    <LegalLayout title="Refund Policy" lastUpdated="April 1, 2026">
+      <p>
+        At Janu Bhai Coffee, we want you to be completely satisfied with your Poshtik experience.
+      </p>
 
-          <div className="h-px bg-accent-brown/5" />
+      <h2>1. In-Store Orders</h2>
+      <p>
+        If your coffee does not meet our quality standards, please inform our Adda staff immediately. We will replace your beverage on the spot. Refunds for completed, consumed in-store orders are generally not provided.
+      </p>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <CreditCard size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">2. Refunds</h3>
-            </div>
-            <p>Refunds are processed if the order is cancelled within the allowed window or if the outlet is unable to fulfill the order. Refunds typically take 5-7 business days to reflect in your account.</p>
-          </section>
+      <h2>2. Wallet Top-Ups</h2>
+      <p>
+        Funds added to the Janu Bhai digital wallet are non-refundable and cannot be transferred back to a bank account. They can only be used for purchases within our app or physical outlets.
+      </p>
 
-          <div className="h-px bg-accent-brown/5" />
+      <h2>3. Disputed Transactions</h2>
+      <p>
+        If you notice an unauthorized or incorrect charge on your account, please contact support within 48 hours with your transaction ID. We will investigate and credit your wallet if a technical error occurred on our end.
+      </p>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-accent-brown/5 rounded-xl flex items-center justify-center text-accent-brown">
-                <AlertCircle size={18} />
-              </div>
-              <h3 className="text-xl font-bold tracking-tight">3. Quality Issues</h3>
-            </div>
-            <p>If you are unhappy with your order, please contact the specific outlet directly or reach out via our support channel at hello@janubhai.com.</p>
-          </section>
-        </div>
-      }
-    />
+      <h2>4. Contact Us</h2>
+      <p>
+        For refund inquiries, reach out to <a href="mailto:support@janubhai.com">support@janubhai.com</a>.
+      </p>
+    </LegalLayout>
   );
 }

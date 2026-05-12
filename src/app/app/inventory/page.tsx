@@ -1,67 +1,76 @@
 "use client";
 
+import { RoleGuard } from "@/components/ui/RoleGuard";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { AlertTriangle, Package, Plus } from "lucide-react";
+import { Package, Plus } from "lucide-react";
 
-const stock = [
-  { name: "Coffee Beans (Dark Roast)", unit: "kg", current: 1.2, min: 5, level: "critical" },
-  { name: "Full Cream Milk", unit: "L", current: 4, min: 10, level: "low" },
-  { name: "Paper Cups", unit: "pcs", current: 420, min: 200, level: "safe" },
-  { name: "Chocolate Syrup", unit: "L", current: 7, min: 3, level: "safe" },
+const INVENTORY_ITEMS = [
+  { id: 1, name: "AAA Coffee Beans", unit: "Kg", current: 4.2, max: 20 },
+  { id: 2, name: "Whole Milk", unit: "Liters", current: 12, max: 50 },
+  { id: 3, name: "Raw Sugar", unit: "Kg", current: 1.5, max: 10 }, // Below 20%
+  { id: 4, name: "Paper Cups", unit: "Units", current: 450, max: 1000 },
 ];
 
 export default function InventoryPage() {
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      <header className="flex items-end justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-heading tracking-tight">Inventory</h1>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">Okhla stock control</p>
-        </div>
-        <Button className="bg-accent-brown text-white px-4">
-          <Plus size={18} />
-        </Button>
-      </header>
+    <RoleGuard allowedRoles={["manager", "outlet_owner", "superadmin"]}>
+      <div className="space-y-6 relative min-h-[calc(100vh-140px)]">
+        <header className="flex justify-between items-end">
+          <div>
+            <h1 className="text-4xl font-heading font-black tracking-tighter uppercase">
+              Inventory
+            </h1>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-40 mt-1">
+              Core Raw Materials
+            </p>
+          </div>
+        </header>
 
-      <Card glass className="p-6 flex items-start gap-4 border-accent-red/20 bg-accent-red/5">
-        <AlertTriangle className="text-accent-red shrink-0" />
-        <div>
-          <h2 className="text-lg font-heading">2 items need attention</h2>
-          <p className="text-sm opacity-60">Restock beans and milk before the evening rush.</p>
-        </div>
-      </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-24">
+          {INVENTORY_ITEMS.map((item) => {
+            const percentage = (item.current / item.max) * 100;
+            const isLow = percentage <= 20;
 
-      <section className="grid gap-4">
-        {stock.map((item) => {
-          const percent = Math.min(100, Math.round((item.current / item.min) * 100));
-          const tone = item.level === "critical" ? "bg-accent-red" : item.level === "low" ? "bg-accent-gold" : "bg-accent-green";
-          return (
-            <Card key={item.name} className="p-5 bg-white border-black/5 space-y-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-accent-brown/5 p-3">
-                    <Package size={18} />
+            return (
+              <Card key={item.id} className={`p-6 border-4 rounded-[32px] bg-white transition-colors ${isLow ? 'border-accent-red shadow-[4px_4px_0_0_#E23744]' : 'border-black/10'}`}>
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-2xl ${isLow ? 'bg-accent-red/10 text-accent-red' : 'bg-black/5 text-accent-brown'}`}>
+                      <Package size={20} />
+                    </div>
+                    <h3 className="font-bold text-lg uppercase tracking-tight">{item.name}</h3>
                   </div>
-                  <div>
-                    <h2 className="text-sm font-bold">{item.name}</h2>
-                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">
-                      Min {item.min} {item.unit}
-                    </p>
+                  <div className="text-right">
+                    <span className={`text-2xl font-black tracking-tighter ${isLow ? 'text-accent-red' : 'text-accent-brown'}`}>
+                      {item.current}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 ml-1">
+                      / {item.max} {item.unit}
+                    </span>
                   </div>
                 </div>
-                <p className="text-xl text-number">
-                  {item.current}
-                  <span className="text-xs font-bold opacity-40"> {item.unit}</span>
-                </p>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-accent-brown/5">
-                <div className={`h-full ${tone}`} style={{ width: `${percent}%` }} />
-              </div>
-            </Card>
-          );
-        })}
-      </section>
-    </div>
+
+                <div className="w-full bg-black/5 h-4 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-1000 ${isLow ? 'bg-accent-red' : 'bg-accent-green'}`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+                {isLow && (
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-accent-red mt-3">
+                    Critical Level! Restock immediately.
+                  </p>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Floating Action Button */}
+        <button className="fixed bottom-8 right-8 md:bottom-12 md:right-12 w-16 h-16 bg-accent-brown text-white rounded-full shadow-[4px_4px_0_0_#FFB800] border-2 border-accent-yellow flex items-center justify-center hover:scale-105 active:scale-95 transition-transform group">
+          <Plus size={32} className="group-hover:rotate-90 transition-transform duration-300" />
+        </button>
+      </div>
+    </RoleGuard>
   );
 }

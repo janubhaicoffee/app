@@ -4,30 +4,19 @@
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
 
-  --color-bg-cream: #FDFCF8;
-  --color-accent-brown: #2D1B18;
-  --color-accent-brown-light: #4A322E;
-  --color-accent-brown-muted: #F5F1E9;
-  --color-accent-red: #C41E11;
-  --color-accent-green: #2E7D32;
-  --color-accent-gold: #FFB300;
-  
-  --color-espresso-900: #120A08;
-  --color-espresso-800: #1A0F0D;
-  --color-espresso-700: #2D1B18;
+  /* NEW BRAND IDENTITY: Poshtik Adda */
+  --color-bg-cream: #FDFBF7;
+  --color-espresso-brown: #4A3022;
+  --color-saffron-yellow: #FFB800;
+  --color-vibrant-red: #E23744;
   
   --font-heading: "Inter", system-ui, sans-serif;
   --font-number: "Satoshi", "Inter", system-ui, sans-serif;
 }
 
 :root {
-  --background: #FDFCF8;
-  --foreground: #120A08;
-}
-
-.dark-theme {
-  --background: #120A08;
-  --foreground: #FDFCF8;
+  --background: #FDFBF7;
+  --foreground: #4A3022;
 }
 
 body {
@@ -40,10 +29,10 @@ body {
 
 @layer base {
   * {
-    @apply border-black/5 dark:border-white/5;
+    @apply border-black/10;
   }
   body {
-    @apply selection:bg-accent-gold/30 selection:text-current;
+    @apply selection:bg-saffron-yellow/30 selection:text-espresso-brown;
   }
 }
 
@@ -56,7 +45,7 @@ body {
     height: 100vh;
     pointer-events: none;
     z-index: 50;
-    opacity: 0.03;
+    opacity: 0.05;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   }
 
@@ -77,29 +66,6 @@ body {
     @apply transition-transform duration-200 active:scale-95;
   }
 
-  .glass-card {
-    @apply bg-white/40 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_0_rgba(62,39,35,0.08)];
-  }
-
-  .glass-espresso {
-    @apply bg-espresso-900/60 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
-  }
-
-  .hero-gradient {
-    @apply bg-gradient-to-b from-espresso-900 via-espresso-800 to-transparent;
-  }
-
-  .glow-effect {
-    @apply relative;
-  }
-  .glow-effect::before {
-    content: "";
-    @apply absolute inset-0 -z-10 rounded-full blur-xl bg-accent-gold/20 transition-opacity duration-500 opacity-0;
-  }
-  .glow-effect:hover::before {
-    @apply opacity-100;
-  }
-
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -111,20 +77,8 @@ body {
 }
 
 @layer components {
-  .card {
-    @apply rounded-3xl border border-black/5 bg-white shadow-sm transition-all duration-300;
-  }
-
-  .dark-theme .card {
-    @apply border-white/5 bg-espresso-800;
-  }
-
-  .hover-lift:hover {
-    @apply -translate-y-1 shadow-2xl;
-  }
-
   .btn {
-    @apply inline-flex items-center justify-center rounded-full font-semibold transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden;
+    @apply inline-flex items-center justify-center font-bold uppercase tracking-widest transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden;
   }
 
   .btn-md {
@@ -132,56 +86,34 @@ body {
   }
 
   .btn-lg {
-    @apply h-14 px-8 text-base;
-  }
-
-  .btn-primary {
-    @apply bg-accent-brown text-white shadow-lg shadow-accent-brown/20 hover:scale-[1.02] active:scale-[0.98];
-  }
-
-  .dark-theme .btn-primary {
-    @apply bg-white text-espresso-900 shadow-white/10;
-  }
-
-  .btn-secondary {
-    @apply bg-accent-red text-white hover:bg-accent-red/90 hover:scale-[1.02] active:scale-[0.98];
-  }
-
-  .btn-outline {
-    @apply border-2 border-accent-brown/20 bg-transparent text-accent-brown hover:border-accent-brown hover:bg-accent-brown hover:text-white;
-  }
-
-  .dark-theme .btn-outline {
-    @apply border-white/20 text-white hover:border-white hover:bg-white hover:text-espresso-900;
-  }
-
-  .btn-ghost {
-    @apply bg-transparent text-accent-brown hover:bg-accent-brown/5;
-  }
-
-  .dark-theme .btn-ghost {
-    @apply text-white hover:bg-white/10;
-  }
-
-  .btn-full {
-    @apply w-full;
+    @apply h-16 px-8 text-lg;
   }
 
   /* Legal Prose */
   .prose-legal p {
-    @apply mb-6;
+    @apply mb-6 text-espresso-brown/80 leading-relaxed text-lg;
+  }
+  .prose-legal h2 {
+    @apply text-3xl font-heading font-bold text-espresso-brown mt-16 mb-8;
   }
   .prose-legal h3 {
-    @apply text-xl font-bold uppercase tracking-widest text-accent-brown mt-12 mb-4;
-  }
-  .dark-theme .prose-legal h3 {
-    @apply text-white;
+    @apply text-xl font-bold uppercase tracking-widest text-espresso-brown mt-12 mb-4;
   }
   .prose-legal ul {
     @apply list-disc list-inside space-y-3 mb-8 pl-4;
   }
   .prose-legal li {
-    @apply opacity-80;
+    @apply opacity-80 text-espresso-brown;
+  }
+  .prose-legal a {
+    @apply text-espresso-brown font-bold relative inline-block;
+  }
+  .prose-legal a::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-2 bg-saffron-yellow/40 -z-10 transition-all duration-300;
+  }
+  .prose-legal a:hover::after {
+    @apply h-full bg-saffron-yellow/60;
   }
 }
 

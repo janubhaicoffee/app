@@ -1,17 +1,14 @@
 "use client";
 
 import React, { useRef } from 'react';
-import { motion, useScroll, useTransform, useInView } from 'framer-motion';
-import { Coffee, ShieldCheck, Thermometer, Wind, Zap, ArrowRight, MapPin, CheckCircle2, BarChart3, Users, Network } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { Coffee, Smartphone, Zap, Flame, Snowflake, ArrowRight, QrCode, HeartHandshake, ShieldCheck } from 'lucide-react';
 import { SEO } from '@/components/ui/SEO';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-
-// Motion Components
 import { FadeIn } from '@/components/ui/motion/FadeIn';
 import { Parallax } from '@/components/ui/motion/Parallax';
-import { AnimatedCounter } from '@/components/ui/motion/AnimatedCounter';
-import { MagneticButton } from '@/components/ui/motion/MagneticButton';
+import { Mascot } from '@/components/ui/motion/Mascot';
 
 export default function LandingPage() {
   const containerRef = useRef(null);
@@ -21,241 +18,246 @@ export default function LandingPage() {
   });
 
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.9]);
-  const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 150]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
+  const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 50]);
 
   return (
-    <div className="bg-espresso-900 text-bg-cream overflow-x-hidden min-h-screen" ref={containerRef}>
+    <div className="bg-bg-cream text-espresso-brown overflow-x-hidden min-h-screen" ref={containerRef}>
       <SEO 
-        title="Janu Bhai Coffee | India's Decentralized Coffee Movement"
-        description="Experience the science of freshness. Sourced from Chikkamagaluru, processed without chemicals, and preserved via advanced dry vacuum technology."
-        keywords="Chikkamagaluru coffee, decentralized coffee, Gen Z coffee brand, dry vacuum coffee, fresh roasted coffee India"
+        title="Janu Bhai Coffee | Ekdum Jhakaas Poshtik Coffee"
+        description="Not a luxury café. Just India's most poshtik coffee. No corporate bullshit. Experience the true Adda culture."
+        keywords="Janu Bhai coffee, poshtik coffee, adda culture, cheap coffee india, premium cheap coffee"
       />
 
-      <div className="grain-overlay" />
+      <div className="grain-overlay opacity-10" />
 
-      {/* Cinematic Hero Section */}
-      <section className="relative h-[100svh] flex flex-col justify-center overflow-hidden">
-        {/* Background Parallax Image */}
-        <div className="absolute inset-0 z-0">
-          <Parallax speed={0.4} className="h-full">
-            <div className="absolute inset-0 bg-gradient-to-b from-espresso-900/60 via-espresso-900/40 to-espresso-900 z-10" />
-            <img 
-              src="/farm.png" 
-              alt="Chikkamagaluru Farm Cinematic" 
-              className="w-full h-full object-cover scale-110 opacity-40 mix-blend-luminosity"
-            />
-          </Parallax>
-        </div>
-
-        {/* Floating Steam Particles (CSS driven) */}
-        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-30 mix-blend-screen">
-          <div className="absolute w-[800px] h-[800px] bg-accent-gold/20 rounded-full blur-[120px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" style={{ animationDuration: '8s' }} />
-        </div>
+      {/* Section 1: The Immersive Hero */}
+      <section className="relative min-h-[100svh] flex flex-col justify-center items-center pt-24 pb-12 px-6 overflow-hidden">
         
+        {/* Abstract Background Element */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-5 pointer-events-none">
+          <motion.div 
+            animate={{ rotate: 360 }}
+            transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
+            className="w-[150vw] h-[150vw] sm:w-[100vw] sm:h-[100vw] rounded-full border-[100px] border-espresso-brown border-dashed"
+          />
+        </div>
+
         <motion.div 
           style={{ opacity: heroOpacity, scale: heroScale, y: heroY }} 
-          className="relative z-10 px-6 max-w-7xl mx-auto w-full pt-20"
+          className="relative z-10 w-full max-w-5xl mx-auto text-center flex flex-col items-center"
         >
           <FadeIn delay={0.2} direction="down">
-            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-espresso text-accent-gold text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] mb-8 border-accent-gold/30">
-              <Zap size={14} className="animate-pulse" />
-              India's First Decentralized Coffee Movement
+            <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-saffron-yellow text-espresso-brown font-black uppercase tracking-widest text-xs mb-8 shadow-[4px_4px_0_0_#4A3022] border-2 border-espresso-brown rotate-[-2deg]">
+              <Zap size={16} strokeWidth={3} />
+              Ekdum Jhakaas Vibes
             </div>
           </FadeIn>
           
-          <FadeIn delay={0.4} direction="up">
-            <h1 className="text-6xl sm:text-8xl md:text-[9rem] font-heading tracking-tighter leading-[0.85] mb-8 uppercase text-white drop-shadow-2xl">
-              Roz Ki <span className="text-accent-red italic pr-4">Strong</span><br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-bg-cream to-accent-gold">Kahaani</span>
+          <FadeIn delay={0.4} direction="up" className="relative">
+            <h1 className="text-7xl sm:text-[8rem] md:text-[11rem] font-heading font-black tracking-tighter uppercase leading-[0.8] text-espresso-brown drop-shadow-[8px_8px_0_rgba(226,55,68,0.2)]">
+              ROZ KI <br/>
+              <span className="text-vibrant-red stroke-espresso-brown stroke-2" style={{ WebkitTextStroke: '3px #4A3022' }}>STRONG</span><br/>
+              KAHAANI
             </h1>
+            
+            {/* Floating Mascot reacting to nothing but scroll */}
+            <motion.div 
+              animate={{ y: [0, -20, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -top-10 -right-10 md:top-0 md:-right-20 hidden sm:block drop-shadow-2xl"
+            >
+              <Mascot size={150} state="idle" />
+            </motion.div>
           </FadeIn>
 
           <FadeIn delay={0.6} direction="up">
-            <p className="text-lg md:text-2xl font-medium opacity-80 mb-12 max-w-2xl text-bg-cream/90 leading-relaxed">
-              We are not just a coffee chain. We are an operating system for the culture. AAA-grade Chikkamagaluru beans, completely decentralized.
+            <p className="text-xl md:text-3xl font-bold opacity-90 mt-10 mb-12 max-w-2xl mx-auto leading-relaxed">
+              Not a luxury café. Just India's most poshtik coffee. No corporate bullshit.
             </p>
           </FadeIn>
 
-          <FadeIn delay={0.8} direction="up" className="flex flex-col sm:flex-row items-center gap-6">
-            <Link href="/login">
-              <MagneticButton intensity={0.3}>
-                <Button size="lg" className="bg-white text-espresso-900 px-10 h-16 rounded-full text-lg shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] group">
-                  Enter the OS
-                  <ArrowRight size={20} className="ml-3 group-hover:translate-x-2 transition-transform" />
-                </Button>
-              </MagneticButton>
+          <FadeIn delay={0.8} direction="up" className="flex flex-col w-full sm:w-auto sm:flex-row items-center gap-6">
+            <Link href="#menu" className="w-full sm:w-auto">
+              <button className="w-full sm:w-auto bg-saffron-yellow text-espresso-brown px-12 py-5 rounded-2xl font-black uppercase tracking-widest text-xl border-4 border-espresso-brown shadow-[8px_8px_0_0_#4A3022] hover:translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0_0_#4A3022] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all flex items-center justify-center gap-3">
+                Order Now
+                <ArrowRight strokeWidth={3} />
+              </button>
             </Link>
-            <Link href="/franchise">
-              <MagneticButton intensity={0.2}>
-                <Button variant="outline" size="lg" className="px-10 h-16 rounded-full text-lg border-white/30 text-white hover:bg-white hover:text-espresso-900">
-                  Own an Outlet
-                </Button>
-              </MagneticButton>
+            <Link href="/app" className="w-full sm:w-auto">
+              <button className="w-full sm:w-auto bg-bg-cream text-espresso-brown px-12 py-5 rounded-2xl font-black uppercase tracking-widest text-xl border-4 border-espresso-brown shadow-[8px_8px_0_0_#4A3022] hover:translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0_0_#4A3022] active:translate-y-2 active:translate-x-2 active:shadow-none transition-all flex items-center justify-center gap-3">
+                Download App
+                <Smartphone strokeWidth={3} />
+              </button>
             </Link>
           </FadeIn>
         </motion.div>
+      </section>
 
-        {/* Live Ecosystem Metrics Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-white/10 glass-espresso">
-          <div className="max-w-7xl mx-auto px-6 py-6 md:py-8 flex flex-wrap justify-between gap-8 md:gap-4">
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase tracking-[0.3em] opacity-50 mb-1 text-accent-gold">Active Outlets</span>
-              <div className="text-3xl md:text-4xl font-heading font-bold text-white"><AnimatedCounter value={24} /></div>
-            </div>
-            <div className="h-12 w-px bg-white/10 hidden md:block" />
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase tracking-[0.3em] opacity-50 mb-1 text-accent-gold">Cups Served</span>
-              <div className="text-3xl md:text-4xl font-heading font-bold text-white"><AnimatedCounter value={120500} suffix="+" /></div>
-            </div>
-            <div className="h-12 w-px bg-white/10 hidden md:block" />
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase tracking-[0.3em] opacity-50 mb-1 text-accent-gold">Cities</span>
-              <div className="text-3xl md:text-4xl font-heading font-bold text-white"><AnimatedCounter value={5} /></div>
-            </div>
-            <div className="h-12 w-px bg-white/10 hidden md:block" />
-            <div className="flex flex-col">
-              <span className="text-[10px] uppercase tracking-[0.3em] opacity-50 mb-1 text-accent-gold">Network APY</span>
-              <div className="text-3xl md:text-4xl font-heading font-bold text-accent-green"><AnimatedCounter value={18} suffix="%" /></div>
-            </div>
+      {/* Section 2: The "No-Bullshit" Menu */}
+      <section id="menu" className="py-24 px-6 border-t-[12px] border-espresso-brown bg-saffron-yellow relative z-10">
+        <div className="max-w-7xl mx-auto space-y-16">
+          <FadeIn direction="up" className="text-center space-y-4">
+            <h2 className="text-6xl md:text-8xl font-heading font-black tracking-tighter uppercase text-espresso-brown drop-shadow-[4px_4px_0_0_#FDFBF7]">
+              The No-Bullshit Menu
+            </h2>
+            <p className="text-2xl font-bold uppercase tracking-widest opacity-80">We only do two things. But we do them best.</p>
+          </FadeIn>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            
+            {/* Hot Coffee Card */}
+            <FadeIn direction="right" className="bg-bg-cream rounded-[3rem] border-8 border-espresso-brown p-8 md:p-12 shadow-[16px_16px_0_0_#4A3022] flex flex-col justify-between group overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-vibrant-red/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
+              
+              <div className="relative z-10 flex justify-between items-start mb-12">
+                <div className="bg-vibrant-red text-white p-4 rounded-2xl border-4 border-espresso-brown shadow-[4px_4px_0_0_#4A3022] rotate-[-5deg]">
+                  <Flame size={48} strokeWidth={2.5} />
+                </div>
+                <div className="bg-bg-cream text-espresso-brown px-6 py-2 rounded-full border-4 border-espresso-brown shadow-[4px_4px_0_0_#4A3022] font-black text-4xl rotate-[5deg]">
+                  ₹20
+                </div>
+              </div>
+
+              <div className="relative z-10 space-y-4">
+                <h3 className="text-5xl md:text-7xl font-heading font-black uppercase tracking-tighter text-espresso-brown">The Classic <span className="text-vibrant-red">Hot</span></h3>
+                <p className="text-2xl font-bold opacity-80 leading-snug">
+                  Strong, sweet, brewed for the daily grind. Served in our signature kulhad-style cups.
+                </p>
+              </div>
+            </FadeIn>
+
+            {/* Cold Coffee Card */}
+            <FadeIn delay={0.2} direction="left" className="bg-bg-cream rounded-[3rem] border-8 border-espresso-brown p-8 md:p-12 shadow-[16px_16px_0_0_#4A3022] flex flex-col justify-between group overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-saffron-yellow/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
+              
+              <div className="relative z-10 flex justify-between items-start mb-12">
+                <div className="bg-saffron-yellow text-espresso-brown p-4 rounded-2xl border-4 border-espresso-brown shadow-[4px_4px_0_0_#4A3022] rotate-[5deg]">
+                  <Snowflake size={48} strokeWidth={2.5} />
+                </div>
+                <div className="bg-bg-cream text-espresso-brown px-6 py-2 rounded-full border-4 border-espresso-brown shadow-[4px_4px_0_0_#4A3022] font-black text-4xl rotate-[-5deg]">
+                  ₹50
+                </div>
+              </div>
+
+              <div className="relative z-10 space-y-4">
+                <h3 className="text-5xl md:text-7xl font-heading font-black uppercase tracking-tighter text-espresso-brown">The Chilled <span className="text-saffron-yellow stroke-espresso-brown stroke-2" style={{ WebkitTextStroke: '2px #4A3022' }}>Out</span></h3>
+                <p className="text-2xl font-bold opacity-80 leading-snug">
+                  Ice cold, thick, Gen-Z approved poshtik energy. Made to beat the heat.
+                </p>
+              </div>
+            </FadeIn>
+
           </div>
         </div>
       </section>
 
-      {/* Dashboard Preview Section (OS View) */}
-      <section className="py-32 px-6 relative z-10 bg-espresso-800">
-        <div className="max-w-7xl mx-auto text-center space-y-16">
-          <FadeIn direction="up">
-            <p className="text-accent-gold font-bold uppercase tracking-[0.4em] text-[10px] mb-4">The Command Center</p>
-            <h2 className="text-4xl md:text-6xl font-heading tracking-tight text-white leading-[1.1]">
-              Manage Your Outlet Like <br/>
-              <span className="italic text-white/50">A Tech Startup</span>
+      {/* Section 3: The Adda Culture (Community) */}
+      <section className="py-24 px-6 bg-espresso-brown text-bg-cream relative overflow-hidden">
+        {/* Big Background Text */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none opacity-[0.03]">
+          <h2 className="text-[20rem] font-heading font-black leading-none uppercase">ADDA<br/>VIBES</h2>
+        </div>
+
+        <div className="max-w-7xl mx-auto space-y-16 relative z-10">
+          <FadeIn direction="up" className="text-center">
+            <h2 className="text-6xl md:text-8xl font-heading font-black tracking-tighter uppercase text-saffron-yellow mb-4">
+              Your Local Adda.<br/><span className="text-bg-cream">Redefined.</span>
             </h2>
           </FadeIn>
-          
-          <FadeIn delay={0.2} direction="up" className="relative max-w-5xl mx-auto">
-            <div className="absolute inset-0 bg-accent-gold/20 blur-[100px] rounded-full" />
-            <div className="relative glass-espresso rounded-3xl border border-white/20 p-2 md:p-4 shadow-2xl overflow-hidden aspect-video flex flex-col">
-              {/* Mock Dashboard Topbar */}
-              <div className="flex items-center justify-between p-4 border-b border-white/10 mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-full bg-accent-red flex items-center justify-center text-[10px] font-bold">JB</div>
-                  <div className="text-sm font-bold uppercase tracking-widest text-white/80">Okhla Terminal</div>
-                </div>
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-accent-green animate-pulse" />
-                  <span className="text-xs uppercase tracking-widest text-accent-green font-bold">Live</span>
-                </div>
-              </div>
-              
-              {/* Mock Dashboard Content */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 flex-grow">
-                <div className="col-span-2 glass-espresso rounded-2xl border border-white/5 p-6 flex flex-col justify-between">
-                  <div>
-                    <h4 className="text-[10px] uppercase tracking-[0.3em] text-white/40">Today's Revenue</h4>
-                    <p className="text-4xl font-number font-bold mt-2">₹14,500</p>
+
+          {/* Masonry/IG Reel Style Gallery */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {[1, 2, 3, 4].map((item, i) => (
+              <FadeIn key={item} delay={i * 0.15} direction="up">
+                <div className={`bg-white/10 rounded-3xl overflow-hidden relative border-4 border-transparent hover:border-saffron-yellow transition-colors ${i % 2 === 0 ? 'aspect-[9/16]' : 'aspect-square md:aspect-[9/16] mt-0 md:mt-12'}`}>
+                  {/* Placeholder for real images */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent flex items-end p-4">
+                    <div className="flex items-center gap-2">
+                      <HeartHandshake size={20} className="text-saffron-yellow" />
+                      <span className="font-bold text-sm uppercase">Jamia Nagar</span>
+                    </div>
                   </div>
-                  <div className="h-32 mt-8 flex items-end gap-2">
-                    {[40, 70, 45, 90, 60, 100, 80].map((h, i) => (
-                      <div key={i} className="flex-1 bg-accent-gold/50 rounded-t-sm transition-all duration-1000 hover:bg-accent-gold" style={{ height: `${h}%` }} />
-                    ))}
-                  </div>
+                  <img src={`/api/placeholder/400/${i % 2 === 0 ? '700' : '500'}`} alt="Community Adda" className="w-full h-full object-cover mix-blend-luminosity hover:mix-blend-normal transition-all duration-500" />
                 </div>
-                <div className="space-y-4">
-                  <div className="glass-espresso rounded-2xl border border-white/5 p-6">
-                    <h4 className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-2">Cups Pulled</h4>
-                    <p className="text-3xl font-number font-bold">142</p>
-                  </div>
-                  <div className="glass-espresso rounded-2xl border border-white/5 p-6">
-                    <h4 className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-2">Bean Supply</h4>
-                    <p className="text-3xl font-number font-bold text-accent-red">12 kg</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </FadeIn>
+              </FadeIn>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* The Origin Section - Transition to Cream */}
-      <section id="story" className="py-32 px-6 bg-bg-cream text-espresso-900 rounded-t-[4rem] -mt-10 relative z-20 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-          <div className="space-y-8">
+      {/* Section 4: The Ecosystem Teaser */}
+      <section className="py-32 px-6 bg-bg-cream relative z-10 border-t-[12px] border-espresso-brown">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          
+          <div className="space-y-10">
             <FadeIn direction="right">
-              <p className="text-accent-red font-bold uppercase tracking-[0.4em] text-[10px]">Step 01: The Source</p>
-              <h2 className="text-5xl font-heading tracking-tight mt-2">Private Farms of <br/><span className="italic">Chikkamagaluru</span></h2>
+              <h2 className="text-6xl md:text-8xl font-heading font-black tracking-tighter uppercase leading-[0.9]">
+                Scan.<br/>Earn.<br/><span className="text-vibrant-red">Drink.</span><br/>Repeat.
+              </h2>
             </FadeIn>
-            <FadeIn delay={0.2} direction="up">
-              <p className="text-xl leading-relaxed opacity-80 font-medium">
-                Our journey begins in the mist-covered hills of Chikkamagaluru, where we partner with elite private estates. We don't just buy coffee; we select the top 1% of the harvest.
+            
+            <FadeIn delay={0.2} direction="right">
+              <p className="text-2xl font-bold opacity-80 leading-relaxed max-w-lg">
+                How do we serve coffee this cheap? No cashiers. No complex menus. Just our app and your thirst.
               </p>
             </FadeIn>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-              <FadeIn delay={0.4} direction="up" className="p-8 bg-white rounded-3xl border border-black/5 shadow-xl hover:-translate-y-2 transition-transform duration-500">
-                <div className="w-12 h-12 bg-espresso-900 rounded-xl flex items-center justify-center text-white mb-6">
-                  <ShieldCheck size={24} />
-                </div>
-                <h4 className="font-bold uppercase tracking-widest text-xs mb-3 text-espresso-900">AAA Grade Only</h4>
-                <p className="text-sm opacity-60 leading-relaxed">Strict export-quality sorting. Only the densest, most flavorful beans make the cut.</p>
-              </FadeIn>
-              <FadeIn delay={0.6} direction="up" className="p-8 bg-white rounded-3xl border border-black/5 shadow-xl hover:-translate-y-2 transition-transform duration-500">
-                <div className="w-12 h-12 bg-espresso-900 rounded-xl flex items-center justify-center text-white mb-6">
-                  <MapPin size={24} />
-                </div>
-                <h4 className="font-bold uppercase tracking-widest text-xs mb-3 text-espresso-900">Single Estate</h4>
-                <p className="text-sm opacity-60 leading-relaxed">Traceable to the specific patch of land. No mixing, no compromises on purity.</p>
-              </FadeIn>
-            </div>
+
+            <FadeIn delay={0.4} direction="right">
+              <ul className="space-y-6">
+                {['Load wallet instantly via UPI', 'Earn points on every ₹20 spent', 'Skip the line, order from phone'].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-4 text-xl font-bold">
+                    <ShieldCheck size={28} className="text-vibrant-red flex-shrink-0" strokeWidth={3} />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </FadeIn>
           </div>
-          
-          <FadeIn direction="left" className="relative group h-[700px]">
-            <div className="absolute inset-0 bg-accent-brown/5 rounded-[4rem] rotate-3 group-hover:rotate-0 transition-transform duration-700" />
-            <div className="relative z-10 w-full h-full rounded-[3rem] overflow-hidden shadow-2xl">
-              <Parallax speed={0.1}>
-                <img 
-                  src="/storage.png" 
-                  alt="Raw Bean Storage" 
-                  className="w-full h-[120%] object-cover scale-110"
-                />
-              </Parallax>
+
+          <FadeIn direction="left" className="relative flex justify-center">
+            {/* Mock Mobile UI */}
+            <div className="w-[320px] bg-espresso-brown rounded-[3rem] p-4 border-[12px] border-black shadow-[16px_16px_0_0_#FFB800] rotate-3 relative overflow-hidden">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-3xl z-20" />
+              <div className="bg-bg-cream h-[600px] rounded-[2rem] p-6 relative overflow-hidden flex flex-col">
+                <div className="flex justify-between items-center mb-8 pt-4">
+                  <span className="font-heading font-black uppercase text-xl">Janu Bhai</span>
+                  <div className="bg-saffron-yellow p-2 rounded-full"><QrCode size={20} strokeWidth={3} /></div>
+                </div>
+                
+                <div className="bg-espresso-brown text-bg-cream p-6 rounded-3xl mb-6 shadow-xl relative overflow-hidden">
+                  <div className="absolute -right-10 -bottom-10 opacity-20"><Coffee size={100} /></div>
+                  <p className="font-bold text-sm uppercase opacity-60 mb-2">Wallet Balance</p>
+                  <p className="font-heading font-black text-5xl">₹240</p>
+                </div>
+
+                <div className="space-y-4 flex-grow">
+                  <p className="font-bold uppercase text-sm tracking-widest">Recent Orders</p>
+                  <div className="bg-white p-4 rounded-2xl flex justify-between items-center border-2 border-black/5 shadow-sm">
+                    <div>
+                      <p className="font-black">Classic Hot</p>
+                      <p className="text-xs font-bold opacity-50 uppercase">Today, 9:00 AM</p>
+                    </div>
+                    <p className="font-black text-vibrant-red">-₹20</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-2xl flex justify-between items-center border-2 border-black/5 shadow-sm">
+                    <div>
+                      <p className="font-black">Chilled Out</p>
+                      <p className="text-xs font-bold opacity-50 uppercase">Yesterday</p>
+                    </div>
+                    <p className="font-black text-vibrant-red">-₹50</p>
+                  </div>
+                </div>
+
+                <button className="w-full bg-saffron-yellow text-espresso-brown py-4 rounded-xl font-black uppercase tracking-widest shadow-[4px_4px_0_0_#4A3022] border-2 border-espresso-brown mt-4">
+                  Add Money
+                </button>
+              </div>
             </div>
           </FadeIn>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-40 text-center px-6 bg-espresso-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/roast.png')] opacity-10 bg-cover bg-center mix-blend-overlay" />
-        <div className="absolute inset-0 bg-gradient-to-t from-espresso-900 via-transparent to-transparent" />
-        
-        <div className="max-w-4xl mx-auto space-y-12 relative z-10">
-          <FadeIn direction="up">
-            <h2 className="text-6xl md:text-[8rem] font-heading tracking-tighter uppercase leading-[0.8] mb-8 drop-shadow-2xl">
-              Join the <br/><span className="text-accent-red italic">Brotherhood</span>
-            </h2>
-            <p className="text-xl md:text-2xl opacity-60 font-medium max-w-2xl mx-auto leading-relaxed">
-              Whether you're a coffee lover or a potential franchise partner, the Janu Bhai OS is ready for you.
-            </p>
-          </FadeIn>
-          
-          <FadeIn delay={0.2} direction="up" className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10">
-            <Link href="/login" className="w-full sm:w-auto">
-              <MagneticButton intensity={0.4}>
-                <Button size="lg" className="w-full sm:w-auto bg-white text-espresso-900 px-14 py-8 text-xl rounded-full shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] transition-shadow">
-                  Sign In to Dashboard
-                </Button>
-              </MagneticButton>
-            </Link>
-            <Link href="/franchise" className="w-full sm:w-auto">
-              <MagneticButton intensity={0.2}>
-                <Button variant="outline" size="lg" className="w-full sm:w-auto px-14 py-8 text-xl rounded-full border-white/30 text-white hover:bg-white hover:text-espresso-900">
-                  Partner With Us
-                </Button>
-              </MagneticButton>
-            </Link>
-          </FadeIn>
-        </div>
-      </section>
     </div>
   );
 }

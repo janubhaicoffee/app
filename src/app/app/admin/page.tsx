@@ -1,122 +1,167 @@
 "use client";
 
-import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { AnimatedCounter } from '@/components/ui/motion/AnimatedCounter';
 import { Card } from '@/components/ui/Card';
+import { SEO } from '@/components/ui/SEO';
 import { Button } from '@/components/ui/Button';
-import { 
-  Users, 
-  Store, 
-  BarChart3, 
-  Map as MapIcon, 
-  AlertCircle, 
-  ShieldCheck, 
-  FileText, 
-  TrendingUp,
-  Power
-} from 'lucide-react';
+import { MapPin, TrendingUp, Zap, ServerCrash } from 'lucide-react';
 
-export default function SuperadminDashboard() {
-  const { profile } = useAuth();
+// MOCK DATA for layout
+const MOCK_OUTLETS = [
+  { id: '1', name: 'Ghafoor Nagar Hub', volume: 1450, tier: 'premium' },
+  { id: '2', name: 'Indiranagar Express', volume: 1200, tier: 'standard' },
+  { id: '3', name: 'Koramangala Block 5', volume: 980, tier: 'standard' },
+  { id: '4', name: 'HSR Layout Sector 2', volume: 840, tier: 'standard' },
+  { id: '5', name: 'BTM Lake Road', volume: 720, tier: 'standard' },
+];
 
-  if (profile?.role !== 'superadmin') {
-    return <div className="p-10 text-center">Unauthorized. Superadmin access only.</div>;
-  }
+export default function SuperadminCommandCenter() {
+  const [outlets, setOutlets] = useState(MOCK_OUTLETS);
+
+  const toggleTier = (id: string) => {
+    setOutlets(outlets.map(o => {
+      if (o.id === id) {
+        return { ...o, tier: o.tier === 'standard' ? 'premium' : 'standard' };
+      }
+      return o;
+    }));
+  };
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
-      <header className="flex justify-between items-end">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-heading tracking-tighter">HQ Command Center</h1>
-          <p className="text-sm opacity-50 font-medium uppercase tracking-widest">Global Network Status • Live</p>
+    <div className="min-h-screen bg-espresso-900 text-bg-cream p-6 md:p-12 font-sans selection:bg-accent-red selection:text-white">
+      <SEO title="Superadmin OS | Janu Bhai" description="Global Command Center" />
+
+      <header className="mb-12 flex justify-between items-end border-b border-white/10 pb-6">
+        <div>
+          <h1 className="text-3xl font-heading font-black tracking-tighter uppercase text-white flex items-center gap-3">
+            <ServerCrash className="text-accent-red" /> Global Command Center
+          </h1>
+          <p className="text-accent-gold font-bold tracking-widest uppercase text-xs mt-2">Level 4 Clearance Authorized</p>
         </div>
-        <div className="flex gap-4">
-          <Button variant="outline" className="border-accent-red/20 text-accent-red bg-accent-red/5 hover:bg-accent-red hover:text-white press-effect">
-            <Power size={18} className="mr-2" />
-            Global Emergency Stop
-          </Button>
+        <div className="text-right hidden md:block">
+          <p className="text-white/50 text-xs font-bold uppercase tracking-widest">Network Status</p>
+          <div className="flex items-center justify-end gap-2 text-accent-red font-bold">
+            <span className="w-2 h-2 rounded-full bg-accent-red animate-pulse" /> Live & Nominal
+          </div>
         </div>
       </header>
 
-      {/* Stats Overview */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Active Outlets', value: '142', sub: '+3 this week', icon: <Store /> },
-          { label: 'Total Revenue', value: '₹12.4L', sub: 'Today', icon: <TrendingUp /> },
-          { label: 'Active Orders', value: '24', sub: 'Across 12 cities', icon: <BarChart3 /> },
-          { label: 'Pending Apps', value: '8', sub: 'Franchise review', icon: <FileText /> }
-        ].map((stat, i) => (
-          <Card key={i} glass className="p-6 space-y-4">
-            <div className="flex justify-between items-start opacity-40">
-              <span className="text-[10px] font-bold uppercase tracking-widest">{stat.label}</span>
-              {stat.icon}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Column: Metrics & Map */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Master Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="bg-black/40 border border-white/10 p-6">
+              <p className="text-white/50 text-[10px] font-bold tracking-widest uppercase mb-2">Total Active Addas</p>
+              <div className="text-4xl text-white font-black font-number flex items-baseline gap-2">
+                <AnimatedCounter value={42} /> 
+                <span className="text-sm text-white/30">NODES</span>
+              </div>
+            </Card>
+            
+            <Card className="bg-black/40 border border-white/10 p-6">
+              <p className="text-white/50 text-[10px] font-bold tracking-widest uppercase mb-2">Live Cups Today</p>
+              <div className="text-4xl text-accent-gold font-black font-number flex items-baseline gap-2">
+                <AnimatedCounter value={18450} />
+              </div>
+            </Card>
+
+            <Card className="bg-black/40 border border-white/10 p-6">
+              <p className="text-white/50 text-[10px] font-bold tracking-widest uppercase mb-2">Global Revenue</p>
+              <div className="text-4xl text-accent-red font-black font-number flex items-baseline gap-2">
+                <AnimatedCounter value={645000} prefix="₹" />
+              </div>
+            </Card>
+          </div>
+
+          {/* Abstract SVG Node Map */}
+          <Card className="bg-black/40 border border-white/10 p-8 relative overflow-hidden h-[400px] flex items-center justify-center">
+            <div className="absolute inset-0 bg-[url('/grain.png')] opacity-10 mix-blend-overlay pointer-events-none" />
+            <div className="absolute top-6 left-6 z-10">
+              <h3 className="text-white/50 text-xs font-bold tracking-widest uppercase flex items-center gap-2">
+                <MapPin size={14} /> Live Expansion Grid
+              </h3>
             </div>
-            <div className="space-y-1">
-              <h4 className="text-3xl text-number">{stat.value}</h4>
-              <p className="text-[10px] font-bold text-accent-green">{stat.sub}</p>
+            
+            <svg viewBox="0 0 800 400" className="w-full h-full opacity-60">
+              {/* Abstract Connections */}
+              <path d="M 200 150 L 350 200 L 450 100 L 600 250" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2" strokeDasharray="5,5" />
+              <path d="M 350 200 L 400 300 L 600 250" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2" strokeDasharray="5,5" />
+              
+              {/* Nodes (Active = Red, Pending = Yellow) */}
+              <motion.circle cx="200" cy="150" r="6" fill="#E23744" animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }} transition={{ duration: 2, repeat: Infinity }} />
+              <motion.circle cx="350" cy="200" r="8" fill="#E23744" animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }} transition={{ duration: 2.5, repeat: Infinity }} />
+              <motion.circle cx="450" cy="100" r="5" fill="#E23744" animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }} transition={{ duration: 1.8, repeat: Infinity }} />
+              <motion.circle cx="600" cy="250" r="10" fill="#E23744" animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }} transition={{ duration: 3, repeat: Infinity }} />
+              
+              <motion.circle cx="400" cy="300" r="6" fill="#FFB800" animate={{ opacity: [1, 0.2, 1] }} transition={{ duration: 1, repeat: Infinity }} />
+              <motion.circle cx="550" cy="150" r="4" fill="#FFB800" animate={{ opacity: [1, 0.2, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
+            </svg>
+            
+            <div className="absolute bottom-6 right-6 flex gap-4 text-[10px] font-bold uppercase tracking-widest text-white/50">
+              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-accent-red" /> Active Adda</span>
+              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-accent-gold" /> Pending Blueprint</span>
             </div>
           </Card>
-        ))}
-      </section>
+        </div>
 
-      {/* Main Grid */}
-      <div className="grid md:grid-cols-3 gap-8">
-        {/* Live Network Map Placeholder */}
-        <Card glass className="md:col-span-2 aspect-video relative overflow-hidden bg-accent-brown/5 flex items-center justify-center">
-          <div className="absolute inset-0 opacity-10 grayscale contrast-150">
-            <img src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80" alt="Map Grid" className="w-full h-full object-cover" />
-          </div>
-          <div className="relative z-10 text-center space-y-4">
-            <MapIcon size={48} className="mx-auto opacity-20" />
-            <p className="text-xs font-bold uppercase tracking-[0.3em] opacity-40">Live Network Visualization</p>
-          </div>
-        </Card>
+        {/* Right Column: Leaderboard & God Switch */}
+        <div className="space-y-8">
+          
+          <Card className="bg-black/40 border border-white/10 p-6">
+            <h3 className="text-white/50 text-xs font-bold tracking-widest uppercase mb-6 flex items-center gap-2">
+              <TrendingUp size={14} /> Volume Leaderboard
+            </h3>
+            
+            <div className="space-y-4">
+              {outlets.map((outlet, idx) => (
+                <div key={outlet.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <span className={`font-black font-number text-lg ${idx === 0 ? 'text-accent-gold' : 'text-white/30'}`}>
+                      0{idx + 1}
+                    </span>
+                    <div>
+                      <p className="font-bold text-sm text-white">{outlet.name}</p>
+                      <p className="text-[10px] uppercase tracking-widest text-white/50">{outlet.volume} CUPS</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
 
-        {/* Urgent Actions */}
-        <div className="space-y-6">
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">Action Required</h2>
-          <div className="space-y-3">
-            {[
-              { title: 'Franchise App: Okhla', time: '2h ago', type: 'approval', icon: <ShieldCheck className="text-accent-green" /> },
-              { title: 'Inventory Alert: Saket', time: '4h ago', type: 'alert', icon: <AlertCircle className="text-accent-red" /> },
-              { title: 'Staff Audit: CP Hub', time: '1d ago', type: 'task', icon: <Users className="text-accent-brown" /> }
-            ].map((action, i) => (
-              <Card key={i} className="p-4 flex items-center gap-4 bg-white/50 border-black/5 hover:bg-white transition-colors cursor-pointer">
-                <div className="p-2 rounded-xl bg-bg-cream shadow-inner">
-                  {action.icon}
+          {/* The God Switch */}
+          <Card className="bg-accent-red/10 border border-accent-red/20 p-6">
+            <h3 className="text-accent-red text-xs font-bold tracking-widest uppercase mb-6 flex items-center gap-2">
+              <Zap size={14} /> The God Switch (Tier Control)
+            </h3>
+            
+            <div className="space-y-4">
+              {outlets.map((outlet) => (
+                <div key={outlet.id} className="flex items-center justify-between p-3 rounded-lg bg-black/40 border border-black">
+                  <p className="font-bold text-sm text-white w-1/2 truncate pr-2">{outlet.name}</p>
+                  <Button
+                    size="md"
+                    onClick={() => toggleTier(outlet.id)}
+                    className={`w-28 text-[10px] tracking-widest uppercase font-bold py-2 ${
+                      outlet.tier === 'premium' 
+                        ? 'bg-accent-gold text-espresso-900 hover:bg-white' 
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
+                  >
+                    {outlet.tier}
+                  </Button>
                 </div>
-                <div className="flex-1">
-                  <h5 className="text-sm font-bold">{action.title}</h5>
-                  <p className="text-[10px] opacity-40 uppercase tracking-wider">{action.time}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-          <Button fullWidth variant="outline" className="border-accent-brown/10 text-[10px] font-bold uppercase tracking-widest py-4">
-            View All Notifications
-          </Button>
+              ))}
+            </div>
+          </Card>
+
         </div>
       </div>
-
-      {/* Centralized Controls */}
-      <section className="space-y-6">
-        <h2 className="text-xs font-bold uppercase tracking-[0.2em] opacity-40">System Controls</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'Global Menu', icon: <FileText />, href: '/app/menu' },
-            { label: 'Pricing Tiers', icon: <TrendingUp />, href: '/app/pricing' },
-            { label: 'Regional Admins', icon: <Users />, href: '/app/users' },
-            { label: 'Platform Settings', icon: <ShieldCheck />, href: '/app/settings' }
-          ].map((control, i) => (
-            <Link key={i} href={control.href}>
-              <Button variant="outline" className="h-32 w-full flex flex-col items-center justify-center gap-3 border-accent-brown/5 bg-white/30 hover:bg-white hover:border-accent-brown/20 press-effect">
-                <div className="opacity-40">{control.icon}</div>
-                <span className="text-[10px] font-bold uppercase tracking-widest">{control.label}</span>
-              </Button>
-            </Link>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

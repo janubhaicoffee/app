@@ -16,30 +16,41 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://janubhai.com"),
   title: {
-    default: "Janu Bhai Coffee | Roz Ki Strong Kahaani",
+    default: "Janu Bhai | The Smartest Cup in India",
     template: "%s | Janu Bhai Coffee"
   },
-  description: "Experience the science of freshness. Sourced from Chikkamagaluru, processed without chemicals, and preserved via advanced dry vacuum technology.",
-  keywords: ["coffee india", "franchise coffee india", "janu bhai coffee", "decentralized coffee", "Chikkamagaluru coffee"],
+  description: "Roz ki strong kahaani. Join India's fastest-growing decentralized coffee movement. AAA Grade Chikkamagaluru beans, dry vacuum processed.",
+  keywords: ["coffee india", "franchise coffee india", "janu bhai coffee", "decentralized coffee", "Chikkamagaluru coffee", "poshtik coffee", "gen z coffee india"],
   authors: [{ name: "Janu Bhai Coffee Co." }],
+  manifest: "/manifest.json",
+  other: {
+    "theme-color": "#FFB800",
+    "msapplication-TileColor": "#FFB800",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Janu Bhai",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
     url: "https://janubhai.com",
-    title: "Janu Bhai Coffee | Roz Ki Strong Kahaani",
-    description: "Premium AAA Grade coffee from Chikkamagaluru hills. Processed with science, delivered with heart.",
+    title: "Janu Bhai | The Smartest Cup in India",
+    description: "Roz ki strong kahaani. Join India's fastest-growing decentralized coffee movement.",
     siteName: "Janu Bhai Coffee",
     images: [{
       url: "/farm.png",
       width: 1200,
       height: 630,
-      alt: "Janu Bhai Coffee Farm"
+      alt: "Janu Bhai Coffee — India's Decentralized Coffee Movement"
     }]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Janu Bhai Coffee | Roz Ki Strong Kahaani",
-    description: "The most robust coffee in the real India.",
+    title: "Janu Bhai | The Smartest Cup in India",
+    description: "Roz ki strong kahaani. Join India's fastest-growing decentralized coffee movement.",
+    creator: "@janubhaicoffee",
     images: ["/farm.png"]
   },
   icons: {
@@ -56,6 +67,8 @@ export const metadata: Metadata = {
 
 import { Navbar } from "@/components/ui/Navbar";
 import { Footer } from "@/components/ui/Footer";
+import { InstallAppBanner } from "@/components/ui/InstallAppBanner";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 
 export default function RootLayout({
   children,
@@ -69,6 +82,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <Providers>
+          <ServiceWorkerRegistration />
+          <InstallAppBanner />
           <Navbar />
           <main className="flex-grow pt-20">
             {children}
