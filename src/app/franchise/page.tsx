@@ -129,7 +129,7 @@ export default function FranchisePublicPage() {
                   transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
                 >
                   <div className="w-40 h-px bg-gradient-to-r from-accent-gold/40 to-transparent" />
-                  <div className="absolute top-[-20px] left-[160px] w-10 h-10 glass-espresso rounded-full border border-white/20 flex items-center justify-center shadow-lg" style={{ rotate: -deg }}>
+                  <div className="absolute top-[-20px] left-[160px] w-10 h-10 glass-espresso rounded-full border border-white/20 flex items-center justify-center shadow-lg" style={{ transform: `rotate(${-deg}deg)` }}>
                     <MapPin size={14} className={i % 2 === 0 ? "text-accent-red" : "text-white"} />
                   </div>
                 </motion.div>
