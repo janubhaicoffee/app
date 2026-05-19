@@ -6,12 +6,16 @@
 
   /* NEW BRAND IDENTITY: Poshtik Adda */
   --color-bg-cream: #FDFBF7;
-  --color-espresso-brown: #4A3022;
-  --color-saffron-yellow: #FFB800;
-  --color-vibrant-red: #E23744;
+  --color-espresso-900: #4A3022;
+  --color-accent-gold: #FFB800;
+  --color-accent-red: #E23744;
   
   --font-heading: "Inter", system-ui, sans-serif;
   --font-number: "Satoshi", "Inter", system-ui, sans-serif;
+
+  --shadow-janu: 8px 8px 0px 0px #4A3022;
+  --shadow-janu-sm: 4px 4px 0px 0px #4A3022;
+  --shadow-janu-lg: 12px 12px 0px 0px #4A3022;
 }
 
 :root {
@@ -32,7 +36,7 @@ body {
     @apply border-black/10;
   }
   body {
-    @apply selection:bg-saffron-yellow/30 selection:text-espresso-brown;
+    @apply selection:bg-accent-gold/30 selection:text-espresso-900;
   }
 }
 
@@ -74,6 +78,20 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  .shadow-janu {
+    box-shadow: var(--shadow-janu);
+  }
+  .shadow-janu-sm {
+    box-shadow: var(--shadow-janu-sm);
+  }
+  .shadow-janu-lg {
+    box-shadow: var(--shadow-janu-lg);
+  }
+  
+  .janu-border {
+    @apply border-4 border-espresso-900;
+  }
 }
 
 @layer components {
@@ -91,29 +109,29 @@ body {
 
   /* Legal Prose */
   .prose-legal p {
-    @apply mb-6 text-espresso-brown/80 leading-relaxed text-lg;
+    @apply mb-6 text-espresso-900/80 leading-relaxed text-lg;
   }
   .prose-legal h2 {
-    @apply text-3xl font-heading font-bold text-espresso-brown mt-16 mb-8;
+    @apply text-3xl font-heading font-bold text-espresso-900 mt-16 mb-8;
   }
   .prose-legal h3 {
-    @apply text-xl font-bold uppercase tracking-widest text-espresso-brown mt-12 mb-4;
+    @apply text-xl font-bold uppercase tracking-widest text-espresso-900 mt-12 mb-4;
   }
   .prose-legal ul {
     @apply list-disc list-inside space-y-3 mb-8 pl-4;
   }
   .prose-legal li {
-    @apply opacity-80 text-espresso-brown;
+    @apply opacity-80 text-espresso-900;
   }
   .prose-legal a {
-    @apply text-espresso-brown font-bold relative inline-block;
+    @apply text-espresso-900 font-bold relative inline-block;
   }
   .prose-legal a::after {
     content: '';
-    @apply absolute bottom-0 left-0 w-full h-2 bg-saffron-yellow/40 -z-10 transition-all duration-300;
+    @apply absolute bottom-0 left-0 w-full h-2 bg-accent-gold/40 -z-10 transition-all duration-300;
   }
   .prose-legal a:hover::after {
-    @apply h-full bg-saffron-yellow/60;
+    @apply h-full bg-accent-gold/60;
   }
 }
 
