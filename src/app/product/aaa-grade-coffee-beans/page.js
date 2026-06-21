@@ -6,13 +6,13 @@ import { useRouter } from "next/navigation";
 import "../product.css";
 
 const productData = {
-  id: "thodi-hard-coffee",
-  name: "THODI HARD COFFEE",
-  price: 300,
-  image: "/product.png"
+  id: "aaa-grade-coffee-beans",
+  name: "AAA Grade Coffee Beans",
+  price: 899,
+  image: "/beans.png" // User will place beans.png in public folder if needed
 };
 
-export default function ProductPage() {
+export default function CoffeeBeansProductPage() {
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
   const router = useRouter();
@@ -34,22 +34,25 @@ export default function ProductPage() {
         {/* Product Image Gallery */}
         <div className="product-image-section">
           <div className="main-image-wrapper vintage-border">
-            {/* The user will drop product.png in public */}
-            <Image src="/product.png" alt="THODI HARD COFFEE" width={500} height={500} className="product-img" />
+            {/* The user will drop beans.png in public */}
+            <div style={{width: 500, height: 500, backgroundColor: "#f9f6f0", display: "flex", alignItems: "center", justifyContent: "center"}}>
+               <h3>AAA Beans</h3>
+               {/* <Image src="/beans.png" alt="AAA Grade Coffee Beans" width={500} height={500} className="product-img" /> */}
+            </div>
           </div>
         </div>
 
         {/* Product Details */}
         <div className="product-details-section">
-          <h1 className="product-title">THODI HARD COFFEE</h1>
-          <p className="product-subtitle">Pure South Indian Chicory & Coffee Blend (70-30)</p>
+          <h1 className="product-title">AAA Grade Coffee Beans</h1>
+          <p className="product-subtitle">Premium Whole Beans - Expertly Sorted & Roasted</p>
           
           <div className="price-tag">₹ {productData.price} <span className="mrp-text">(Incl. of all taxes)</span></div>
-          <p className="net-weight">Net Weight: 100g</p>
+          <p className="net-weight">Net Weight: 250g</p>
 
           <div className="slogan-box">
-            <p>"For The Ones Who Refuse To Conform"</p>
-            <p><strong>Locally Roasted. Globally Bold.</strong></p>
+            <p>"For The Perfect Fresh Brew"</p>
+            <p><strong>Carefully sorted, highest quality beans.</strong></p>
           </div>
 
           <div className="actions">
@@ -64,17 +67,17 @@ export default function ProductPage() {
           </div>
 
           <div className="nutrition-table vintage-border">
-            <h3>Nutritional Facts (Per 100g)</h3>
+            <h3>Coffee Info</h3>
             <table>
               <tbody>
-                <tr><td>Energy</td><td>354 kcal</td></tr>
-                <tr><td>Protein</td><td>9 g</td></tr>
-                <tr><td>Fat</td><td>14.4 g</td></tr>
-                <tr><td>Carbohydrate</td><td>58.7 g</td></tr>
-                <tr><td>Sugar</td><td>0 g</td></tr>
+                <tr><td>Roast Level</td><td>Medium-Dark</td></tr>
+                <tr><td>Origin</td><td>Chikmagalur, India</td></tr>
+                <tr><td>Altitude</td><td>1200m - 1500m</td></tr>
+                <tr><td>Processing</td><td>Washed</td></tr>
+                <tr><td>Tasting Notes</td><td>Dark Chocolate, Caramel, Nuts</td></tr>
               </tbody>
             </table>
-            <p className="nutrition-footer">No Artificial Colors - No Artificial Flavours - 100% Indian</p>
+            <p className="nutrition-footer">100% Pure Arabica - Handpicked</p>
           </div>
         </div>
       </div>

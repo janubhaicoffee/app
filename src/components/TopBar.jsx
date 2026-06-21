@@ -45,8 +45,8 @@ export default function TopBar() {
             {isDropdownOpen && (
               <div className="dropdown-menu-wrapper">
                 <div className="dropdown-menu">
-                  <Link href="/category/instant-coffee" className="dropdown-item">Instant Coffee</Link>
-                  <Link href="/category/coffee-beans" className="dropdown-item">Coffee Beans</Link>
+                  <Link href="/product/thodi-hard-coffee" className="dropdown-item">Instant Coffee</Link>
+                  <Link href="/product/aaa-grade-coffee-beans" className="dropdown-item">Coffee Beans</Link>
                 </div>
               </div>
             )}
