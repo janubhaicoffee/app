@@ -29,7 +29,7 @@ export default function TopBar() {
       <div className="container topbar-container">
         <div className="logo-container">
           <Link href="/">
-            <Image src="/logo.png" alt="Janu Bhai Logo" width={100} height={100} className="logo-img" />
+            <Image src="/logo.png" alt="Janu Bhai Logo" width={75} height={75} className="logo-img" />
           </Link>
         </div>
 
@@ -45,8 +45,8 @@ export default function TopBar() {
             {isDropdownOpen && (
               <div className="dropdown-menu-wrapper">
                 <div className="dropdown-menu">
-                  <Link href="#instant" className="dropdown-item">Instant Coffee</Link>
-                  <Link href="#beans" className="dropdown-item">Coffee Beans</Link>
+                  <Link href="/category/instant-coffee" className="dropdown-item">Instant Coffee</Link>
+                  <Link href="/category/coffee-beans" className="dropdown-item">Coffee Beans</Link>
                 </div>
               </div>
             )}
