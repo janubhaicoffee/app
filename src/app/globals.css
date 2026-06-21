@@ -1,137 +1,59 @@
-@import "tailwindcss";
-
-@theme inline {
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
-
-  /* NEW BRAND IDENTITY: Poshtik Adda */
-  --color-bg-cream: #FDFBF7;
-  --color-espresso-900: #4A3022;
-  --color-accent-gold: #FFB800;
-  --color-accent-red: #E23744;
-  
-  --font-heading: "Inter", system-ui, sans-serif;
-  --font-number: "Satoshi", "Inter", system-ui, sans-serif;
-
-  --shadow-janu: 8px 8px 0px 0px #4A3022;
-  --shadow-janu-sm: 4px 4px 0px 0px #4A3022;
-  --shadow-janu-lg: 12px 12px 0px 0px #4A3022;
+:root {
+  --bg-color: #F8F1E4; /* Warm parchment */
+  --text-primary: #3E2723; /* Dark Coffee */
+  --text-secondary: #5D4037;
+  --accent-red: #B71C1C;
+  --accent-red-hover: #9A1515;
+  --accent-gold: #FFB300;
+  --border-color: #D7CCC8;
 }
 
-:root {
-  --background: #FDFBF7;
-  --foreground: #4A3022;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  transition: background-color 0.5s ease, color 0.5s ease;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-inter), sans-serif;
+  line-height: 1.6;
 }
 
-@layer base {
-  * {
-    @apply border-black/10;
-  }
-  body {
-    @apply selection:bg-accent-gold/30 selection:text-espresso-900;
-  }
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-playfair), serif;
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
-@layer utilities {
-  .grain-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    pointer-events: none;
-    z-index: 50;
-    opacity: 0.05;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  }
-
-  .text-number {
-    font-family: var(--font-number);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.05em;
-    font-weight: 800;
-  }
-
-  .font-heading {
-    font-family: var(--font-heading);
-    font-weight: 900;
-    letter-spacing: -0.04em;
-  }
-
-  .press-effect {
-    @apply transition-transform duration-200 active:scale-95;
-  }
-
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .shadow-janu {
-    box-shadow: var(--shadow-janu);
-  }
-  .shadow-janu-sm {
-    box-shadow: var(--shadow-janu-sm);
-  }
-  .shadow-janu-lg {
-    box-shadow: var(--shadow-janu-lg);
-  }
-  
-  .janu-border {
-    @apply border-4 border-espresso-900;
-  }
+a {
+  text-decoration: none;
+  color: inherit;
 }
 
-@layer components {
-  .btn {
-    @apply inline-flex items-center justify-center font-bold uppercase tracking-widest transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden;
-  }
-
-  .btn-md {
-    @apply h-12 px-6 text-sm;
-  }
-
-  .btn-lg {
-    @apply h-16 px-8 text-lg;
-  }
-
-  /* Legal Prose */
-  .prose-legal p {
-    @apply mb-6 text-espresso-900/80 leading-relaxed text-lg;
-  }
-  .prose-legal h2 {
-    @apply text-3xl font-heading font-bold text-espresso-900 mt-16 mb-8;
-  }
-  .prose-legal h3 {
-    @apply text-xl font-bold uppercase tracking-widest text-espresso-900 mt-12 mb-4;
-  }
-  .prose-legal ul {
-    @apply list-disc list-inside space-y-3 mb-8 pl-4;
-  }
-  .prose-legal li {
-    @apply opacity-80 text-espresso-900;
-  }
-  .prose-legal a {
-    @apply text-espresso-900 font-bold relative inline-block;
-  }
-  .prose-legal a::after {
-    content: '';
-    @apply absolute bottom-0 left-0 w-full h-2 bg-accent-gold/40 -z-10 transition-all duration-300;
-  }
-  .prose-legal a:hover::after {
-    @apply h-full bg-accent-gold/60;
-  }
+button {
+  cursor: pointer;
+  font-family: inherit;
 }
 
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Vintage border utility */
+.vintage-border {
+  border: 2px solid var(--text-primary);
+  padding: 4px;
+  position: relative;
+}
+
+.vintage-border::before {
+  content: '';
+  position: absolute;
+  top: 4px; left: 4px; right: 4px; bottom: 4px;
+  border: 1px solid var(--text-primary);
+  pointer-events: none;
+}

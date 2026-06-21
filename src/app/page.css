@@ -1,0 +1,204 @@
+.main-content {
+  min-height: 100vh;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 3rem;
+  position: relative;
+  color: var(--accent-red);
+}
+
+.section-title span {
+  background-color: var(--bg-color);
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.section-title::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--text-primary);
+  z-index: 0;
+}
+
+/* Hero Section */
+.hero {
+  padding: 80px 0;
+  background-image: linear-gradient(rgba(248, 241, 228, 0.9), rgba(248, 241, 228, 0.9)), url("https://www.transparenttextures.com/patterns/old-wall.png");
+  border-bottom: 2px solid var(--text-primary);
+  text-align: center;
+}
+
+.hero-text {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px;
+  background-color: rgba(248, 241, 228, 0.95);
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  color: var(--accent-red);
+  margin-bottom: 10px;
+  line-height: 1.1;
+}
+
+.hindi-sub {
+  font-size: 1.5rem;
+  color: var(--accent-gold);
+  margin-bottom: 20px;
+  font-weight: bold;
+  text-shadow: 1px 1px 0px var(--text-primary);
+}
+
+.hero-desc {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  font-family: var(--font-inter);
+}
+
+.btn-primary {
+  background-color: var(--accent-red);
+  color: #fff;
+  border: 2px solid var(--text-primary);
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: 4px 4px 0px var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--text-primary);
+  background-color: var(--accent-red-hover);
+}
+
+/* Process Section */
+.process-section {
+  padding: 80px 0;
+  background-color: #FDF8ED; /* Slightly lighter for contrast */
+  border-bottom: 2px solid var(--text-primary);
+}
+
+.process-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  text-align: center;
+}
+
+.process-step h3 {
+  color: var(--accent-red);
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+.process-step p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.process-img-wrapper {
+  margin-bottom: 20px;
+  border: 2px solid var(--text-primary);
+  border-radius: 50%;
+  overflow: hidden;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 20px auto;
+  box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+}
+
+.process-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.process-step:hover .process-img {
+  transform: scale(1.1);
+}
+
+/* Products Section */
+.products-section {
+  padding: 80px 0;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+}
+
+.product-card {
+  padding: 40px;
+  text-align: center;
+  background-color: #fff;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+}
+
+.product-badge {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  background-color: var(--accent-gold);
+  color: var(--text-primary);
+  font-weight: bold;
+  padding: 5px 15px;
+  border: 2px solid var(--text-primary);
+  transform: rotate(5deg);
+  font-family: var(--font-playfair);
+}
+
+.product-card h3 {
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin-bottom: 15px;
+}
+
+.product-desc {
+  margin-bottom: 20px;
+  color: var(--text-secondary);
+  min-height: 50px;
+}
+
+.product-price {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--accent-red);
+  margin-bottom: 25px;
+  font-family: var(--font-playfair);
+}
+
+/* Footer */
+.footer {
+  background-color: var(--text-primary);
+  color: #fff;
+  text-align: center;
+  padding: 40px 0;
+  border-top: 4px solid var(--accent-gold);
+}
+
+.footer p {
+  margin: 5px 0;
+}
+
+.footer-sub {
+  color: var(--accent-gold);
+  font-size: 0.9rem;
+}
