@@ -21,37 +21,13 @@
   height: 90px;
 }
 
-.logo-container {
-  display: flex;
-  align-items: center;
+.logo-img {
+  object-fit: contain;
+  transition: transform 0.3s ease;
 }
 
-.logo-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 3px solid var(--accent-red);
-  padding: 4px 16px;
-  background-color: var(--bg-color);
-  border-radius: 4px;
-}
-
-.logo-text {
-  font-family: var(--font-playfair), serif;
-  font-size: 1.8rem;
-  font-weight: 900;
-  color: var(--accent-red);
-  line-height: 1;
-  letter-spacing: 2px;
-}
-
-.logo-subtext {
-  font-family: var(--font-inter), sans-serif;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: 4px;
+.logo-img:hover {
+  transform: scale(1.05);
 }
 
 .nav-menu {
@@ -86,10 +62,14 @@
   align-items: center;
 }
 
-.dropdown-menu {
+.dropdown-menu-wrapper {
   position: absolute;
   top: 100%;
   left: -20px;
+  padding-top: 15px; /* Creates the invisible hover bridge */
+}
+
+.dropdown-menu {
   background-color: var(--bg-color);
   border: 2px solid var(--text-primary);
   min-width: 220px;
@@ -97,13 +77,13 @@
   flex-direction: column;
   box-shadow: 4px 4px 0px var(--text-primary);
   padding: 8px 0;
-  margin-top: 10px;
+  position: relative;
 }
 
 .dropdown-menu::before {
   content: '';
   position: absolute;
-  top: -8px;
+  top: -9px;
   left: 30px;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
@@ -129,11 +109,37 @@
   padding-left: 25px;
 }
 
-.cart-icon {
-  cursor: pointer;
-  transition: transform 0.2s ease;
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
-.cart-icon:hover {
+.action-icon {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.action-icon:hover {
   transform: scale(1.1);
+}
+
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: var(--accent-red);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-inter);
 }

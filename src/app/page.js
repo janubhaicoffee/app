@@ -120,10 +120,10 @@ export default function Home() {
           <div className="products-grid">
             <div className="product-card vintage-border" id="instant">
               <div className="product-badge">BESTSELLER</div>
-              <h3>100% Arabica Instant Coffee</h3>
-              <p className="product-desc">Rich aroma, smooth body, and a balanced taste. Ready in seconds.</p>
-              <div className="product-price">₹ 499</div>
-              <button className="btn-primary" onClick={() => handleBuy("Instant Coffee", 499)}>BUY NOW</button>
+              <h3>THODI HARD COFFEE</h3>
+              <p className="product-desc">Pure South Indian Chicory & Coffee Blend (70-30). Locally roasted, globally bold.</p>
+              <div className="product-price">₹ 300</div>
+              <button className="btn-primary" onClick={() => window.location.href='/product/thodi-hard-coffee'}>VIEW PRODUCT</button>
             </div>
             <div className="product-card vintage-border" id="beans">
               <h3>AAA Grade Coffee Beans</h3>

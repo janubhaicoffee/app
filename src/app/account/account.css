@@ -1,0 +1,45 @@
+.account-page {
+  padding: 60px 0;
+  min-height: 80vh;
+}
+
+.account-layout {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.profile-section {
+  flex: 1;
+  min-width: 300px;
+  background-color: #fff;
+  padding: 40px;
+  box-shadow: 8px 8px 0px var(--text-primary);
+}
+
+.orders-section {
+  flex: 2;
+  min-width: 300px;
+  background-color: #fff;
+  padding: 40px;
+  box-shadow: 8px 8px 0px var(--text-primary);
+}
+
+.section-header {
+  font-size: 1.8rem;
+  color: var(--accent-red);
+  margin-bottom: 25px;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.profile-details p {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.no-orders {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 1.1rem;
+}

@@ -1,6 +1,7 @@
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import TopBar from "@/components/TopBar";
+import { CartProvider } from "@/context/CartContext";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -21,8 +22,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${playfair.variable} ${inter.variable}`}>
-        <TopBar />
-        {children}
+        <CartProvider>
+          <TopBar />
+          {children}
+        </CartProvider>
       </body>
     </html>
   );
