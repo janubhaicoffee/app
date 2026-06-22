@@ -245,3 +245,50 @@
   50% { opacity: 1; }
   100% { opacity: 0.6; }
 }
+
+.blend-multiply {
+  mix-blend-mode: multiply;
+}
+
+/* Tabs Styling */
+.purchase-tabs-container {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+  background: rgba(255,255,255,0.8);
+  box-shadow: 4px 4px 0px var(--text-primary);
+}
+
+.tabs-header {
+  display: flex;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 15px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-btn:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.tab-btn.active {
+  color: var(--text-primary);
+  border-bottom: 3px solid var(--accent-red);
+  background: #fff;
+}
+
+.tab-content {
+  padding: 20px;
+  background: #fff;
+}

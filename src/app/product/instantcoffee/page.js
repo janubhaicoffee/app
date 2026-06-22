@@ -10,15 +10,15 @@ const variants = {
     id: "instantcoffee-100g",
     name: "THODI HARD COFFEE (100g)",
     price: 300,
-    frontImage: "/product/100gram/100gramfront-nobg.png",
-    backImage: "/product/100gram/100gramback-nobg.png"
+    frontImage: "/product/100gram/100gramfront.png",
+    backImage: "/product/100gram/100gramback.png"
   },
   "1000g": {
     id: "instantcoffee-1000g",
     name: "THODI HARD COFFEE (1000g)",
     price: 3000,
-    frontImage: "/product/1000gram/1000gramfront-nobg.png",
-    backImage: "/product/1000gram/1000gramback-nobg.png"
+    frontImage: "/product/1000gram/1000gramfront.png",
+    backImage: "/product/1000gram/1000gramback.png"
   }
 };
 
@@ -31,6 +31,7 @@ export default function ProductPage() {
 
   const [variant, setVariant] = useState("100g");
   const [activeImage, setActiveImage] = useState(variants["100g"].frontImage);
+  const [activeTab, setActiveTab] = useState("buy");
 
   const handleVariantChange = (newVariant) => {
     setVariant(newVariant);
@@ -80,7 +81,7 @@ export default function ProductPage() {
                 alt="THODI HARD COFFEE" 
                 width={500} 
                 height={500} 
-                className="product-img" 
+                className="product-img blend-multiply" 
                 priority
               />
             </div>
@@ -92,14 +93,14 @@ export default function ProductPage() {
                 onClick={() => setActiveImage(variants[variant].frontImage)}
                 aria-label="View front of the pack"
               >
-                <Image src={variants[variant].frontImage} alt="Front View" width={80} height={80} className="thumbnail-img" />
+                <Image src={variants[variant].frontImage} alt="Front View" width={80} height={80} className="thumbnail-img blend-multiply" />
               </button>
               <button 
                 className={`thumbnail-btn ${activeImage === variants[variant].backImage ? "active" : ""}`}
                 onClick={() => setActiveImage(variants[variant].backImage)}
                 aria-label="View back of the pack"
               >
-                <Image src={variants[variant].backImage} alt="Back View" width={80} height={80} className="thumbnail-img" />
+                <Image src={variants[variant].backImage} alt="Back View" width={80} height={80} className="thumbnail-img blend-multiply" />
               </button>
             </div>
           </div>
@@ -136,58 +137,84 @@ export default function ProductPage() {
             <p><strong>Locally Roasted. Globally Bold.</strong></p>
           </div>
 
-          {/* PURCHASE MODULES */}
+          {/* PURCHASE MODULES - Tabbed Interface */}
           <div className="purchase-modules">
-            
-            {/* 1. Direct Purchase */}
-            <div className="purchase-card vintage-border" style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.3)' }}>
-              <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--primary-color)' }}>One-Time Purchase</h3>
-              <div className="actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                <div className="quantity-selector" style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '4px' }}>
-                  <button onClick={() => setBuyQuantity(q => Math.max(1, q - 1))} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>-</button>
-                  <span style={{ minWidth: '30px', textAlign: 'center', fontWeight: 'bold' }}>{buyQuantity}</span>
-                  <button onClick={() => setBuyQuantity(q => q + 1)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>+</button>
-                </div>
-                
-                <button className="btn-secondary" onClick={handleAddToCart} style={{ flex: 1 }}>ADD TO CART</button>
-                <button className="btn-primary buy-btn" onClick={handleBuyNow} style={{ flex: 1 }}>BUY NOW</button>
-              </div>
-            </div>
-
-            {/* 2. Subscribe & Save */}
-            <div className="purchase-card vintage-border" style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'rgba(183, 28, 28, 0.1)', borderColor: 'var(--primary-color)' }}>
-              <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--primary-color)', display: 'flex', justifyContent: 'space-between' }}>
-                Subscribe & Save <span>10% OFF</span>
-              </h3>
-              <p style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '1rem' }}>Never run out of coffee again. Auto-delivered to your door.</p>
-              
-              <div className="actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                <select 
-                  value={subFrequency} 
-                  onChange={(e) => setSubFrequency(e.target.value)}
-                  style={{ padding: '0.8rem', background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', flex: 1 }}
+            <div className="purchase-tabs-container vintage-border">
+              <div className="tabs-header">
+                <button 
+                  className={`tab-btn ${activeTab === "buy" ? "active" : ""}`}
+                  onClick={() => setActiveTab("buy")}
                 >
-                  <option value="weekly">Deliver Weekly</option>
-                  <option value="monthly">Deliver Monthly</option>
-                </select>
+                  Buy Once
+                </button>
+                <button 
+                  className={`tab-btn ${activeTab === "subscribe" ? "active" : ""}`}
+                  onClick={() => setActiveTab("subscribe")}
+                >
+                  Subscribe & Save
+                </button>
+                <button 
+                  className={`tab-btn ${activeTab === "gift" ? "active" : ""}`}
+                  onClick={() => setActiveTab("gift")}
+                >
+                  Gift
+                </button>
+              </div>
+              
+              <div className="tab-content">
+                {activeTab === "buy" && (
+                  <div className="tab-pane">
+                    <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--primary-color)' }}>One-Time Purchase</h3>
+                    <div className="actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <div className="quantity-selector" style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.05)', padding: '0.5rem', borderRadius: '4px' }}>
+                        <button onClick={() => setBuyQuantity(q => Math.max(1, q - 1))} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>-</button>
+                        <span style={{ minWidth: '30px', textAlign: 'center', fontWeight: 'bold' }}>{buyQuantity}</span>
+                        <button onClick={() => setBuyQuantity(q => q + 1)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>+</button>
+                      </div>
+                      
+                      <button className="btn-secondary" onClick={handleAddToCart} style={{ flex: 1 }}>ADD TO CART</button>
+                      <button className="btn-primary buy-btn" onClick={handleBuyNow} style={{ flex: 1 }}>BUY NOW</button>
+                    </div>
+                  </div>
+                )}
 
-                <div className="quantity-selector" style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '4px' }}>
-                  <button onClick={() => setSubQuantity(q => Math.max(1, q - 1))} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>-</button>
-                  <span style={{ minWidth: '30px', textAlign: 'center', fontWeight: 'bold' }}>{subQuantity}</span>
-                  <button onClick={() => setSubQuantity(q => q + 1)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>+</button>
-                </div>
-                
-                <button className="btn-primary" onClick={handleSubscribe} style={{ width: '100%', marginTop: '0.5rem' }}>SUBSCRIBE NOW</button>
+                {activeTab === "subscribe" && (
+                  <div className="tab-pane">
+                    <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--primary-color)', display: 'flex', justifyContent: 'space-between' }}>
+                      Subscribe & Save <span>10% OFF</span>
+                    </h3>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Never run out of coffee again. Auto-delivered to your door.</p>
+                    
+                    <div className="actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <select 
+                        value={subFrequency} 
+                        onChange={(e) => setSubFrequency(e.target.value)}
+                        style={{ padding: '0.8rem', background: '#fff', color: 'var(--text-primary)', border: '2px solid var(--text-primary)', borderRadius: '4px', flex: 1 }}
+                      >
+                        <option value="weekly">Deliver Weekly</option>
+                        <option value="monthly">Deliver Monthly</option>
+                      </select>
+
+                      <div className="quantity-selector" style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.05)', padding: '0.5rem', borderRadius: '4px' }}>
+                        <button onClick={() => setSubQuantity(q => Math.max(1, q - 1))} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>-</button>
+                        <span style={{ minWidth: '30px', textAlign: 'center', fontWeight: 'bold' }}>{subQuantity}</span>
+                        <button onClick={() => setSubQuantity(q => q + 1)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>+</button>
+                      </div>
+                      
+                      <button className="btn-primary" onClick={handleSubscribe} style={{ width: '100%', marginTop: '0.5rem' }}>SUBSCRIBE NOW</button>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "gift" && (
+                  <div className="tab-pane" style={{ textAlign: 'center' }}>
+                    <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--primary-color)' }}>Send as a Gift 🎁</h3>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Ship directly to a friend with a personalized message.</p>
+                    <button className="btn-secondary" onClick={handleGift} style={{ width: '100%' }}>GIFT NOW</button>
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* 3. Gift */}
-            <div className="purchase-card vintage-border" style={{ padding: '1.5rem', marginBottom: '2rem', background: 'rgba(0,0,0,0.3)', textAlign: 'center' }}>
-              <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: '#fff' }}>Send as a Gift 🎁</h3>
-              <p style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '1rem' }}>Ship directly to a friend with a personalized message.</p>
-              <button className="btn-secondary" onClick={handleGift} style={{ width: '100%' }}>GIFT NOW</button>
-            </div>
-
           </div>
 
           <div className="nutrition-table vintage-border">
