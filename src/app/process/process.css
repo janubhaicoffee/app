@@ -41,14 +41,14 @@
 }
 
 .hindi-text {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  color: var(--primary-color);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  color: var(--accent-red);
   font-weight: 700;
 }
 
 .urdu-text {
-  font-size: clamp(2.5rem, 6vw, 4rem);
-  color: var(--accent-red);
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  color: var(--primary-color);
   font-weight: 700;
 }
 
@@ -69,25 +69,25 @@
 .section-title {
   text-align: center;
   font-family: var(--font-playfair), serif;
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   color: var(--bg-color);
   background-color: var(--accent-red);
   display: inline-block;
-  padding: 0.5rem 2rem;
-  border-radius: 4px;
+  padding: 0.5rem 2.5rem;
+  border-radius: 2px;
   margin: 0 auto 4rem;
   font-weight: 800;
   text-transform: uppercase;
   position: relative;
   left: 50%;
   transform: translateX(-50%);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 4px 4px 0px rgba(74, 48, 34, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .timeline-container {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
   position: relative;
 }
 
@@ -100,7 +100,7 @@
     bottom: 0;
     left: 50%;
     width: 2px;
-    background-color: var(--border-color);
+    background-color: rgba(74, 48, 34, 0.3);
     transform: translateX(-50%);
   }
 }
@@ -112,6 +112,7 @@
   gap: 1.5rem;
   position: relative;
   width: 100%;
+  margin-bottom: 2rem;
 }
 
 @media (min-width: 768px) {
@@ -126,16 +127,16 @@
 }
 
 .step-icon-container {
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   background-color: var(--bg-color);
-  border: 3px solid var(--border-color);
+  border: 2px solid rgba(74, 48, 34, 0.4);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2;
-  box-shadow: inset 0 0 15px rgba(0,0,0,0.05), 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.02), 0 4px 10px rgba(0,0,0,0.08);
 }
 
 @media (min-width: 768px) {
@@ -151,25 +152,25 @@
 }
 
 .step-content {
-  background-color: rgba(255, 255, 255, 0.5);
-  border: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(74, 48, 34, 0.2);
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 4px;
   width: 100%;
-  max-width: 400px;
+  max-width: 350px;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+  box-shadow: 2px 2px 0px rgba(74, 48, 34, 0.1);
 }
 
 @media (min-width: 768px) {
   .timeline-step:nth-child(odd) .step-content {
     text-align: right;
-    margin-right: calc(50% + 40px);
+    margin-right: calc(50% + 60px);
   }
   
   .timeline-step:nth-child(even) .step-content {
     text-align: left;
-    margin-left: calc(50% + 40px);
+    margin-left: calc(50% + 60px);
   }
 }
 
@@ -211,10 +212,10 @@
   background-color: var(--accent-red);
   color: var(--bg-color);
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 4px;
   text-align: center;
-  min-width: 200px;
-  box-shadow: 0 10px 20px rgba(186, 32, 38, 0.2);
+  min-width: 180px;
+  box-shadow: 4px 4px 0px rgba(74, 48, 34, 0.3);
 }
 
 .grade-badge h2 {
