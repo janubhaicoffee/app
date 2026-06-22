@@ -1,0 +1,64 @@
+.gallery-container {
+  width: 100%;
+  position: relative;
+}
+
+.swipe-gallery {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.swipe-gallery::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+.swipe-item {
+  min-width: 100%;
+  scroll-snap-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-zoom-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  cursor: zoom-in;
+  border-radius: 4px;
+}
+
+.zoom-img {
+  transition: transform 0.2s ease-out;
+  object-fit: contain;
+}
+
+.zoom-img.mobile-zoomed {
+  transform: scale(2);
+}
+
+.gallery-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--border-color);
+  transition: background-color 0.2s ease;
+}
+
+.indicator.active {
+  background-color: var(--accent-red);
+}

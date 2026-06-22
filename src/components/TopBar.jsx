@@ -9,6 +9,7 @@ import "./TopBar.css";
 
 export default function TopBar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { getCartCount } = useCart();
   const [user, setUser] = useState(null);
 
@@ -33,7 +34,11 @@ export default function TopBar() {
           </Link>
         </div>
 
-        <nav className="nav-menu">
+        <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle menu">
+          ☰
+        </button>
+
+        <nav className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
           <div 
             className="dropdown"
             onMouseEnter={() => setIsDropdownOpen(true)}
@@ -51,8 +56,7 @@ export default function TopBar() {
               </div>
             )}
           </div>
-          <Link href="#process" className="nav-link">Our Process</Link>
-          <Link href="/track" className="nav-link">Track Order</Link>
+          <Link href="/process" className="nav-link">Our Process</Link>
         </nav>
 
         <div className="topbar-actions">

@@ -3,6 +3,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
+import ImageGallery from "@/components/ImageGallery";
 import "../product.css";
 
 const variants = {
@@ -23,19 +24,16 @@ const variants = {
 };
 
 export default function ProductPage() {
-  const [buyQuantity, setBuyQuantity] = useState(1);
-  const [subQuantity, setSubQuantity] = useState(1);
   const [subFrequency, setSubFrequency] = useState("weekly");
   const { addToCart, clearCart } = useCart();
   const router = useRouter();
 
   const [variant, setVariant] = useState("100g");
-  const [activeImage, setActiveImage] = useState(variants["100g"].frontImage);
   const [activeTab, setActiveTab] = useState("buy");
+  const [showAddMoreHint, setShowAddMoreHint] = useState(false);
 
   const handleVariantChange = (newVariant) => {
     setVariant(newVariant);
-    setActiveImage(variants[newVariant].frontImage);
   };
 
   const currentProduct = {
@@ -46,25 +44,28 @@ export default function ProductPage() {
   };
 
   const handleAddToCart = () => {
-    addToCart({ ...currentProduct, quantity: buyQuantity });
-    alert("Added to cart!");
+    addToCart({ ...currentProduct, quantity: 1 });
+    setShowAddMoreHint(true);
+    setTimeout(() => {
+      setShowAddMoreHint(false);
+    }, 3000);
   };
 
   const handleBuyNow = () => {
     clearCart();
-    addToCart({ ...currentProduct, quantity: buyQuantity });
+    addToCart({ ...currentProduct, quantity: 1 });
     router.push("/checkout?mode=standard");
   };
 
   const handleSubscribe = () => {
     clearCart();
-    addToCart({ ...currentProduct, quantity: subQuantity, subscription: subFrequency });
+    addToCart({ ...currentProduct, quantity: 1, subscription: subFrequency });
     router.push(`/checkout?mode=subscription&frequency=${subFrequency}`);
   };
 
   const handleGift = () => {
     clearCart();
-    addToCart({ ...currentProduct, quantity: buyQuantity, isGift: true });
+    addToCart({ ...currentProduct, quantity: 1, isGift: true });
     router.push("/checkout?mode=gift");
   };
 
@@ -74,35 +75,11 @@ export default function ProductPage() {
         
         {/* Product Image Gallery */}
         <div className="product-image-section">
-          <div className="main-image-wrapper vintage-border premium-image-container">
-            <div className="floating-product">
-              <Image 
-                src={activeImage} 
-                alt="THODI HARD COFFEE" 
-                width={500} 
-                height={500} 
-                className="product-img blend-multiply" 
-                priority
-              />
-            </div>
-            <p className="interactive-hint">Hover to explore the premium quality</p>
-            
-            <div className="product-thumbnails">
-              <button 
-                className={`thumbnail-btn ${activeImage === variants[variant].frontImage ? "active" : ""}`}
-                onClick={() => setActiveImage(variants[variant].frontImage)}
-                aria-label="View front of the pack"
-              >
-                <Image src={variants[variant].frontImage} alt="Front View" width={80} height={80} className="thumbnail-img blend-multiply" />
-              </button>
-              <button 
-                className={`thumbnail-btn ${activeImage === variants[variant].backImage ? "active" : ""}`}
-                onClick={() => setActiveImage(variants[variant].backImage)}
-                aria-label="View back of the pack"
-              >
-                <Image src={variants[variant].backImage} alt="Back View" width={80} height={80} className="thumbnail-img blend-multiply" />
-              </button>
-            </div>
+          <div className="vintage-border premium-image-container" style={{ padding: '10px' }}>
+            <ImageGallery 
+              frontImage={variants[variant].frontImage} 
+              backImage={variants[variant].backImage} 
+            />
           </div>
         </div>
 
@@ -113,7 +90,8 @@ export default function ProductPage() {
           
           <div className="price-tag">₹ {variants[variant].price} <span className="mrp-text">(Incl. of all taxes)</span></div>
           
-          <div className="variant-selector" style={{ display: 'flex', gap: '15px', marginTop: '10px', marginBottom: '10px' }}>
+          <p className="net-weight" style={{ fontWeight: 'bold', marginBottom: '5px' }}>Net Weight: {variant}</p>
+          <div className="variant-selector" style={{ display: 'flex', gap: '15px', marginTop: '5px', marginBottom: '15px' }}>
             <button 
               onClick={() => handleVariantChange("100g")}
               className={variant === "100g" ? "btn-primary" : "btn-secondary"}
@@ -129,13 +107,8 @@ export default function ProductPage() {
               1000g
             </button>
           </div>
-          
-          <p className="net-weight">Net Weight: {variant}</p>
 
-          <div className="slogan-box">
-            <p>"For The Ones Who Refuse To Conform"</p>
-            <p><strong>Locally Roasted. Globally Bold.</strong></p>
-          </div>
+
 
           {/* PURCHASE MODULES - Tabbed Interface */}
           <div className="purchase-modules">
@@ -151,7 +124,7 @@ export default function ProductPage() {
                   className={`tab-btn ${activeTab === "subscribe" ? "active" : ""}`}
                   onClick={() => setActiveTab("subscribe")}
                 >
-                  Subscribe & Save
+                  Subscribe Now
                 </button>
                 <button 
                   className={`tab-btn ${activeTab === "gift" ? "active" : ""}`}
@@ -164,15 +137,15 @@ export default function ProductPage() {
               <div className="tab-content">
                 {activeTab === "buy" && (
                   <div className="tab-pane">
-                    <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--primary-color)' }}>One-Time Purchase</h3>
                     <div className="actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                      <div className="quantity-selector" style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.05)', padding: '0.5rem', borderRadius: '4px' }}>
-                        <button onClick={() => setBuyQuantity(q => Math.max(1, q - 1))} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>-</button>
-                        <span style={{ minWidth: '30px', textAlign: 'center', fontWeight: 'bold' }}>{buyQuantity}</span>
-                        <button onClick={() => setBuyQuantity(q => q + 1)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>+</button>
-                      </div>
-                      
-                      <button className="btn-secondary" onClick={handleAddToCart} style={{ flex: 1 }}>ADD TO CART</button>
+                      <button className="btn-secondary" onClick={handleAddToCart} style={{ flex: 1, position: 'relative' }}>
+                        ADD TO CART
+                        {showAddMoreHint && (
+                          <span style={{ position: 'absolute', top: '-35px', left: '50%', transform: 'translateX(-50%)', background: 'var(--text-primary)', color: 'var(--bg-color)', padding: '6px 10px', borderRadius: '4px', fontSize: '0.8rem', whiteSpace: 'nowrap', opacity: 1, transition: 'opacity 0.3s' }}>
+                            Tap again to add more packets!
+                          </span>
+                        )}
+                      </button>
                       <button className="btn-primary buy-btn" onClick={handleBuyNow} style={{ flex: 1 }}>BUY NOW</button>
                     </div>
                   </div>
@@ -181,7 +154,7 @@ export default function ProductPage() {
                 {activeTab === "subscribe" && (
                   <div className="tab-pane">
                     <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--primary-color)', display: 'flex', justifyContent: 'space-between' }}>
-                      Subscribe & Save <span>10% OFF</span>
+                      Subscribe Now
                     </h3>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Never run out of coffee again. Auto-delivered to your door.</p>
                     
@@ -195,11 +168,7 @@ export default function ProductPage() {
                         <option value="monthly">Deliver Monthly</option>
                       </select>
 
-                      <div className="quantity-selector" style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.05)', padding: '0.5rem', borderRadius: '4px' }}>
-                        <button onClick={() => setSubQuantity(q => Math.max(1, q - 1))} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>-</button>
-                        <span style={{ minWidth: '30px', textAlign: 'center', fontWeight: 'bold' }}>{subQuantity}</span>
-                        <button onClick={() => setSubQuantity(q => q + 1)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: '1.2rem', cursor: 'pointer', padding: '0 10px' }}>+</button>
-                      </div>
+
                       
                       <button className="btn-primary" onClick={handleSubscribe} style={{ width: '100%', marginTop: '0.5rem' }}>SUBSCRIBE NOW</button>
                     </div>

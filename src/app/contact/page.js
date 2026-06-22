@@ -12,14 +12,14 @@ export default function ContactPage() {
 
         <h2>Contact Information</h2>
         <ul>
-          <li><strong>Email:</strong> support@janubhai.com</li>
-          <li><strong>Phone:</strong> +91 98765 43210 (Mon-Fri, 9am - 6pm IST)</li>
+          <li><strong>Email:</strong> hello@janubhai.com</li>
+          <li><strong>Phone:</strong> +91 8527976791 (Mon-Fri, 9am - 6pm IST)</li>
         </ul>
 
         <h2>Operating Address</h2>
-        <p>Janu Bhai Coffee Estate,<br/>
-        Chikmagaluru, Karnataka - 577101<br/>
-        India</p>
+        <p>Ground Floor, Shop 16, Building A1,<br/>
+        Gafoor Nagar Dhalan, Jamia Nagar, 110025,<br/>
+        South East Delhi, Delhi, India</p>
       </div>
     </main>
   );

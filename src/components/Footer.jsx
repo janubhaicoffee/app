@@ -26,9 +26,10 @@ export default function Footer() {
           <div className="footer-contact">
             <h4>Support</h4>
             <ul>
+              <li><Link href="/track">Track Order</Link></li>
               <li><Link href="/contact">Contact Us</Link></li>
-              <li>Email: support@janubhai.com</li>
-              <li>Phone: +91 98765 43210</li>
+              <li>Email: hello@janubhai.com</li>
+              <li>Phone: +91 8527976791</li>
             </ul>
           </div>
         </div>

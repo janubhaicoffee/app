@@ -9,7 +9,7 @@ export default function RefundsPage() {
         <p>Last updated: {new Date().toLocaleDateString()}</p>
 
         <h2>1. Cancellations</h2>
-        <p>Orders can only be cancelled before they are dispatched. Once an order is shipped, we cannot accept any cancellation requests. If you wish to cancel an order, please contact us immediately at support@janubhai.com.</p>
+        <p>Orders can only be cancelled before they are dispatched. Once an order is shipped, we cannot accept any cancellation requests. If you wish to cancel an order, please contact us immediately at hello@janubhai.com.</p>
 
         <h2>2. Returns & Refunds</h2>
         <p>Due to the perishable nature of coffee, we do not accept returns. However, if you receive a damaged product or the wrong item, please notify us within 48 hours of delivery with photographic evidence.</p>
