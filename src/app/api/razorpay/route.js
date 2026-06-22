@@ -5,10 +5,13 @@ export async function POST(req) {
   try {
     const { amount } = await req.json();
 
-    // Ensure we have API keys (fallback to test keys if not present, though in real prod it will fail without actual keys)
+    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.NEXT_SECRET_RAZORPAY_KEY) {
+      return NextResponse.json({ error: "Razorpay keys are missing" }, { status: 500 });
+    }
+
     const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_dummy',
-      key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy_secret',
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key_secret: process.env.NEXT_SECRET_RAZORPAY_KEY,
     });
 
     const options = {
@@ -17,14 +20,7 @@ export async function POST(req) {
       receipt: `receipt_order_${Math.floor(Math.random() * 1000)}`,
     };
 
-    // Since we're using dummy keys, Razorpay will fail if they are invalid.
-    // For the sake of this test implementation without real keys, we return a mock order if dummy keys are detected.
-    if (process.env.RAZORPAY_KEY_ID === undefined) {
-       console.log("Mocking Razorpay Order because actual keys are missing in env");
-       return NextResponse.json({
-         orderId: `order_mock_${Math.floor(Math.random() * 10000)}`
-       });
-    }
+    // Order creation will use the actual keys
 
     const order = await razorpay.orders.create(options);
 

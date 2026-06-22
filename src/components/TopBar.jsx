@@ -45,13 +45,14 @@ export default function TopBar() {
             {isDropdownOpen && (
               <div className="dropdown-menu-wrapper">
                 <div className="dropdown-menu">
-                  <Link href="/product/thodi-hard-coffee" className="dropdown-item">Instant Coffee</Link>
-                  <Link href="/product/aaa-grade-coffee-beans" className="dropdown-item">Coffee Beans</Link>
+                  <Link href="/product/instantcoffee" className="dropdown-item">Instant Coffee</Link>
+                  <Link href="/product/coffeebeans" className="dropdown-item">Coffee Beans</Link>
                 </div>
               </div>
             )}
           </div>
           <Link href="#process" className="nav-link">Our Process</Link>
+          <Link href="/track" className="nav-link">Track Order</Link>
         </nav>
 
         <div className="topbar-actions">

@@ -17,7 +17,7 @@ export default function InstantCoffeePage() {
             <h3>THODI HARD COFFEE</h3>
             <p className="product-desc">Pure South Indian Chicory & Coffee Blend (70-30). Locally roasted, globally bold.</p>
             <div className="product-price">₹ 300</div>
-            <button className="btn-primary" onClick={() => router.push('/product/thodi-hard-coffee')}>VIEW PRODUCT</button>
+            <button className="btn-primary" onClick={() => router.push('/product/instantcoffee')}>VIEW PRODUCT</button>
           </div>
         </div>
       </div>

@@ -115,11 +115,6 @@ export default function Home() {
 
 
 
-      {/* Footer */}
-      <footer className="footer">
-        <p>© 2026 Janu Bhai Coffee. All rights reserved.</p>
-        <p className="footer-sub">Born in Chikmagaluru, Loved everywhere.</p>
-      </footer>
     </main>
   );
 }

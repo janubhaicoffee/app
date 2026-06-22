@@ -1,0 +1,154 @@
+.track-page {
+  padding: 100px 20px 60px;
+  min-height: 80vh;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.track-title {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  color: var(--primary-color);
+  text-align: center;
+  margin-bottom: 0.5rem;
+  letter-spacing: 2px;
+}
+
+.track-subtitle {
+  text-align: center;
+  margin-bottom: 3rem;
+  color: #d1d1d1;
+  font-family: var(--font-body);
+}
+
+.track-form {
+  display: flex;
+  gap: 1rem;
+  max-width: 600px;
+  margin: 0 auto 3rem auto;
+  padding: 2rem;
+  background: rgba(30, 30, 30, 0.5);
+  border-radius: 12px;
+  align-items: center;
+}
+
+.track-input {
+  flex: 1;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+}
+
+.track-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 8px rgba(183, 28, 28, 0.4);
+}
+
+.track-error {
+  color: #D32F2F;
+  text-align: center;
+  margin-top: -2rem;
+  margin-bottom: 2rem;
+}
+
+.tracking-results {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: rgba(30, 30, 30, 0.5);
+  border-radius: 12px;
+}
+
+.tracking-results h2 {
+  font-family: var(--font-heading);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.status-badge {
+  background-color: var(--primary-color);
+  color: #fff;
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-family: var(--font-body);
+}
+
+.tracking-meta {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  font-family: var(--font-body);
+  color: #ccc;
+}
+
+.timeline-container {
+  position: relative;
+  padding-left: 20px;
+}
+
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background: var(--border-color);
+}
+
+.timeline-event {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -25px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  box-shadow: 0 0 10px var(--primary-color);
+}
+
+.timeline-content h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.timeline-content p {
+  margin: 0 0 0.5rem 0;
+  color: #aaa;
+  font-size: 0.95rem;
+}
+
+.timeline-date {
+  font-size: 0.85rem;
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .track-form {
+    flex-direction: column;
+  }
+  .track-form button {
+    width: 100%;
+  }
+  .tracking-meta {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

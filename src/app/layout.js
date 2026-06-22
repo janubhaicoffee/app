@@ -1,6 +1,7 @@
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import TopBar from "@/components/TopBar";
+import Footer from "@/components/Footer";
 import { CartProvider } from "@/context/CartContext";
 
 const playfair = Playfair_Display({
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
         <CartProvider>
           <TopBar />
           {children}
+          <Footer />
         </CartProvider>
       </body>
     </html>
