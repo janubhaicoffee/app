@@ -62,6 +62,9 @@ export default function Home() {
       <section className="hero">
         <div className="container hero-container">
           <div className="hero-text vintage-border">
+            <div className="hero-portrait">
+              <Image src="/arsalanazad.png" alt="Arsalan Azad - Janu Bhai Coffee" width={250} height={250} priority className="portrait-img" />
+            </div>
             <h1>FROM THE HILLS OF CHIKMAGALURU</h1>
             <p className="hindi-sub">चिकमगलुरु की ताज़ा कॉफ़ी</p>
             <p className="hero-desc">
