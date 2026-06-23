@@ -23,7 +23,10 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
+      let errMsg = error.message || error.msg || JSON.stringify(error);
+      if (typeof errMsg === 'object') errMsg = JSON.stringify(errMsg);
+      if (errMsg === '{}') errMsg = "Invalid email or password.";
+      setError(errMsg);
     } else {
       router.push("/account");
     }
@@ -42,11 +45,11 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="auth-form">
             <div className="form-group">
               <label>Email Address</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="hello@janubhai.com" />
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
             </div>
             <div className="form-group">
               <label>Password</label>
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" />
             </div>
             <button type="submit" className="btn-primary full-width mt-20" disabled={loading}>
               {loading ? "LOGGING IN..." : "LOG IN"}

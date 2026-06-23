@@ -31,7 +31,10 @@ export default function SignupPage() {
     });
 
     if (error) {
-      setError(error.message);
+      let errMsg = error.message || error.msg || JSON.stringify(error);
+      if (typeof errMsg === 'object') errMsg = JSON.stringify(errMsg);
+      if (errMsg === '{}') errMsg = "Signup failed. Please check your details and try again.";
+      setError(errMsg);
     } else {
       // If user identities is empty, it usually means the email is already registered 
       // but email confirmations are disabled or it's a soft duplicate.
@@ -58,15 +61,15 @@ export default function SignupPage() {
           <form onSubmit={handleSignup} className="auth-form">
             <div className="form-group">
               <label>Full Name</label>
-              <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Arsalan Azad" />
+              <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" />
             </div>
             <div className="form-group">
               <label>Email Address</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="hello@janubhai.com" />
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
             </div>
             <div className="form-group">
               <label>Password</label>
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" minLength={6} />
+              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" minLength={6} />
             </div>
             <button type="submit" className="btn-primary full-width mt-20" disabled={loading}>
               {loading ? "CREATING ACCOUNT..." : "SIGN UP"}
