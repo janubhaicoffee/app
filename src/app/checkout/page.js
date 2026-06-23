@@ -43,21 +43,28 @@ export default function CheckoutPage() {
   useEffect(() => {
     let currentText = facts[factIndex];
     let i = 0;
+    let timeoutId;
+    
     setDisplayedFact("");
     
     const typingInterval = setInterval(() => {
+      // Use substring to guarantee the exact text is rendered, avoiding async state batching issues
+      setDisplayedFact(currentText.substring(0, i));
+      
       if (i < currentText.length) {
-        setDisplayedFact((prev) => prev + currentText.charAt(i));
         i++;
       } else {
         clearInterval(typingInterval);
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           setFactIndex((prev) => (prev + 1) % facts.length);
         }, 3000); // Wait 3s before next fact
       }
     }, 50); // Typing speed
     
-    return () => clearInterval(typingInterval);
+    return () => {
+      clearInterval(typingInterval);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [factIndex]);
 
   useEffect(() => {
