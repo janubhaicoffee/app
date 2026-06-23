@@ -22,47 +22,88 @@ export default function AccountPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const getUserAndData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/auth/login");
-        return;
-      }
-      
-      setUser(session.user);
+    let mounted = true;
 
-      // Fetch Profile for Address
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('address, city, pincode')
-        .eq('id', session.user.id)
-        .single();
+    const fetchUserData = async (session) => {
+      try {
+        if (!session) {
+          router.push("/auth/login");
+          return;
+        }
         
-      if (profile) {
-        setAddressForm({
-          address: profile.address || "",
-          city: profile.city || "",
-          pincode: profile.pincode || ""
-        });
+        setUser(session.user);
+
+        // Fetch Profile for Address
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('address, city, pincode')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (profile && mounted) {
+          setAddressForm({
+            address: profile.address || "",
+            city: profile.city || "",
+            pincode: profile.pincode || ""
+          });
+        }
+
+        // Fetch Orders
+        let orCondition = `user_id.eq.${session.user.id}`;
+        if (session.user.email) orCondition += `,customer_email.eq.${session.user.email}`;
+
+        const { data: orderData } = await supabase
+          .from('orders')
+          .select('*')
+          .or(orCondition)
+          .order('created_at', { ascending: false });
+          
+        if (orderData && mounted) {
+          setOrders(orderData);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        if (mounted) setLoading(false);
       }
-
-      // Fetch Orders
-      let orCondition = `user_id.eq.${session.user.id}`;
-      if (session.user.email) orCondition += `,customer_email.eq.${session.user.email}`;
-
-      const { data: orderData } = await supabase
-        .from('orders')
-        .select('*')
-        .or(orCondition)
-        .order('created_at', { ascending: false });
-        
-      if (orderData) {
-        setOrders(orderData);
-      }
-
-      setLoading(false);
     };
-    getUserAndData();
+
+    // First check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        fetchUserData(session);
+      } else {
+        // If no session immediately (e.g. parsing hash), wait a moment or let auth listener catch it
+        // We don't redirect immediately to allow the hash to be parsed
+      }
+    });
+
+    // Listen for auth state changes (crucial for Magic Links / OAuth with hash fragments)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        fetchUserData(session);
+      } else if (event === 'SIGNED_OUT') {
+        if (mounted) {
+          setUser(null);
+          router.push("/auth/login");
+        }
+      }
+    });
+
+    // Fallback: If after 2 seconds we still have no session and loading is true, redirect
+    const timeout = setTimeout(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session && mounted) {
+          router.push("/auth/login");
+        }
+      });
+    }, 2000);
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, [router]);
 
   const handleLogout = async () => {
