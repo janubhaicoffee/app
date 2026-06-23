@@ -1,0 +1,148 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9f6f0;
+}
+
+.admin-sidebar {
+  width: 250px;
+  background-color: var(--primary-color);
+  color: var(--bg-color);
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1rem;
+  border-right: 1px solid var(--border-color);
+}
+
+.admin-brand {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.admin-brand h2 {
+  font-family: var(--font-playfair);
+  color: var(--accent-gold);
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.admin-brand p {
+  color: #ccc;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.admin-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--accent-gold);
+}
+
+.admin-footer-nav {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+}
+
+.text-danger {
+  color: #ff6b6b !important;
+}
+
+.text-danger:hover {
+  background-color: rgba(255, 107, 107, 0.1) !important;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 2rem 3rem;
+  overflow-y: auto;
+  background-color: #f9f6f0;
+}
+
+/* Common Admin UI Elements */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.admin-header h1 {
+  font-family: var(--font-playfair);
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.admin-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th, .admin-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.admin-table th {
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  background: rgba(0,0,0,0.02);
+}
+
+.admin-btn {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-btn:hover {
+  background: #3a251b;
+}
+
+.admin-btn-outline {
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { ChevronDown, ShoppingBag, User } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -13,6 +14,8 @@ export default function TopBar() {
   const { getCartCount } = useCart();
   const [user, setUser] = useState(null);
 
+  const pathname = usePathname();
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user || null);
@@ -24,6 +27,8 @@ export default function TopBar() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  if (pathname?.startsWith('/admin')) return null;
 
   return (
     <header className="topbar">
