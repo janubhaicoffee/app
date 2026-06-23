@@ -3,10 +3,15 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { calculateOrderTotal, PRODUCT_CATALOG } from "@/lib/products";
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy');
 
-// Initialize Supabase admin client to bypass RLS for inserting orders
+// Missing Service Role check
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.warn("WARNING: SUPABASE_SERVICE_ROLE_KEY is missing. RLS might block inserts.");
+}
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -15,10 +20,24 @@ const supabase = createClient(
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { formData, cartItems, shippingRate, finalTotal, paymentId, razorpayOrderId, razorpaySignature, isGift, giftMessage, isSubscription, subscriptionId, subscriptionFrequency, userId } = body;
+    const { formData, cartItems, shippingRate, finalTotal: clientFinalTotal, paymentId, razorpayOrderId, razorpaySignature, isGift, giftMessage, isSubscription, subscriptionId, subscriptionFrequency, userId } = body;
 
-    if (!formData || !cartItems || !shippingRate || !finalTotal || !paymentId || !razorpayOrderId || !razorpaySignature) {
+    if (!formData || !cartItems || !shippingRate || !clientFinalTotal || !paymentId || !razorpayOrderId || !razorpaySignature) {
       return NextResponse.json({ success: false, error: "Missing required order data or payment signatures" }, { status: 400 });
+    }
+
+    // Input Validation (Regex)
+    const phoneRegex = /^[0-9]{10,15}$/;
+    if (!phoneRegex.test(formData.phone)) return NextResponse.json({ success: false, error: "Invalid phone number" }, { status: 400 });
+    
+    const pincodeRegex = /^[0-9]{6}$/;
+    if (!pincodeRegex.test(formData.pincode)) return NextResponse.json({ success: false, error: "Invalid 6-digit pincode" }, { status: 400 });
+
+    // Server-Side Price Verification
+    const finalTotal = calculateOrderTotal(cartItems, parseFloat(shippingRate.shipping_cost));
+    if (finalTotal !== clientFinalTotal) {
+      console.error(`Price mismatch: Server ${finalTotal} != Client ${clientFinalTotal}`);
+      return NextResponse.json({ success: false, error: "Price mismatch detected. Order rejected." }, { status: 400 });
     }
 
     // 1. Verify Razorpay Signature
@@ -92,6 +111,9 @@ export async function POST(request) {
     }
 
     // 4. Save Order to Supabase
+    // Sanitize gift message against XSS
+    const sanitizedGiftMessage = giftMessage ? giftMessage.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
+
     const { data: orderRow, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -104,14 +126,14 @@ export async function POST(request) {
         razorpay_payment_id: paymentId,
         awb_number: awbNumber,
         is_gift: isGift || false,
-        gift_message: giftMessage || ""
+        gift_message: sanitizedGiftMessage
       })
       .select('id')
       .single();
 
     if (orderError) {
-      console.error("Supabase Order Insert Error:", orderError);
-      throw new Error("Failed to save order to database.");
+      console.error("Supabase Order Insert Error (Supressed PII)");
+      throw new Error("Database insertion failed");
     }
 
     // 4.5 Save Subscription if applicable
@@ -132,8 +154,8 @@ export async function POST(request) {
     }
 
     if (orderError) {
-      console.error("Supabase Order Insert Error:", orderError);
-      throw new Error("Failed to save order to database.");
+      console.error("Supabase Order Insert Error (Supressed PII)");
+      throw new Error("Database insertion failed");
     }
 
     // 5. Save Order Items
@@ -142,7 +164,7 @@ export async function POST(request) {
       product_id: item.id.toString(),
       product_name: item.name,
       quantity: item.quantity,
-      price: item.price
+      price: PRODUCT_CATALOG[item.id]?.price || 0 // Prevents price tampering
     }));
 
     const { error: itemsError } = await supabase
@@ -150,7 +172,7 @@ export async function POST(request) {
       .insert(orderItemsToInsert);
 
     if (itemsError) {
-      console.error("Supabase Order Items Insert Error:", itemsError);
+      console.error("Supabase Order Items Insert Error");
     }
 
     // 6. Send Order Confirmation Email via Resend
@@ -195,7 +217,7 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    console.error("Order Completion Error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error("Order Completion Error (Suppressed detailed error)");
+    return NextResponse.json({ success: false, error: "An internal server error occurred" }, { status: 500 });
   }
 }

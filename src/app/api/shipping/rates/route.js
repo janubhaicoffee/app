@@ -1,14 +1,27 @@
 import { getShippingRates } from "@/lib/nimbuspost";
 import { NextResponse } from "next/server";
+import { calculateOrderTotal, PRODUCT_CATALOG } from "@/lib/products";
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { destination, weight, order_amount } = body;
+    const { destination, cartItems } = body;
 
-    if (!destination || !weight || !order_amount) {
-      return NextResponse.json({ success: false, error: "Missing required fields: destination, weight, order_amount" }, { status: 400 });
+    if (!destination || !cartItems) {
+      return NextResponse.json({ success: false, error: "Missing required fields: destination, cartItems" }, { status: 400 });
     }
+
+    const pincodeRegex = /^[0-9]{6}$/;
+    if (!pincodeRegex.test(destination)) {
+      return NextResponse.json({ success: false, error: "Invalid 6-digit pincode" }, { status: 400 });
+    }
+
+    // Secure calculation on server side
+    const order_amount = calculateOrderTotal(cartItems, 0);
+    const weight = cartItems.reduce((acc, item) => {
+      const prod = PRODUCT_CATALOG[item.id];
+      return acc + ((prod?.weight || 500) * item.quantity);
+    }, 0);
 
     // Call Nimbuspost to get serviceability and rates for prepaid payment
     const rates = await getShippingRates({

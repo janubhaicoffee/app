@@ -1,17 +1,17 @@
-"use client";
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
-export default function AdminCustomers() {
-  const [customers, setCustomers] = useState([]);
+export default async function AdminCustomers() {
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
 
-  useEffect(() => {
-    async function fetchCustomers() {
-      const { data } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
-      if (data) setCustomers(data);
-    }
-    fetchCustomers();
-  }, []);
+  const { data: customers } = await supabaseAdmin
+    .from('customers')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  const customerList = customers || [];
 
   return (
     <div>
@@ -30,10 +30,10 @@ export default function AdminCustomers() {
             </tr>
           </thead>
           <tbody>
-            {customers.length === 0 ? (
+            {customerList.length === 0 ? (
               <tr><td colSpan="4" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No customers found.</td></tr>
             ) : (
-              customers.map(customer => (
+              customerList.map(customer => (
                 <tr key={customer.id}>
                   <td style={{ fontWeight: 600 }}>{customer.name}</td>
                   <td>{customer.email}</td>

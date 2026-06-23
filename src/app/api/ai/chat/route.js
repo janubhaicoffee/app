@@ -11,6 +11,15 @@ export async function POST(req) {
       return NextResponse.json({ error: "Messages array is required" }, { status: 400 });
     }
 
+    if (messages.length > 20) {
+      return NextResponse.json({ error: "Conversation too long" }, { status: 400 });
+    }
+
+    const latestMsg = messages[messages.length - 1];
+    if (latestMsg && latestMsg.content.length > 1000) {
+      return NextResponse.json({ error: "Message too long" }, { status: 400 });
+    }
+
     let contextStr = "Here is some context about our business:\n";
     
     // We conditionally run Pinecone so your app doesn't break before you add the API Key

@@ -11,6 +11,23 @@ export async function POST(req) {
       return NextResponse.json({ error: "Topic is required" }, { status: 400 });
     }
 
+    // AUTHENTICATION CHECK
+    // Extract token from cookie (basic check, middleware should protect it ideally, but API routes need their own check)
+    const cookieHeader = req.headers.get("cookie");
+    if (!cookieHeader) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    
+    const adminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+    if (!adminEmails.includes(user.email?.toLowerCase())) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const headers = {
       "Authorization": `Bearer ${process.env.NVIDIA_API_KEY}`,
       "Accept": "application/json"
@@ -87,7 +104,7 @@ export async function POST(req) {
     return NextResponse.json({ success: true, article });
 
   } catch (error) {
-    console.error("AI Generation Error:", error?.response?.data || error.message);
+    console.error("AI Generation Error (Suppressed details)");
     return NextResponse.json({ error: "Failed to generate article" }, { status: 500 });
   }
 }

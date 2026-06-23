@@ -17,7 +17,7 @@ export default function AdminGuard({ children }) {
       }
 
       // Check if user's email is in the SUPERADMIN_EMAILS env variable
-      const adminEmails = (process.env.NEXT_PUBLIC_SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+      const adminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
       const userEmail = session.user.email?.toLowerCase();
 
       if (userEmail && adminEmails.includes(userEmail)) {

@@ -1,8 +1,8 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createShipment } from "@/lib/nimbuspost";
 
-// Initialize Supabase admin client to bypass RLS for webhook updates
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -12,17 +12,11 @@ export async function POST(req) {
   try {
     const rawBody = await req.text();
     const signature = req.headers.get("x-razorpay-signature");
-
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
-    if (!secret) {
-      return NextResponse.json({ error: "Webhook secret is missing" }, { status: 500 });
-    }
+    if (!secret) return NextResponse.json({ error: "Webhook secret is missing" }, { status: 500 });
 
-    const expectedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(rawBody)
-      .digest("hex");
+    const expectedSignature = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
 
     if (expectedSignature !== signature) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
@@ -30,32 +24,44 @@ export async function POST(req) {
 
     const event = JSON.parse(rawBody);
 
-    // Handle the payment.captured or order.paid events as a fallback
-    // if the frontend /api/order/complete didn't trigger because the user closed their browser
+    // Webhook Target Validation
+    if (process.env.RAZORPAY_ACCOUNT_ID && event.account_id !== process.env.RAZORPAY_ACCOUNT_ID) {
+      return NextResponse.json({ error: "Invalid account_id" }, { status: 400 });
+    }
+
+    // Webhook Replay Protection
+    // Check if the event_id has already been processed to prevent replay attacks
+    const { data: existingEvent } = await supabase
+      .from('webhook_events')
+      .select('id')
+      .eq('event_id', event.id)
+      .single();
+
+    if (existingEvent) {
+      return NextResponse.json({ status: "ok", message: "Event already processed" });
+    }
+
+    // Log the event as processed
+    await supabase.from('webhook_events').insert({ event_id: event.id, event_type: event.event });
+
     if (event.event === "payment.captured" || event.event === "order.paid") {
       const paymentEntity = event.payload.payment.entity;
       const razorpayOrderId = paymentEntity.order_id;
       
-      // We can update the order status to "payment_successful" if it was pending
-      // Usually, our frontend API will handle shipping creation, but the webhook acts as a safety net.
       const { error } = await supabase
         .from("orders")
         .update({ status: "payment_webhook_received" })
         .eq("razorpay_order_id", razorpayOrderId);
 
-      if (error) {
-        console.error("Razorpay Webhook Supabase Error:", error);
-      }
+      if (error) console.error("Razorpay Webhook Supabase Error");
     }
 
-    // Handle subscription renewals
     if (event.event === "subscription.charged") {
       const paymentEntity = event.payload.payment.entity;
       const subId = event.payload.subscription.entity.id;
       const paymentId = paymentEntity.id;
       const amount = paymentEntity.amount / 100;
 
-      // 1. Check if this payment was already handled by frontend order/complete
       const { data: existingOrder } = await supabase
         .from("orders")
         .select("id")
@@ -63,7 +69,6 @@ export async function POST(req) {
         .single();
         
       if (!existingOrder) {
-        // 2. Fetch Subscription Data
         const { data: subData } = await supabase
           .from("subscriptions")
           .select("*")
@@ -72,14 +77,12 @@ export async function POST(req) {
 
         if (subData) {
           const { cartItems, formData } = subData.cart_snapshot;
-          
-          // 3. Create Nimbuspost Shipment
           const orderNumber = `JB-SUB-${Math.floor(Date.now() / 1000)}`;
           const weight = cartItems.reduce((acc, item) => acc + (500 * item.quantity), 0) || 500;
           
           const orderData = {
             order_number: orderNumber,
-            shipping_charges: 0, // Assume shipping was factored into the sub price
+            shipping_charges: 0,
             discount: 0,
             cod_charges: 0,
             payment_type: "prepaid",
@@ -114,19 +117,18 @@ export async function POST(req) {
               price: item.price.toString(),
               sku: item.id
             })),
-            courier_id: "1" // Defaulting or fetch from a config if needed
+            courier_id: "1"
           };
 
           let awbNumber = null;
           try {
-            const { createShipment } = require("@/lib/nimbuspost");
+            // Using static import at top instead of dynamic require
             const shipmentData = await createShipment(orderData);
             awbNumber = shipmentData.awb_number;
           } catch (e) {
-            console.error("Auto Shipment failed:", e);
+            console.error("Auto Shipment failed");
           }
 
-          // 4. Create new Order in DB
           await supabase
             .from("orders")
             .insert({
@@ -142,7 +144,7 @@ export async function POST(req) {
 
     return NextResponse.json({ status: "ok" });
   } catch (error) {
-    console.error("Razorpay Webhook Error:", error);
+    console.error("Razorpay Webhook Error");
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

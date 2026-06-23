@@ -115,8 +115,7 @@ export default function CheckoutPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             destination: pincodeStr,
-            weight,
-            order_amount: getCartTotal()
+            cartItems: cartItems
           })
         });
         const data = await res.json();

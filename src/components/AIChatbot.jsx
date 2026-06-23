@@ -120,9 +120,10 @@ export default function AIChatbot() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a question..."
+          maxLength={500}
           disabled={isLoading}
         />
-        <button type="submit" disabled={isLoading || !input.trim()}>
+        <button type="submit" disabled={isLoading || !input.trim() || input.length > 500}>
           <Send size={18} />
         </button>
       </form>
