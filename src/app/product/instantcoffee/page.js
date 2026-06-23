@@ -111,7 +111,7 @@ export default function ProductPage() {
 
           {/* PURCHASE MODULES - Tabbed Interface */}
           <div className="purchase-modules">
-            <div className="purchase-tabs-container vintage-border">
+            <div className="purchase-tabs-container">
               <div className="tabs-header">
                 <button 
                   className={`tab-btn ${activeTab === "buy" ? "active" : ""}`}
@@ -185,7 +185,7 @@ export default function ProductPage() {
             </div>
           </div>
 
-          <div className="nutrition-table vintage-border">
+          <div className="nutrition-table">
             <h3>Nutritional Facts (Per 100g)</h3>
             <table>
               <tbody>

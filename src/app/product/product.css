@@ -108,41 +108,38 @@
 }
 
 .btn-secondary {
-  background-color: var(--bg-color);
+  background-color: transparent;
   color: var(--text-primary);
-  border: 3px solid var(--text-primary);
+  border: 2px solid var(--text-primary);
   padding: 15px 30px;
   font-size: 1.1rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2px;
-  box-shadow: 4px 4px 0px var(--text-primary);
+  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px var(--text-primary);
-  background-color: #fff;
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .btn-primary {
   background-color: var(--accent-red);
   color: #fff;
-  border: 3px solid var(--text-primary);
+  border: 2px solid var(--accent-red);
   padding: 15px 30px;
   font-size: 1.1rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2px;
-  box-shadow: 4px 4px 0px var(--text-primary);
+  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
 .btn-primary:hover {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px var(--text-primary);
   background-color: var(--accent-red-hover);
+  border-color: var(--accent-red-hover);
 }
 
 .buy-btn {
@@ -153,7 +150,8 @@
   margin-top: 40px;
   padding: 30px;
   background-color: #fff;
-  box-shadow: 6px 6px 0px var(--text-primary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
 }
 
 .nutrition-table h3 {
@@ -273,7 +271,8 @@
   margin-top: 1rem;
   margin-bottom: 2rem;
   background: rgba(255,255,255,0.8);
-  box-shadow: 4px 4px 0px var(--text-primary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
 }
 
 .tabs-header {

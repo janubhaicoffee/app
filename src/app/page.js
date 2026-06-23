@@ -59,11 +59,11 @@ export default function Home() {
               finest coffee growing regions. No middlemen, no compromise.
             </p>
             <div className="hero-actions">
-              <Link href="/product/instantcoffee" className="btn-primary">
+              <Link href="/product/instantcoffee" className="btn-cta">
                 Shop Coffee
                 <ArrowRight size={18} className="btn-arrow" />
               </Link>
-              <Link href="/process" className="btn-secondary">
+              <Link href="/process" className="btn-cta-ghost">
                 Our Process
               </Link>
             </div>

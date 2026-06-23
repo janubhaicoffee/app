@@ -170,7 +170,7 @@
    BUTTONS
    ======================================== */
 
-.btn-primary {
+.btn-cta {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -188,7 +188,7 @@
   box-shadow: 0 2px 12px rgba(183, 28, 28, 0.25);
 }
 
-.btn-primary:hover {
+.btn-cta:hover {
   background: var(--accent-red-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(183, 28, 28, 0.35);
@@ -198,11 +198,11 @@
   transition: transform 0.3s ease;
 }
 
-.btn-primary:hover .btn-arrow {
+.btn-cta:hover .btn-arrow {
   transform: translateX(3px);
 }
 
-.btn-secondary {
+.btn-cta-ghost {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -219,7 +219,7 @@
   transition: all 0.3s ease;
 }
 
-.btn-secondary:hover {
+.btn-cta-ghost:hover {
   color: #fff;
   border-color: rgba(255, 255, 255, 0.5);
   background: rgba(255, 255, 255, 0.05);
@@ -835,8 +835,8 @@
     width: 100%;
   }
 
-  .btn-primary,
-  .btn-secondary {
+  .btn-cta,
+  .btn-cta-ghost {
     width: 100%;
     justify-content: center;
   }

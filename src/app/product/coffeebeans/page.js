@@ -74,7 +74,7 @@ export default function CoffeeBeansProductPage() {
           <div className="purchase-modules">
             
             {/* 1. Direct Purchase */}
-            <div className="purchase-card vintage-border" style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.3)' }}>
+            <div className="purchase-card" style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
               <h3 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--primary-color)' }}>One-Time Purchase</h3>
               <div className="actions" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <div className="quantity-selector" style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.1)', padding: '0.5rem', borderRadius: '4px' }}>
@@ -89,7 +89,7 @@ export default function CoffeeBeansProductPage() {
             </div>
 
             {/* 2. Subscribe & Save */}
-            <div className="purchase-card vintage-border" style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'rgba(183, 28, 28, 0.1)', borderColor: 'var(--primary-color)' }}>
+            <div className="purchase-card" style={{ padding: '1.5rem', marginBottom: '1.5rem', background: 'rgba(183, 28, 28, 0.1)', border: '1px solid var(--primary-color)', borderRadius: '8px' }}>
               <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: 'var(--primary-color)', display: 'flex', justifyContent: 'space-between' }}>
                 Subscribe & Save <span>10% OFF</span>
               </h3>
@@ -116,7 +116,7 @@ export default function CoffeeBeansProductPage() {
             </div>
 
             {/* 3. Gift */}
-            <div className="purchase-card vintage-border" style={{ padding: '1.5rem', marginBottom: '2rem', background: 'rgba(0,0,0,0.3)', textAlign: 'center' }}>
+            <div className="purchase-card" style={{ padding: '1.5rem', marginBottom: '2rem', background: 'rgba(0,0,0,0.3)', textAlign: 'center', borderRadius: '8px' }}>
               <h3 style={{ marginTop: 0, marginBottom: '0.5rem', color: '#fff' }}>Send as a Gift 🎁</h3>
               <p style={{ fontSize: '0.9rem', color: '#ccc', marginBottom: '1rem' }}>Ship directly to a friend with a personalized message.</p>
               <button className="btn-secondary" onClick={handleGift} style={{ width: '100%' }}>GIFT NOW</button>
@@ -124,7 +124,7 @@ export default function CoffeeBeansProductPage() {
 
           </div>
 
-          <div className="nutrition-table vintage-border">
+          <div className="nutrition-table">
             <h3>Coffee Info</h3>
             <table>
               <tbody>
