@@ -24,13 +24,13 @@ export default function CartPage() {
 
   return (
     <main className="cart-page">
-      <div className="container">
-        <h1 className="cart-title">YOUR CART</h1>
+      <div className="container" style={{ maxWidth: '1000px' }}>
+        <h1 className="cart-title">Your Cart</h1>
         
-        <div className="cart-layout">
-          <div className="cart-items">
+        <div className="cart-master-card">
+          <div className="cart-items-section">
             {cartItems.map((item) => (
-              <div key={item.id} className="cart-item vintage-border">
+              <div key={item.id} className="cart-item">
                 <div className="cart-item-img-wrapper">
                   <Image src={item.image} alt={item.name} width={100} height={100} className="cart-item-img" />
                 </div>
@@ -55,7 +55,7 @@ export default function CartPage() {
             ))}
           </div>
 
-          <div className="cart-summary vintage-border">
+          <div className="cart-summary-section">
             <h2>ORDER SUMMARY</h2>
             <div className="summary-row">
               <span>Subtotal</span>
@@ -70,7 +70,7 @@ export default function CartPage() {
               <span>Total (Tax Incl.)</span>
               <span>₹ {getCartTotal()}</span>
             </div>
-            <button className="btn-primary checkout-btn" onClick={() => router.push('/checkout')}>
+            <button className="cart-checkout-btn pulse-hover" onClick={() => router.push('/checkout')}>
               PROCEED TO CHECKOUT
             </button>
           </div>
