@@ -1,9 +1,12 @@
 .topbar {
-  background-color: var(--bg-color);
+  background-color: rgba(248, 241, 228, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 2px solid var(--text-primary);
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: all 0.3s ease;
 }
 
 .topbar::after {

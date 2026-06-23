@@ -97,7 +97,9 @@ img {
 }
 
 .btn-secondary:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(62, 39, 35, 0.05);
+  box-shadow: 0 4px 12px rgba(62, 39, 35, 0.1);
+  transform: translateY(-2px);
 }
 
 .btn-primary {
@@ -116,4 +118,6 @@ img {
 .btn-primary:hover {
   background-color: var(--accent-red-hover);
   border-color: var(--accent-red-hover);
+  box-shadow: 0 6px 20px rgba(183, 28, 28, 0.3);
+  transform: translateY(-2px);
 }
