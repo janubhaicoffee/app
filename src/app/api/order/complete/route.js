@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy');
 
 // Initialize Supabase admin client to bypass RLS for inserting orders
 const supabase = createClient(
