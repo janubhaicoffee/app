@@ -14,7 +14,6 @@ export default function CartPage() {
     return (
       <main className="cart-page">
         <div className="container text-center">
-          <h1 className="cart-title">Your Cart is Empty</h1>
           <p className="cart-empty-text">Looks like you haven't added any premium coffee yet.</p>
           <Link href="/" className="btn-primary">START SHOPPING</Link>
         </div>
@@ -25,7 +24,6 @@ export default function CartPage() {
   return (
     <main className="cart-page">
       <div className="container" style={{ maxWidth: '1000px' }}>
-        <h1 className="cart-title">Your Cart</h1>
         
         <div className="cart-master-card">
           <div className="cart-items-section">

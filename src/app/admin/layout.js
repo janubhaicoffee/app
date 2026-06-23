@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LayoutDashboard, Package, ShoppingCart, Users, FileText, Settings, LogOut } from "lucide-react";
+import AdminGuard from "@/components/AdminGuard";
 import "./admin.css";
 
 export const metadata = {
@@ -47,7 +48,9 @@ export default function AdminLayout({ children }) {
 
       {/* Main Content Area */}
       <main className="admin-main">
-        {children}
+        <AdminGuard>
+          {children}
+        </AdminGuard>
       </main>
     </div>
   );

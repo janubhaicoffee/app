@@ -6,7 +6,16 @@ const nextConfig = {
     // your project has type errors.
     // !! WARN !!
     ignoreBuildErrors: true,
-  }
+  },
+  async redirects() {
+    return [
+      {
+        source: '/auth/signup',
+        destination: '/auth/login',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

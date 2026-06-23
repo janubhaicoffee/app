@@ -180,6 +180,7 @@ export default function CheckoutPage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              formData,
               cartItems,
               shippingRate,
               finalTotal,
@@ -260,7 +261,6 @@ export default function CheckoutPage() {
   return (
     <main className="checkout-page">
       <div className="container" style={{ maxWidth: '1000px' }}>
-        <h1 className="checkout-title">Secure Checkout</h1>
         
         <div className="checkout-master-card">
           <div className="checkout-form-section">

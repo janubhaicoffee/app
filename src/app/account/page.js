@@ -20,11 +20,19 @@ export default function AccountPage() {
       
       setUser(session.user);
 
-      // Fetch Orders
+      // Fetch Orders (Unified Guest Profile Logic)
+      let orCondition = `user_id.eq.${session.user.id}`;
+      if (session.user.email) orCondition += `,customer_email.eq.${session.user.email}`;
+      if (session.user.phone) {
+        // user.phone usually contains country code (e.g. +91 or 91), strip it to match typical 10-digit checkout input
+        const cleanPhone = session.user.phone.replace(/^\+?91/, '');
+        orCondition += `,customer_phone.eq.${cleanPhone}`;
+      }
+
       const { data: orderData, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('user_id', session.user.id)
+        .or(orCondition)
         .order('created_at', { ascending: false });
         
       if (!error && orderData) {
@@ -54,8 +62,8 @@ export default function AccountPage() {
           {/* Profile Section */}
           <div className="profile-section vintage-border">
             <h2 className="section-header">My Profile</h2>
-            <div className="profile-details">
-              <p><strong>Email:</strong> {user.email}</p>
+              {user.email && <p><strong>Email:</strong> {user.email}</p>}
+              {user.phone && <p><strong>Phone:</strong> {user.phone}</p>}
               <p><strong>Name:</strong> {user.user_metadata?.full_name || "N/A"}</p>
             </div>
             <button className="btn-secondary mt-20" onClick={handleLogout}>LOGOUT</button>

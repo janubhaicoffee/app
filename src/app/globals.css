@@ -77,3 +77,39 @@ img {
   background: var(--accent-gold);
   color: var(--text-primary);
 }
+
+/* Global Buttons */
+.btn-secondary {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 2px solid var(--text-primary);
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+  background-color: var(--accent-red);
+  color: #fff;
+  border: 2px solid var(--accent-red);
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-red-hover);
+  border-color: var(--accent-red-hover);
+}

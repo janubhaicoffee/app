@@ -2,6 +2,9 @@ import { createShipment } from "@/lib/nimbuspost";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Initialize Supabase admin client to bypass RLS for inserting orders
 const supabase = createClient(
@@ -20,9 +23,13 @@ export async function POST(request) {
 
     // 1. Verify Razorpay Signature
     const secret = process.env.NEXT_SECRET_RAZORPAY_KEY;
+    const payloadToSign = isSubscription 
+      ? paymentId + "|" + razorpayOrderId 
+      : razorpayOrderId + "|" + paymentId;
+
     const generatedSignature = crypto
       .createHmac("sha256", secret)
-      .update(razorpayOrderId + "|" + paymentId)
+      .update(payloadToSign)
       .digest("hex");
 
     if (generatedSignature !== razorpaySignature) {
@@ -89,6 +96,8 @@ export async function POST(request) {
       .from('orders')
       .insert({
         user_id: userId || null,
+        customer_email: formData.email || null,
+        customer_phone: formData.phone || null,
         total_amount: finalTotal,
         status: awbNumber ? "processing" : "payment_successful_shipping_failed",
         razorpay_order_id: isSubscription ? null : razorpayOrderId,
@@ -142,6 +151,39 @@ export async function POST(request) {
 
     if (itemsError) {
       console.error("Supabase Order Items Insert Error:", itemsError);
+    }
+
+    // 6. Send Order Confirmation Email via Resend
+    if (formData.email && process.env.RESEND_API_KEY) {
+      try {
+        await resend.emails.send({
+          from: 'Janu Bhai Coffee <hello@janubhai.com>',
+          to: [formData.email],
+          subject: `Order Confirmation #${orderNumber} - Janu Bhai`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+              <h1 style="color: #e74c3c;">Thank you for your order!</h1>
+              <p>Hi ${formData.name},</p>
+              <p>We've received your order <strong>#${orderNumber}</strong> and we're getting it ready to ship.</p>
+              
+              <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h3 style="margin-top: 0;">Order Details:</h3>
+                <p><strong>Total Amount:</strong> ₹${finalTotal}</p>
+                ${awbNumber ? `<p><strong>Tracking Number (AWB):</strong> ${awbNumber}</p>` : ''}
+              </div>
+
+              <h3>Shipping Address:</h3>
+              <p>${formData.address}<br/>${formData.city}, ${formData.pincode}</p>
+
+              <p style="margin-top: 30px;">You can track your order status by logging into your account at janubhai.com using this email address.</p>
+              <p>Cheers,<br/><strong>The Janu Bhai Team</strong></p>
+            </div>
+          `
+        });
+      } catch (emailErr) {
+        console.error("Failed to send order confirmation email:", emailErr);
+        // We don't fail the order if the email fails
+      }
     }
 
     return NextResponse.json({
