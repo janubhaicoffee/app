@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Package, MapPin, Coffee, LogOut, CheckCircle2 } from "lucide-react";
+import { LayoutDashboard, Package, MapPin, Coffee, LogOut, CheckCircle2, Settings } from "lucide-react";
 import "./account.css";
 
 export default function AccountPage() {
@@ -10,6 +10,7 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // Address Form State
   const [addressForm, setAddressForm] = useState({
@@ -61,6 +62,18 @@ export default function AccountPage() {
         if (orderData && mounted) {
           setOrders(orderData);
         }
+
+        // Check Admin Status
+        const adminRes = await fetch("/api/admin/data?type=check", {
+          headers: { "Authorization": `Bearer ${session.access_token}` }
+        });
+        if (adminRes.ok) {
+          const adminData = await adminRes.json();
+          if (adminData.isAdmin && mounted) {
+            setIsAdmin(true);
+          }
+        }
+
       } catch (error) {
         console.error("Error fetching user data:", error);
       } finally {
@@ -178,6 +191,17 @@ export default function AccountPage() {
                 <Coffee size={20} />
                 <span>Subscriptions</span>
               </div>
+              
+              {isAdmin && (
+                <div 
+                  className="nav-item"
+                  onClick={() => router.push('/admin')}
+                  style={{ color: 'var(--accent-red)', fontWeight: 'bold' }}
+                >
+                  <Settings size={20} />
+                  <span>Admin Panel</span>
+                </div>
+              )}
               
               <div className="nav-item logout" onClick={handleLogout}>
                 <LogOut size={20} />

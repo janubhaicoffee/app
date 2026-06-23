@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export async function middleware(req) {
-  // 1. Admin & Secure API Route Protection
+  // 1. Secure API Route Protection (Admin routes protected by AdminGuard and secure APIs instead)
   const pathname = req.nextUrl.pathname;
-  if (pathname.startsWith('/admin') || pathname.startsWith('/api/ai/generate-article')) {
+  if (pathname.startsWith('/api/ai/generate-article')) {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY

@@ -1,17 +1,42 @@
-import { createClient } from "@supabase/supabase-js";
+"use client";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
-export default async function AdminCustomers() {
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+export default function AdminCustomers() {
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const { data: customers } = await supabaseAdmin
-    .from('customers')
-    .select('*')
-    .order('created_at', { ascending: false });
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
 
-  const customerList = customers || [];
+        const res = await fetch("/api/admin/data?type=customers", {
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`
+          }
+        });
+        
+        const json = await res.json();
+        if (res.ok) {
+          setCustomers(json.data || []);
+        } else {
+          setError(json.error);
+        }
+      } catch (err) {
+        setError("Failed to fetch customers");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCustomers();
+  }, []);
+
+  if (loading) return <div style={{ padding: '2rem' }}>Loading customers...</div>;
+  if (error) return <div style={{ padding: '2rem', color: 'red' }}>Error: {error}</div>;
 
   return (
     <div>
@@ -30,10 +55,10 @@ export default async function AdminCustomers() {
             </tr>
           </thead>
           <tbody>
-            {customerList.length === 0 ? (
+            {customers.length === 0 ? (
               <tr><td colSpan="4" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No customers found.</td></tr>
             ) : (
-              customerList.map(customer => (
+              customers.map(customer => (
                 <tr key={customer.id}>
                   <td style={{ fontWeight: 600 }}>{customer.name}</td>
                   <td>{customer.email}</td>
