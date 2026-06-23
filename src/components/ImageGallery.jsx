@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import "./ImageGallery.css";
 
 const ImageZoom = ({ src, alt }) => {
@@ -37,10 +38,6 @@ const ImageZoom = ({ src, alt }) => {
     }
   };
 
-  // Safely check for desktop during render using a simple check or defer to CSS.
-  // To avoid hydration mismatch, we'll apply zoomStyle universally, but the handlers above restrict it.
-  // The state will be empty anyway on mobile because handleMouseMove won't trigger.
-
   return (
     <div 
       className="image-zoom-container"
@@ -69,12 +66,27 @@ export default function ImageGallery({ frontImage, backImage }) {
     if (galleryRef.current) {
       const scrollPosition = galleryRef.current.scrollLeft;
       const width = galleryRef.current.offsetWidth;
-      // Calculate which item is mostly in view
       const newIndex = Math.round(scrollPosition / width);
       if (newIndex !== activeIndex) {
         setActiveIndex(newIndex);
       }
     }
+  };
+
+  const scrollTo = (index) => {
+    if (galleryRef.current) {
+      const width = galleryRef.current.offsetWidth;
+      galleryRef.current.scrollTo({ left: width * index, behavior: 'smooth' });
+      setActiveIndex(index);
+    }
+  };
+
+  const goNext = () => {
+    scrollTo(activeIndex < 1 ? activeIndex + 1 : 0);
+  };
+
+  const goPrev = () => {
+    scrollTo(activeIndex > 0 ? activeIndex - 1 : 1);
   };
 
   // Reset to first image when variant changes
@@ -87,6 +99,14 @@ export default function ImageGallery({ frontImage, backImage }) {
 
   return (
     <div className="gallery-container">
+      {/* Navigation Arrows */}
+      <button className="gallery-arrow gallery-arrow-left" onClick={goPrev} aria-label="Previous image">
+        <ChevronLeft size={22} />
+      </button>
+      <button className="gallery-arrow gallery-arrow-right" onClick={goNext} aria-label="Next image">
+        <ChevronRight size={22} />
+      </button>
+
       <div 
         className="swipe-gallery" 
         ref={galleryRef}
@@ -101,8 +121,8 @@ export default function ImageGallery({ frontImage, backImage }) {
       </div>
       
       <div className="gallery-indicators">
-        <div className={`indicator ${activeIndex === 0 ? 'active' : ''}`} />
-        <div className={`indicator ${activeIndex === 1 ? 'active' : ''}`} />
+        <button className={`indicator ${activeIndex === 0 ? 'active' : ''}`} onClick={() => scrollTo(0)} aria-label="View front" />
+        <button className={`indicator ${activeIndex === 1 ? 'active' : ''}`} onClick={() => scrollTo(1)} aria-label="View back" />
       </div>
     </div>
   );

@@ -75,7 +75,7 @@ export default function ProductPage() {
         
         {/* Product Image Gallery */}
         <div className="product-image-section">
-          <div className="vintage-border premium-image-container" style={{ padding: '10px' }}>
+          <div className="premium-image-container">
             <ImageGallery 
               frontImage={variants[variant].frontImage} 
               backImage={variants[variant].backImage} 
@@ -90,21 +90,20 @@ export default function ProductPage() {
           
           <div className="price-tag">₹ {variants[variant].price} <span className="mrp-text">(Incl. of all taxes)</span></div>
           
-          <p className="net-weight" style={{ fontWeight: 'bold', marginBottom: '5px' }}>Net Weight: {variant}</p>
           <div className="variant-selector" style={{ display: 'flex', gap: '15px', marginTop: '5px', marginBottom: '15px' }}>
             <button 
               onClick={() => handleVariantChange("100g")}
               className={variant === "100g" ? "btn-primary" : "btn-secondary"}
               style={{ padding: '10px 20px', fontSize: '1rem', flex: 1 }}
             >
-              100g
+              100 Grams
             </button>
             <button 
               onClick={() => handleVariantChange("1000g")}
               className={variant === "1000g" ? "btn-primary" : "btn-secondary"}
               style={{ padding: '10px 20px', fontSize: '1rem', flex: 1 }}
             >
-              1000g
+              1000 Grams
             </button>
           </div>
 

@@ -48,7 +48,7 @@ export default function CoffeeBeansProductPage() {
         
         {/* Product Image Gallery */}
         <div className="product-image-section">
-          <div className="main-image-wrapper vintage-border">
+          <div className="main-image-wrapper">
             {/* The user will drop beans.png in public */}
             <div style={{width: 500, height: 500, backgroundColor: "#f9f6f0", display: "flex", alignItems: "center", justifyContent: "center"}}>
                <h3>AAA Beans</h3>
