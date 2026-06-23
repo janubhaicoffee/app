@@ -62,6 +62,7 @@ export default function AccountPage() {
           {/* Profile Section */}
           <div className="profile-section vintage-border">
             <h2 className="section-header">My Profile</h2>
+            <div className="profile-details">
               {user.email && <p><strong>Email:</strong> {user.email}</p>}
               {user.phone && <p><strong>Phone:</strong> {user.phone}</p>}
               <p><strong>Name:</strong> {user.user_metadata?.full_name || "N/A"}</p>
