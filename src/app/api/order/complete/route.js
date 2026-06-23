@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
-import { calculateOrderTotal, PRODUCT_CATALOG } from "@/lib/products";
+import { calculateOrderTotal, getProductCatalog } from "@/lib/products";
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy');
 
@@ -34,7 +34,7 @@ export async function POST(request) {
     if (!pincodeRegex.test(formData.pincode)) return NextResponse.json({ success: false, error: "Invalid 6-digit pincode" }, { status: 400 });
 
     // Server-Side Price Verification
-    const finalTotal = calculateOrderTotal(cartItems, parseFloat(shippingRate.shipping_cost));
+    const finalTotal = await calculateOrderTotal(cartItems, parseFloat(shippingRate.shipping_cost));
     if (finalTotal !== clientFinalTotal) {
       console.error(`Price mismatch: Server ${finalTotal} != Client ${clientFinalTotal}`);
       return NextResponse.json({ success: false, error: "Price mismatch detected. Order rejected." }, { status: 400 });
@@ -159,12 +159,15 @@ export async function POST(request) {
     }
 
     // 5. Save Order Items
+    const catalog = await getProductCatalog();
+    const productMap = catalog.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
+    
     const orderItemsToInsert = cartItems.map(item => ({
       order_id: orderRow.id,
       product_id: item.id.toString(),
       product_name: item.name,
       quantity: item.quantity,
-      price: PRODUCT_CATALOG[item.id]?.price || 0 // Prevents price tampering
+      price: productMap[item.id]?.price || 0 // Prevents price tampering
     }));
 
     const { error: itemsError } = await supabase

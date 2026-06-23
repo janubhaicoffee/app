@@ -13,6 +13,7 @@ export default function TopBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { getCartCount } = useCart();
   const [user, setUser] = useState(null);
+  const [products, setProducts] = useState([]);
 
   const pathname = usePathname();
 
@@ -20,6 +21,12 @@ export default function TopBar() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user || null);
     });
+
+    async function loadProducts() {
+      const { data } = await supabase.from('products').select('id, name').order('created_at', { ascending: true });
+      if (data) setProducts(data);
+    }
+    loadProducts();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
@@ -55,8 +62,10 @@ export default function TopBar() {
             {isDropdownOpen && (
               <div className="dropdown-menu-wrapper">
                 <div className="dropdown-menu">
-                  <Link href="/product/instantcoffee" className="dropdown-item">Instant Coffee</Link>
-                  <Link href="/product/coffeebeans" className="dropdown-item">Coffee Beans</Link>
+                  {products.map(p => (
+                    <Link key={p.id} href={`/product/${p.id}`} className="dropdown-item">{p.name}</Link>
+                  ))}
+                  {products.length === 0 && <span className="dropdown-item">Loading...</span>}
                 </div>
               </div>
             )}

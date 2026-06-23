@@ -1,50 +1,58 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import ImageGallery from "@/components/ImageGallery";
+import { supabase } from "@/lib/supabase";
 import "../product.css";
 
-const variants = {
-  "100g": {
-    id: "instantcoffee-100g",
-    name: "THODI HARD COFFEE (100g)",
-    price: 300,
-    frontImage: "/product/100gram/100gramfront.png",
-    backImage: "/product/100gram/100gramback.png"
-  },
-  "1000g": {
-    id: "instantcoffee-1000g",
-    name: "THODI HARD COFFEE (1000g)",
-    price: 3000,
-    frontImage: "/product/1000gram/1000gramfront.png",
-    backImage: "/product/1000gram/1000gramback.png"
-  }
-};
-
-export default function ProductPage() {
+export default function ProductPage({ params }) {
+  const { id } = params;
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
   const [subFrequency, setSubFrequency] = useState("weekly");
   const { addToCart, clearCart } = useCart();
   const router = useRouter();
 
-  const [variant, setVariant] = useState("100g");
   const [activeTab, setActiveTab] = useState("buy");
   const [showAddMoreHint, setShowAddMoreHint] = useState(false);
 
-  const handleVariantChange = (newVariant) => {
-    setVariant(newVariant);
-  };
+  useEffect(() => {
+    async function loadProduct() {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (data) {
+        setProduct(data);
+      }
+      setLoading(false);
+    }
+    loadProduct();
+  }, [id]);
 
-  const currentProduct = {
-    id: variants[variant].id,
-    name: variants[variant].name,
-    price: variants[variant].price,
-    image: variants[variant].frontImage
-  };
+  if (loading) {
+    return <main className="product-page"><div className="container" style={{ padding: '4rem 2rem', textAlign: 'center' }}>Loading product details...</div></main>;
+  }
+
+  if (!product) {
+    return (
+      <main className="product-page">
+        <div className="container" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
+          <h1>Product Not Found</h1>
+          <p>The coffee you are looking for is currently unavailable or doesn't exist.</p>
+          <button className="btn-primary" onClick={() => router.push('/')} style={{ marginTop: '1rem' }}>Return Home</button>
+        </div>
+      </main>
+    );
+  }
 
   const handleAddToCart = () => {
-    addToCart({ ...currentProduct, quantity: 1 });
+    addToCart({ id: product.id, name: product.name, price: product.price, image: product.image_url, quantity: 1 });
     setShowAddMoreHint(true);
     setTimeout(() => {
       setShowAddMoreHint(false);
@@ -53,21 +61,26 @@ export default function ProductPage() {
 
   const handleBuyNow = () => {
     clearCart();
-    addToCart({ ...currentProduct, quantity: 1 });
+    addToCart({ id: product.id, name: product.name, price: product.price, image: product.image_url, quantity: 1 });
     router.push("/checkout?mode=standard");
   };
 
   const handleSubscribe = () => {
     clearCart();
-    addToCart({ ...currentProduct, quantity: 1, subscription: subFrequency });
+    addToCart({ id: product.id, name: product.name, price: product.price, image: product.image_url, quantity: 1, subscription: subFrequency });
     router.push(`/checkout?mode=subscription&frequency=${subFrequency}`);
   };
 
   const handleGift = () => {
     clearCart();
-    addToCart({ ...currentProduct, quantity: 1, isGift: true });
+    addToCart({ id: product.id, name: product.name, price: product.price, image: product.image_url, quantity: 1, isGift: true });
     router.push("/checkout?mode=gift");
   };
+
+  // Extract variants if there are any related products (for future use), but for now just display the current product.
+  // The frontImage/backImage can be derived from product.image_url. If no image_url, we use placeholders.
+  const frontImage = product.image_url || "/product/100gram/100gramfront.png";
+  const backImage = "/product/100gram/100gramback.png"; // Fallback for back image if not provided
 
   return (
     <main className="product-page">
@@ -77,40 +90,27 @@ export default function ProductPage() {
         <div className="product-image-section">
           <div className="premium-image-container">
             <ImageGallery 
-              frontImage={variants[variant].frontImage} 
-              backImage={variants[variant].backImage} 
+              frontImage={frontImage} 
+              backImage={backImage} 
             />
           </div>
         </div>
 
         {/* Product Details */}
         <div className="product-details-section">
-          <h1 className="product-title">THODI HARD COFFEE</h1>
-          <p className="product-subtitle">Pure South Indian Chicory & Coffee Blend (70-30)</p>
+          <h1 className="product-title">{product.name}</h1>
+          <p className="product-subtitle">{product.description || "Premium Coffee Blend"}</p>
           
-          <div className="price-tag">₹ {variants[variant].price} <span className="mrp-text">(Incl. of all taxes)</span></div>
-          
-          <div className="variant-selector" style={{ display: 'flex', gap: '15px', marginTop: '5px', marginBottom: '15px' }}>
-            <button 
-              onClick={() => handleVariantChange("100g")}
-              className={variant === "100g" ? "btn-primary" : "btn-secondary"}
-              style={{ padding: '10px 20px', fontSize: '1rem', flex: 1 }}
-            >
-              100 Grams
-            </button>
-            <button 
-              onClick={() => handleVariantChange("1000g")}
-              className={variant === "1000g" ? "btn-primary" : "btn-secondary"}
-              style={{ padding: '10px 20px', fontSize: '1rem', flex: 1 }}
-            >
-              1000 Grams
-            </button>
+          <div className="price-tag">₹ {product.price} <span className="mrp-text">(Incl. of all taxes)</span></div>
+
+          <div style={{ margin: '15px 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+            <strong>Stock:</strong> {product.stock > 0 ? `${product.stock} available` : <span style={{color:'red'}}>Out of Stock</span>}
+            <br/>
+            <strong>Weight:</strong> {product.weight}g
           </div>
 
-
-
           {/* PURCHASE MODULES - Tabbed Interface */}
-          <div className="purchase-modules">
+          <div className="purchase-modules" style={{ opacity: product.stock > 0 ? 1 : 0.5, pointerEvents: product.stock > 0 ? 'auto' : 'none' }}>
             <div className="purchase-tabs-container">
               <div className="tabs-header">
                 <button 
@@ -167,8 +167,6 @@ export default function ProductPage() {
                         <option value="monthly">Deliver Monthly</option>
                       </select>
 
-
-                      
                       <button className="btn-primary" onClick={handleSubscribe} style={{ width: '100%', marginTop: '0.5rem' }}>SUBSCRIBE NOW</button>
                     </div>
                   </div>

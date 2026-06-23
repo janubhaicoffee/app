@@ -1,6 +1,6 @@
 import { getShippingRates } from "@/lib/nimbuspost";
 import { NextResponse } from "next/server";
-import { calculateOrderTotal, PRODUCT_CATALOG } from "@/lib/products";
+import { calculateOrderTotal, getProductCatalog } from "@/lib/products";
 
 export async function POST(request) {
   try {
@@ -17,9 +17,12 @@ export async function POST(request) {
     }
 
     // Secure calculation on server side
-    const order_amount = calculateOrderTotal(cartItems, 0);
+    const order_amount = await calculateOrderTotal(cartItems, 0);
+    const catalog = await getProductCatalog();
+    const productMap = catalog.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
+
     const weight = cartItems.reduce((acc, item) => {
-      const prod = PRODUCT_CATALOG[item.id];
+      const prod = productMap[item.id];
       return acc + ((prod?.weight || 500) * item.quantity);
     }, 0);
 

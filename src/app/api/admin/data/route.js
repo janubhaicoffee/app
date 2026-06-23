@@ -34,6 +34,43 @@ export async function GET(request) {
       return NextResponse.json({ isAdmin: true });
     }
 
+    if (type === "dashboard") {
+      const [{ count: pCount }, { count: cCount }, { count: oCount }, { count: aCount }, { data: allOrders }] = await Promise.all([
+        supabaseAdmin.from('products').select('*', { count: 'exact', head: true }),
+        supabaseAdmin.from('customers').select('*', { count: 'exact', head: true }),
+        supabaseAdmin.from('orders').select('*', { count: 'exact', head: true }),
+        supabaseAdmin.from('articles').select('*', { count: 'exact', head: true }),
+        supabaseAdmin.from('orders').select('total_amount, status')
+      ]);
+
+      const revenue = (allOrders || []).reduce((sum, order) => {
+        if (['paid', 'processing', 'shipped', 'delivered'].includes(order.status)) {
+          return sum + (order.total_amount || 0);
+        }
+        return sum;
+      }, 0);
+
+      return NextResponse.json({
+        data: {
+          products: pCount || 0,
+          customers: cCount || 0,
+          orders: oCount || 0,
+          articles: aCount || 0,
+          revenue: revenue
+        }
+      });
+    }
+
+    if (type === "products") {
+      const { data: products, error } = await supabaseAdmin
+        .from('products')
+        .select('*')
+        .order('id', { ascending: true });
+      
+      if (error) throw error;
+      return NextResponse.json({ data: products });
+    }
+
     if (type === "orders") {
       const { data: orders, error } = await supabaseAdmin
         .from('orders')
@@ -58,6 +95,42 @@ export async function GET(request) {
 
   } catch (error) {
     console.error("Admin API Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+
+    const adminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+    if (!adminEmails.includes(user.email?.toLowerCase())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const body = await request.json();
+    const { action, payload, id } = body;
+
+    if (action === "create_product") {
+      const { data, error } = await supabaseAdmin.from('products').insert([payload]);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
+    } else if (action === "update_product") {
+      const { data, error } = await supabaseAdmin.from('products').update(payload).eq('id', id);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  } catch (error) {
+    console.error("Admin API POST Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

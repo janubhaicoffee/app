@@ -22,12 +22,12 @@ export async function POST(req) {
       key_secret: process.env.NEXT_SECRET_RAZORPAY_KEY,
     });
 
-    const amount = calculateOrderTotal(cartItems, Number(shippingCost));
+    const amount = await calculateOrderTotal(cartItems, Number(shippingCost));
 
     const options = {
-      amount: (amount * 100).toString(), // amount in smallest currency unit (paise)
+      amount: amount * 100, // amount in the smallest currency unit
       currency: "INR",
-      receipt: `receipt_order_${Math.floor(Math.random() * 1000)}`,
+      receipt: `rcpt_${Date.now()}`
     };
 
     // Order creation will use the actual keys

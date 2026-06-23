@@ -6,24 +6,35 @@ export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [formData, setFormData] = useState({ name: '', price: '', stock: '', description: '', image_url: '' });
+  const [formData, setFormData] = useState({ id: '', name: '', price: '', stock: '', weight: '', description: '', image_url: '' });
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
   async function fetchProducts() {
-    const { data } = await supabase.from('products').select('*').order('id', { ascending: true });
-    if (data) setProducts(data);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch("/api/admin/data?type=products", {
+        headers: { "Authorization": `Bearer ${session.access_token}` }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setProducts(json.data || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   const openModal = (product = null) => {
     if (product) {
       setEditingProduct(product);
-      setFormData({ name: product.name, price: product.price, stock: product.stock, description: product.description || '', image_url: product.image_url || '' });
+      setFormData({ id: product.id, name: product.name, price: product.price, stock: product.stock, weight: product.weight || '', description: product.description || '', image_url: product.image_url || '' });
     } else {
       setEditingProduct(null);
-      setFormData({ name: '', price: '', stock: '', description: '', image_url: '' });
+      setFormData({ id: '', name: '', price: '', stock: '', weight: '', description: '', image_url: '' });
     }
     setIsModalOpen(true);
   };
@@ -31,21 +42,42 @@ export default function AdminProducts() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const payload = {
-      name: formData.name,
+      id: formData.id,
+      name: formData.formData?.name || formData.name, // Fallback safety
       price: parseFloat(formData.price),
       stock: parseInt(formData.stock),
+      weight: parseFloat(formData.weight),
       description: formData.description,
       image_url: formData.image_url
     };
 
-    if (editingProduct) {
-      await supabase.from('products').update(payload).eq('id', editingProduct.id);
-    } else {
-      await supabase.from('products').insert([payload]);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      
+      const res = await fetch("/api/admin/data", {
+        method: "POST",
+        headers: { 
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          action: editingProduct ? "update_product" : "create_product",
+          id: editingProduct?.id,
+          payload
+        })
+      });
+
+      if (res.ok) {
+        setIsModalOpen(false);
+        fetchProducts();
+      } else {
+        alert("Failed to save product.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error saving product.");
     }
-    
-    setIsModalOpen(false);
-    fetchProducts();
   };
 
   return (
@@ -91,14 +123,24 @@ export default function AdminProducts() {
           <div className="admin-card" style={{ width: '500px', backgroundColor: 'var(--bg-primary)' }}>
             <h2 style={{ marginTop: 0 }}>{editingProduct ? "Edit Product" : "Add New Product"}</h2>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label>Name</label>
-                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} />
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label>ID (Slug) - Used in URL</label>
+                  <input required disabled={!!editingProduct} type="text" value={formData.id} onChange={e => setFormData({...formData, id: e.target.value.toLowerCase().replace(/\s+/g, '-')})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} />
+                </div>
+                <div style={{ flex: 2 }}>
+                  <label>Name</label>
+                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} />
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ flex: 1 }}>
                   <label>Price (₹)</label>
                   <input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label>Weight (g)</label>
+                  <input required type="number" value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <label>Stock</label>
