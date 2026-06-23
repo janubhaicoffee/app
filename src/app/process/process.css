@@ -69,18 +69,16 @@
 .section-title {
   text-align: center;
   font-family: var(--font-playfair), serif;
-  font-size: 2.2rem;
+  font-size: clamp(1.8rem, 5vw, 2.2rem);
   color: var(--bg-color);
   background-color: var(--accent-red);
-  display: inline-block;
-  padding: 0.5rem 2.5rem;
+  display: block;
+  width: fit-content;
+  padding: 0.5rem 2rem;
   border-radius: 2px;
   margin: 0 auto 4rem;
   font-weight: 800;
   text-transform: uppercase;
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
   box-shadow: 4px 4px 0px rgba(74, 48, 34, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -91,34 +89,35 @@
   position: relative;
 }
 
-/* Vertical line for desktop */
-@media (min-width: 768px) {
-  .timeline-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 2px;
-    background-color: rgba(74, 48, 34, 0.3);
-    transform: translateX(-50%);
-  }
+/* Vertical line for both mobile and desktop */
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background-color: rgba(74, 48, 34, 0.3);
+  transform: translateX(-50%);
+  z-index: 1;
 }
 
 .timeline-step {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
   position: relative;
   width: 100%;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
+  z-index: 2;
 }
 
 @media (min-width: 768px) {
   .timeline-step {
     flex-direction: row;
     justify-content: space-between;
+    gap: 0;
   }
   
   .timeline-step:nth-child(even) {
@@ -127,20 +126,22 @@
 }
 
 .step-icon-container {
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
   background-color: var(--bg-color);
   border: 2px solid rgba(74, 48, 34, 0.4);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2;
+  z-index: 3;
   box-shadow: inset 0 0 10px rgba(0,0,0,0.02), 0 4px 10px rgba(0,0,0,0.08);
 }
 
 @media (min-width: 768px) {
   .step-icon-container {
+    width: 80px;
+    height: 80px;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -152,17 +153,23 @@
 }
 
 .step-content {
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(74, 48, 34, 0.2);
   padding: 1.5rem;
   border-radius: 4px;
   width: 100%;
-  max-width: 350px;
+  max-width: 320px;
   text-align: center;
   box-shadow: 2px 2px 0px rgba(74, 48, 34, 0.1);
+  z-index: 3;
+  position: relative;
 }
 
 @media (min-width: 768px) {
+  .step-content {
+    max-width: 350px;
+  }
+
   .timeline-step:nth-child(odd) .step-content {
     text-align: right;
     margin-right: calc(50% + 60px);

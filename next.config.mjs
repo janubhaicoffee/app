@@ -7,15 +7,6 @@ const nextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
-  async redirects() {
-    return [
-      {
-        source: '/auth/signup',
-        destination: '/auth/login',
-        permanent: true,
-      },
-    ];
-  },
 };
 
 export default nextConfig;
