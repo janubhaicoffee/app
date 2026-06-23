@@ -3,7 +3,7 @@
   color: var(--bg-color);
   padding: 60px 0 30px;
   border-top: 2px solid var(--accent-gold);
-  margin-top: 60px;
+  margin-top: 0;
 }
 
 .footer-grid {
