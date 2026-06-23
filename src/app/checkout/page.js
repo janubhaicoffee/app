@@ -309,7 +309,7 @@ export default function CheckoutPage() {
 
   return (
     <main className="checkout-page">
-      <div className="container" style={{ maxWidth: '1000px' }}>
+      <div className="container" style={{ maxWidth: '1200px' }}>
         
         <div className="checkout-master-card">
           <div className="checkout-form-section">

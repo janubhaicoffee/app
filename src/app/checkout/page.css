@@ -46,6 +46,7 @@
 .form-row {
   display: flex;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .form-group {
@@ -85,6 +86,7 @@
 /* RIGHT SIDE - SUMMARY */
 .checkout-summary-section {
   flex: 2;
+  min-width: 350px;
   padding: 50px;
   background-color: #fcfbfa;
   border-left: 1px solid var(--border-color);

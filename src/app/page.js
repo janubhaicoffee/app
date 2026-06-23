@@ -42,7 +42,7 @@ export default function Home() {
   return (
     <main className="main-content">
 
-      {/* ===== HERO — SPLIT LAYOUT ===== */}
+      {/* ===== HERO - SPLIT LAYOUT ===== */}
       <section className="hero">
         <div className="hero-bg-grain" />
         <div className="container hero-grid">
@@ -106,7 +106,7 @@ export default function Home() {
 
 
 
-      {/* ===== PROCESS — FARM TO CUP ===== */}
+      {/* ===== PROCESS - FARM TO CUP ===== */}
       <section className="process-section" id="process">
         <div className="container">
           <div className="section-intro animate-on-scroll" ref={addRef}>
@@ -174,7 +174,7 @@ export default function Home() {
                 Brewed for you.
               </h2>
               <p className="story-text">
-                Janu Bhai Coffee started with a simple idea — bring the real taste of
+                Janu Bhai Coffee started with a simple idea - bring the real taste of
                 Chikmagaluru to every Indian home. No blending, no shortcuts,
                 no middlemen. Just honest, fresh coffee from farm to your cup.
               </p>
