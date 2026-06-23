@@ -16,15 +16,24 @@ export default function AdminGuard({ children }) {
         return;
       }
 
-      // Check if user's email is in the SUPERADMIN_EMAILS env variable
-      const adminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
-      const userEmail = session.user.email?.toLowerCase();
-
-      if (userEmail && adminEmails.includes(userEmail)) {
-        setIsAuthorized(true);
-      } else {
-        router.push("/");
+      // Use the secure server API to check if the user is an admin
+      try {
+        const res = await fetch("/api/admin/data?type=check", {
+          headers: { "Authorization": `Bearer ${session.access_token}` }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data.isAdmin) {
+            setIsAuthorized(true);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Auth check failed", err);
       }
+
+      router.push("/");
     };
 
     checkAuth();
