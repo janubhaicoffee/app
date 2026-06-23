@@ -4,6 +4,14 @@ import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import "./page.css";
 
+const facts = [
+  "Did you know? Chikmagalur is the birthplace of coffee in India.",
+  "Our beans are shade-grown under a canopy of fruit trees.",
+  "Janu Bhai Coffee is 100% sourced directly from local farmers.",
+  "Freshly roasted in small batches to preserve maximum flavor.",
+  "Chicory adds that rich, dark, and perfectly bitter kick you love."
+];
+
 export default function CheckoutPage() {
   const { cartItems, getCartTotal, clearCart } = useCart();
   const router = useRouter();
@@ -25,8 +33,32 @@ export default function CheckoutPage() {
   
   const [checkoutMode, setCheckoutMode] = useState("standard");
   const [subFrequency, setSubFrequency] = useState(null);
+  
+  const [factIndex, setFactIndex] = useState(0);
+  const [displayedFact, setDisplayedFact] = useState("");
 
   const finalTotal = getCartTotal() + (shippingRate ? shippingRate.shipping_cost : 0);
+
+  // Typewriter Effect
+  useEffect(() => {
+    let currentText = facts[factIndex];
+    let i = 0;
+    setDisplayedFact("");
+    
+    const typingInterval = setInterval(() => {
+      if (i < currentText.length) {
+        setDisplayedFact((prev) => prev + currentText.charAt(i));
+        i++;
+      } else {
+        clearInterval(typingInterval);
+        setTimeout(() => {
+          setFactIndex((prev) => (prev + 1) % facts.length);
+        }, 3000); // Wait 3s before next fact
+      }
+    }, 50); // Typing speed
+    
+    return () => clearInterval(typingInterval);
+  }, [factIndex]);
 
   useEffect(() => {
     // Parse URL params
@@ -220,29 +252,30 @@ export default function CheckoutPage() {
 
   return (
     <main className="checkout-page">
-      <div className="container">
-        <h1 className="checkout-title">CHECKOUT</h1>
-        <div className="checkout-layout">
-          <div className="checkout-form-section vintage-border">
-            <h2>{checkoutMode === "gift" ? "Recipient's Shipping Details" : "Shipping Details"}</h2>
+      <div className="container" style={{ maxWidth: '1000px' }}>
+        <h1 className="checkout-title">Secure Checkout</h1>
+        
+        <div className="checkout-master-card">
+          <div className="checkout-form-section">
+            <h2 className="section-label">{checkoutMode === "gift" ? "Recipient's Shipping Details" : "Shipping Details"}</h2>
             <form onSubmit={handlePayment} className="checkout-form">
               <div className="form-group">
                 <label>{checkoutMode === "gift" ? "Recipient's Full Name" : "Full Name"}</label>
-                <input type="text" name="name" required value={formData.name} onChange={handleInputChange} />
+                <input type="text" name="name" required value={formData.name} onChange={handleInputChange} placeholder="e.g. Rahul Sharma" />
               </div>
               <div className="form-row">
                 <div className="form-group">
                   <label>Email</label>
-                  <input type="email" name="email" required value={formData.email} onChange={handleInputChange} />
+                  <input type="email" name="email" required value={formData.email} onChange={handleInputChange} placeholder="rahul@example.com" />
                 </div>
                 <div className="form-group">
                   <label>Phone Number</label>
-                  <input type="tel" name="phone" required value={formData.phone} onChange={handleInputChange} />
+                  <input type="tel" name="phone" required value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" />
                 </div>
               </div>
               <div className="form-group">
                 <label>Address</label>
-                <textarea name="address" rows="3" required value={formData.address} onChange={handleInputChange}></textarea>
+                <textarea name="address" rows="3" required value={formData.address} onChange={handleInputChange} placeholder="House/Flat No., Street, Landmark"></textarea>
               </div>
               {checkoutMode === "gift" && (
                 <div className="form-group">
@@ -253,52 +286,72 @@ export default function CheckoutPage() {
               <div className="form-row">
                 <div className="form-group">
                   <label>City</label>
-                  <input type="text" name="city" required value={formData.city} onChange={handleInputChange} />
+                  <input type="text" name="city" required value={formData.city} onChange={handleInputChange} placeholder="New Delhi" />
                 </div>
                 <div className="form-group">
                   <label>PIN Code</label>
-                  <input type="text" name="pincode" required value={formData.pincode} onChange={handleInputChange} />
+                  <input type="text" name="pincode" required value={formData.pincode} onChange={handleInputChange} placeholder="110025" />
                 </div>
               </div>
               
-              {shippingLoading && <p style={{ color: '#FBC02D', marginTop: '10px' }}>Calculating shipping...</p>}
-              {shippingError && <p style={{ color: '#D32F2F', marginTop: '10px' }}>{shippingError}</p>}
+              {shippingLoading && <p className="shipping-status calculating">Calculating shipping rates...</p>}
+              {shippingError && <p className="shipping-status error">{shippingError}</p>}
               {shippingRate && (
-                <div style={{ marginTop: '10px', padding: '10px', background: 'rgba(0,0,0,0.2)', borderLeft: '3px solid #FBC02D' }}>
-                  <p style={{ margin: 0 }}><strong>Delivery via {shippingRate.courier_name}</strong></p>
-                  <p style={{ margin: '5px 0 0 0', fontSize: '0.9rem' }}>Estimated: {shippingRate.estimated_delivery_days} Days</p>
+                <div className="shipping-status success">
+                  <p><strong>Delivery via {shippingRate.courier_name}</strong></p>
+                  <p className="shipping-days">Estimated: {shippingRate.estimated_delivery_days} Days</p>
                 </div>
               )}
 
-              <button type="submit" className="btn-primary full-width mt-20" disabled={shippingLoading || !!shippingError || formData.pincode.length !== 6}>
+              <button type="submit" className="btn-primary full-width mt-20 pulse-hover" disabled={shippingLoading || !!shippingError || formData.pincode.length !== 6}>
                 PAY ₹ {finalTotal}
               </button>
             </form>
           </div>
 
-          <div className="checkout-summary vintage-border">
-            <h2>Order Summary</h2>
+          <div className="checkout-summary-section">
+            <h2 className="section-label">Order Summary</h2>
             <div className="summary-items">
               {cartItems.map(item => (
                 <div key={item.id} className="summary-item">
-                  <span>{item.quantity}x {item.name}</span>
-                  <span>₹ {item.price * item.quantity}</span>
+                  <span className="summary-qty">{item.quantity}x</span>
+                  <span className="summary-name">{item.name}</span>
+                  <span className="summary-price">₹ {item.price * item.quantity}</span>
                 </div>
               ))}
             </div>
+            
+            <div className="summary-divider"></div>
+            
+            <div className="summary-row">
+              <span>Subtotal</span>
+              <span>₹ {getCartTotal()}</span>
+            </div>
+            
             {shippingRate && (
               <div className="summary-row">
                 <span>Shipping</span>
                 <span>₹ {shippingRate.shipping_cost}</span>
               </div>
             )}
-            <hr />
+            
+            <div className="summary-divider thick"></div>
+            
             <div className="summary-row total">
               <span>Total to Pay</span>
               <span>₹ {finalTotal}</span>
             </div>
           </div>
         </div>
+
+        {/* Animated Coffee Facts (Typewriter) */}
+        <div className="checkout-facts">
+          <div className="typewriter-container">
+            <span className="fact-label">Coffee Fact: </span>
+            <span className="typewriter-text">{displayedFact}<span className="cursor">|</span></span>
+          </div>
+        </div>
+
       </div>
     </main>
   );
