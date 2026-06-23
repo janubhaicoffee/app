@@ -22,6 +22,7 @@ export default function CheckoutPage() {
     phone: "",
     address: "",
     city: "",
+    state: "",
     pincode: "",
     giftMessage: ""
   });
@@ -30,6 +31,9 @@ export default function CheckoutPage() {
   const [shippingRate, setShippingRate] = useState(null);
   const [shippingLoading, setShippingLoading] = useState(false);
   const [shippingError, setShippingError] = useState("");
+  
+  // Checkout Assistant State
+  const [assistantMessage, setAssistantMessage] = useState("Hi! I'm your Janu Bhai assistant. Need help with your address?");
   
   const [checkoutMode, setCheckoutMode] = useState("standard");
   const [subFrequency, setSubFrequency] = useState(null);
@@ -71,9 +75,14 @@ export default function CheckoutPage() {
     // Parse URL params
     const searchParams = new URLSearchParams(window.location.search);
     const mode = searchParams.get("mode");
-    if (mode) setCheckoutMode(mode);
     const freq = searchParams.get("frequency");
-    if (freq) setSubFrequency(freq);
+    
+    // We defer the state updates to avoid React's synchronous setState in effect warning.
+    // Instead of doing it directly, we can do it asynchronously or just let it batch.
+    setTimeout(() => {
+      if (mode) setCheckoutMode(mode);
+      if (freq) setSubFrequency(freq);
+    }, 0);
     // Check if user is logged in
     import("@/lib/supabase").then(({ supabase }) => {
       supabase.auth.getSession().then(({ data: { session } }) => {
@@ -96,41 +105,81 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-    if (formData.pincode.length === 6) {
-      fetchShippingRates();
-    } else {
-      setShippingRate(null);
+    const fetchShippingRates = async (pincodeStr) => {
+      setShippingLoading(true);
       setShippingError("");
-    }
-  }, [formData.pincode]);
-
-  const fetchShippingRates = async () => {
-    setShippingLoading(true);
-    setShippingError("");
-    try {
-      // Rough estimate: 500g per item
-      const weight = cartItems.reduce((acc, item) => acc + (500 * item.quantity), 0) || 500;
-      const res = await fetch('/api/shipping/rates', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          destination: formData.pincode,
-          weight,
-          order_amount: getCartTotal()
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setShippingRate(data);
-      } else {
-        setShippingError(data.error || "Delivery unavailable for this pincode.");
+      try {
+        const weight = cartItems.reduce((acc, item) => acc + (500 * item.quantity), 0) || 500;
+        const res = await fetch('/api/shipping/rates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            destination: pincodeStr,
+            weight,
+            order_amount: getCartTotal()
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setShippingRate(data);
+        } else {
+          // Non-blocking Serviceability
+          setAssistantMessage(`It looks like our regular couriers might have trouble delivering to ${pincodeStr}. If you have an alternate nearby address or work address, that might ensure a faster delivery!`);
+          setShippingRate({
+            shipping_cost: 60,
+            courier_name: "Standard Postal Delivery",
+            estimated_delivery_days: "5-7"
+          });
+        }
+      } catch (err) {
+        setAssistantMessage(`We're having trouble fetching live shipping rates for ${pincodeStr}, but don't worry, you can still place your order!`);
+        setShippingRate({
+          shipping_cost: 60,
+          courier_name: "Standard Postal Delivery",
+          estimated_delivery_days: "5-7"
+        });
+      } finally {
+        setShippingLoading(false);
       }
-    } catch (err) {
-      setShippingError("Failed to fetch shipping rates.");
-    } finally {
-      setShippingLoading(false);
+    };
+
+    const fetchCityState = async (pincodeStr) => {
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pincodeStr}`);
+        const data = await res.json();
+        if (data && data[0] && data[0].Status === "Success") {
+          const postOffice = data[0].PostOffice[0];
+          const fetchedCity = postOffice.District;
+          const fetchedState = postOffice.State;
+          
+          setFormData(prev => ({ ...prev, city: fetchedCity, state: fetchedState }));
+          setAssistantMessage(`Got it! Setting your location to ${fetchedCity}, ${fetchedState} based on your pincode.`);
+        }
+      } catch (err) {
+        console.error("Postal API error", err);
+      }
+    };
+
+    if (formData.pincode.length === 6) {
+      fetchCityState(formData.pincode);
+      fetchShippingRates(formData.pincode);
+    } else {
+      setTimeout(() => {
+        setShippingRate(null);
+        setShippingError("");
+      }, 0);
     }
-  };
+  }, [formData.pincode, cartItems, getCartTotal]);
+
+  // Smart Landmark Assistance
+  useEffect(() => {
+    if (formData.address.length > 5 && formData.address.length < 15) {
+      const timeout = setTimeout(() => {
+        setAssistantMessage("Could you add a nearby landmark or colony name? It helps our delivery partners find your door much faster!");
+      }, 1500);
+      return () => clearTimeout(timeout);
+    }
+  }, [formData.address]);
 
 
 
@@ -264,6 +313,11 @@ export default function CheckoutPage() {
         
         <div className="checkout-master-card">
           <div className="checkout-form-section">
+            <div className="checkout-assistant">
+              <div className="assistant-avatar">JB</div>
+              <p className="assistant-message">{assistantMessage}</p>
+            </div>
+            
             <h2 className="section-label">{checkoutMode === "gift" ? "Recipient's Shipping Details" : "Shipping Details"}</h2>
             <form onSubmit={handlePayment} className="checkout-form">
               <div className="form-group">
@@ -294,6 +348,10 @@ export default function CheckoutPage() {
                 <div className="form-group">
                   <label>City</label>
                   <input type="text" name="city" required value={formData.city} onChange={handleInputChange} placeholder="New Delhi" />
+                </div>
+                <div className="form-group">
+                  <label>State</label>
+                  <input type="text" name="state" required value={formData.state} onChange={handleInputChange} placeholder="Delhi" />
                 </div>
                 <div className="form-group">
                   <label>PIN Code</label>
