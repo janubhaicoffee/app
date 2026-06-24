@@ -14,7 +14,7 @@
 }
 
 .hero-subtitle {
-  font-family: var(--font-outfit), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   text-transform: uppercase;
   letter-spacing: 2px;
   font-weight: 600;
