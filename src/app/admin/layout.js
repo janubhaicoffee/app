@@ -37,6 +37,9 @@ export default function AdminLayout({ children }) {
           <Link href="/admin/articles" className="admin-nav-link">
             <FileText size={20} /> Articles (AI)
           </Link>
+          <Link href="/admin/settings" className="admin-nav-link">
+            <Settings size={20} /> Settings
+          </Link>
         </nav>
 
         <div className="admin-footer-nav">

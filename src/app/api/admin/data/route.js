@@ -91,6 +91,25 @@ export async function GET(request) {
       return NextResponse.json({ data: customers });
     }
 
+    if (type === "settings") {
+      const { data: settings, error } = await supabaseAdmin
+        .from('store_settings')
+        .select('*')
+        .eq('id', 'global')
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return NextResponse.json({ 
+        data: settings || { 
+          id: 'global', 
+          store_name: 'Janu Bhai Coffee', 
+          support_email: 'support@janubhaicoffee.com', 
+          free_shipping_threshold: 1000, 
+          razorpay_mode: 'test' 
+        } 
+      });
+    }
+
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
 
   } catch (error) {
@@ -124,6 +143,10 @@ export async function POST(request) {
       return NextResponse.json({ success: true });
     } else if (action === "update_product") {
       const { data, error } = await supabaseAdmin.from('products').update(payload).eq('id', id);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
+    } else if (action === "update_settings") {
+      const { error } = await supabaseAdmin.from('store_settings').upsert({ id: 'global', ...payload, updated_at: new Date().toISOString() });
       if (error) throw error;
       return NextResponse.json({ success: true });
     }

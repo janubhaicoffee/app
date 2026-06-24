@@ -6,7 +6,7 @@ export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [formData, setFormData] = useState({ id: '', name: '', price: '', stock: '', weight: '', description: '', image_url: '' });
+  const [formData, setFormData] = useState({ id: '', name: '', price: '', stock: '', weight: '', description: '', image_url: '', category: '', seo_title: '', seo_description: '' });
 
   useEffect(() => {
     fetchProducts();
@@ -31,10 +31,15 @@ export default function AdminProducts() {
   const openModal = (product = null) => {
     if (product) {
       setEditingProduct(product);
-      setFormData({ id: product.id, name: product.name, price: product.price, stock: product.stock, weight: product.weight || '', description: product.description || '', image_url: product.image_url || '' });
+      setFormData({ 
+        id: product.id, name: product.name, price: product.price, 
+        stock: product.stock, weight: product.weight || '', 
+        description: product.description || '', image_url: product.image_url || '',
+        category: product.category || '', seo_title: product.seo_title || '', seo_description: product.seo_description || ''
+      });
     } else {
       setEditingProduct(null);
-      setFormData({ id: '', name: '', price: '', stock: '', weight: '', description: '', image_url: '' });
+      setFormData({ id: '', name: '', price: '', stock: '', weight: '', description: '', image_url: '', category: '', seo_title: '', seo_description: '' });
     }
     setIsModalOpen(true);
   };
@@ -43,12 +48,15 @@ export default function AdminProducts() {
     e.preventDefault();
     const payload = {
       id: formData.id,
-      name: formData.formData?.name || formData.name, // Fallback safety
+      name: formData.name, // Fixed fallback
       price: parseFloat(formData.price),
       stock: parseInt(formData.stock),
       weight: parseFloat(formData.weight),
       description: formData.description,
-      image_url: formData.image_url
+      image_url: formData.image_url,
+      category: formData.category,
+      seo_title: formData.seo_title,
+      seo_description: formData.seo_description
     };
 
     try {
@@ -77,6 +85,26 @@ export default function AdminProducts() {
     } catch (e) {
       console.error(e);
       alert("Error saving product.");
+    }
+  };
+
+  const generateAISEO = async () => {
+    if (!formData.name) return alert("Please enter a product name first");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/ai/generate-seo", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ productName: formData.name, description: formData.description, price: formData.price })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setFormData(prev => ({ ...prev, seo_title: json.seo.seo_title, seo_description: json.seo.seo_description }));
+      } else {
+        alert("Failed to generate SEO. Check AI keys.");
+      }
+    } catch(e) {
+      alert("Error calling AI");
     }
   };
 
@@ -120,7 +148,7 @@ export default function AdminProducts() {
 
       {isModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div className="admin-card" style={{ width: '500px', backgroundColor: 'var(--bg-primary)' }}>
+          <div className="admin-card" style={{ width: '500px', backgroundColor: '#fff', padding: '2rem' }}>
             <h2 style={{ marginTop: 0 }}>{editingProduct ? "Edit Product" : "Add New Product"}</h2>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -155,6 +183,28 @@ export default function AdminProducts() {
                 <label>Description</label>
                 <textarea rows="3" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }}></textarea>
               </div>
+
+              <div style={{ borderTop: '1px solid var(--border-color)', margin: '1rem 0', paddingTop: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3>SEO Settings</h3>
+                  <button type="button" onClick={generateAISEO} style={{ background: 'var(--accent-gold)', color: 'var(--text-primary)', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>✨ Generate with AI</button>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <label>Category</label>
+                    <input type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} placeholder="e.g. Beans" />
+                  </div>
+                  <div style={{ flex: 2 }}>
+                    <label>SEO Title</label>
+                    <input type="text" value={formData.seo_title} onChange={e => setFormData({...formData, seo_title: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} />
+                  </div>
+                </div>
+                <div style={{ marginTop: '1rem' }}>
+                  <label>SEO Description</label>
+                  <textarea rows="2" value={formData.seo_description} onChange={e => setFormData({...formData, seo_description: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }}></textarea>
+                </div>
+              </div>
+
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button type="submit" className="admin-btn" style={{ flex: 1 }}>Save</button>
                 <button type="button" className="admin-btn-outline" style={{ flex: 1 }} onClick={() => setIsModalOpen(false)}>Cancel</button>
