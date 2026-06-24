@@ -155,6 +155,10 @@ export async function POST(request) {
       const { data, error } = await supabaseAdmin.from('products').update(payload).eq('id', id);
       if (error) throw error;
       return NextResponse.json({ success: true });
+    } else if (action === "update_article") {
+      const { data, error } = await supabaseAdmin.from('articles').update(payload).eq('id', id);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
     } else if (action === "update_settings") {
       const { error } = await supabaseAdmin.from('store_settings').upsert({ id: 'global', ...payload, updated_at: new Date().toISOString() });
       if (error) throw error;
