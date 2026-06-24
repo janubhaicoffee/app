@@ -44,7 +44,7 @@ export async function POST(req) {
     5. ONLY output the JSON object, NO markdown formatting, NO backticks.`;
 
     const payload = {
-      "model": "meta/llama3-70b-instruct", // Using Llama3 for structured JSON output
+      "model": "minimaxai/minimax-m3",
       "messages": [{"role": "user", "content": prompt}],
       "max_tokens": 500,
       "temperature": 0.3,

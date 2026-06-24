@@ -22,9 +22,13 @@ export default function AdminArticles() {
     
     setIsGenerating(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/ai/generate-article', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({ topic })
       });
       

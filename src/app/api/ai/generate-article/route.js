@@ -11,14 +11,14 @@ export async function POST(req) {
       return NextResponse.json({ error: "Topic is required" }, { status: 400 });
     }
 
-    // AUTHENTICATION CHECK
-    // Extract token from cookie (basic check, middleware should protect it ideally, but API routes need their own check)
-    const cookieHeader = req.headers.get("cookie");
-    if (!cookieHeader) {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser();
+    const token = authHeader.split(" ")[1];
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
