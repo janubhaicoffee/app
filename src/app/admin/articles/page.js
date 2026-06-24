@@ -11,6 +11,10 @@ export default function AdminArticles() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState(null);
   const [formData, setFormData] = useState({ id: '', title: '', slug: '', content: '', meta_title: '', meta_description: '', published: false });
+  
+  // AI Tools State
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [isAiEditing, setIsAiEditing] = useState(false);
 
   useEffect(() => {
     fetchArticles();
@@ -74,6 +78,7 @@ export default function AdminArticles() {
       meta_description: article.meta_description || '',
       published: !!article.published
     });
+    setImagePrompt("");
     setIsModalOpen(true);
   };
 
@@ -114,6 +119,56 @@ export default function AdminArticles() {
     } catch (e) {
       console.error(e);
       alert("Error updating article.");
+    }
+  };
+
+  // Editor Tools
+  const insertMarkdown = (prefix, suffix = '') => {
+    const textarea = document.getElementById('markdown-editor');
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = formData.content;
+    const selectedText = text.substring(start, end);
+    const newText = text.substring(0, start) + prefix + selectedText + suffix + text.substring(end);
+    setFormData({...formData, content: newText});
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+    }, 0);
+  };
+
+  const handleGenerateImage = () => {
+    if (!imagePrompt.trim()) return alert("Please enter an image prompt.");
+    const encodedPrompt = encodeURIComponent(imagePrompt.trim() + " premium quality photography coffee aesthetic");
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true&width=800&height=500`;
+    insertMarkdown(`\n![${imagePrompt}](${imageUrl})\n\n`);
+    setImagePrompt("");
+  };
+
+  const handleAITextEdit = async (action) => {
+    if (!formData.content.trim()) return alert("Content is empty.");
+    setIsAiEditing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/ai/edit-article", {
+        method: "POST",
+        headers: { 
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ action, content: formData.content })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setFormData({...formData, content: json.content});
+      } else {
+        alert("AI editing failed. Check API keys.");
+      }
+    } catch (e) {
+      alert("Error connecting to AI service.");
+    } finally {
+      setIsAiEditing(false);
     }
   };
 
@@ -178,8 +233,15 @@ export default function AdminArticles() {
 
       {isModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div className="admin-card" style={{ width: '800px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#fff', padding: '2rem' }}>
-            <h2 style={{ marginTop: 0 }}>Edit Article</h2>
+          <div className="admin-card" style={{ width: '900px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#fff', padding: '2rem' }}>
+            <h2 style={{ marginTop: 0, display: 'flex', justifyContent: 'space-between' }}>
+              Edit Article
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button type="button" onClick={() => handleAITextEdit('polish')} disabled={isAiEditing} style={{ background: 'var(--accent-gold)', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}>{isAiEditing ? "Processing..." : "✨ Polish Text"}</button>
+                <button type="button" onClick={() => handleAITextEdit('expand')} disabled={isAiEditing} style={{ background: 'var(--accent-red)', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}>{isAiEditing ? "Processing..." : "✨ Expand Section"}</button>
+              </div>
+            </h2>
+            
             <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ flex: 2 }}>
@@ -191,10 +253,35 @@ export default function AdminArticles() {
                   <input required type="text" value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} />
                 </div>
               </div>
+
+              {/* AI Image Generator Section */}
+              <div style={{ background: '#f5f5f5', padding: '1rem', borderRadius: '8px', border: '1px solid #ddd' }}>
+                <label style={{ color: 'var(--accent-red)', fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>🎨 AI Image Generator</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input 
+                    type="text" 
+                    value={imagePrompt}
+                    onChange={(e) => setImagePrompt(e.target.value)}
+                    placeholder="e.g. A steaming cup of coffee in a cozy cafe..."
+                    style={{ flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  />
+                  <button type="button" onClick={handleGenerateImage} style={{ background: 'var(--text-primary)', color: '#fff', border: 'none', padding: '0 1rem', borderRadius: '4px', cursor: 'pointer' }}>Insert Image</button>
+                </div>
+              </div>
               
               <div>
-                <label>Content (Markdown)</label>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                  <span>Content (Markdown)</span>
+                  <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '4px' }}>
+                    <button type="button" onClick={() => insertMarkdown('**', '**')} title="Bold" style={{ padding: '2px 6px', cursor: 'pointer' }}>B</button>
+                    <button type="button" onClick={() => insertMarkdown('_', '_')} title="Italic" style={{ padding: '2px 6px', cursor: 'pointer' }}>I</button>
+                    <button type="button" onClick={() => insertMarkdown('## ', '')} title="Heading 2" style={{ padding: '2px 6px', cursor: 'pointer' }}>H2</button>
+                    <button type="button" onClick={() => insertMarkdown('- ', '')} title="Bullet List" style={{ padding: '2px 6px', cursor: 'pointer' }}>•</button>
+                    <button type="button" onClick={() => insertMarkdown('[', '](url)')} title="Link" style={{ padding: '2px 6px', cursor: 'pointer' }}>🔗</button>
+                  </div>
+                </label>
                 <textarea 
+                  id="markdown-editor"
                   required 
                   rows="15" 
                   value={formData.content} 
