@@ -91,6 +91,16 @@ export async function GET(request) {
       return NextResponse.json({ data: customers });
     }
 
+    if (type === "articles") {
+      const { data: articles, error } = await supabaseAdmin
+        .from('articles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return NextResponse.json({ data: articles });
+    }
+
     if (type === "settings") {
       const { data: settings, error } = await supabaseAdmin
         .from('store_settings')

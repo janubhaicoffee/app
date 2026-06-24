@@ -12,8 +12,19 @@ export default function AdminArticles() {
   }, []);
 
   async function fetchArticles() {
-    const { data } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
-    if (data) setArticles(data);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch("/api/admin/data?type=articles", {
+        headers: { "Authorization": `Bearer ${session.access_token}` }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setArticles(json.data || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async function handleGenerate(e) {
