@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import ReactMarkdown from "react-markdown";
 
 export default function AdminArticles() {
   const [articles, setArticles] = useState([]);
@@ -9,6 +10,7 @@ export default function AdminArticles() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
   const [editingArticle, setEditingArticle] = useState(null);
   const [formData, setFormData] = useState({ id: '', title: '', slug: '', content: '', meta_title: '', meta_description: '', published: false });
   
@@ -79,6 +81,7 @@ export default function AdminArticles() {
       published: !!article.published
     });
     setImagePrompt("");
+    setPreviewMode(false);
     setIsModalOpen(true);
   };
 
@@ -222,7 +225,12 @@ export default function AdminArticles() {
                   <td>{new Date(article.created_at).toLocaleDateString()}</td>
                   <td>{article.published ? "Published" : "Draft"}</td>
                   <td>
-                    <button className="admin-btn-outline" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem' }} onClick={() => openModal(article)}>Edit</button>
+                    <button className="admin-btn-outline" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem', marginRight: '0.5rem' }} onClick={() => openModal(article)}>Edit</button>
+                    {article.published && (
+                      <a href={`/articles/${article.slug}`} target="_blank" rel="noopener noreferrer">
+                        <button className="admin-btn" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}>View Live</button>
+                      </a>
+                    )}
                   </td>
                 </tr>
               ))
@@ -272,22 +280,36 @@ export default function AdminArticles() {
               <div>
                 <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                   <span>Content (Markdown)</span>
-                  <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '4px' }}>
-                    <button type="button" onClick={() => insertMarkdown('**', '**')} title="Bold" style={{ padding: '2px 6px', cursor: 'pointer' }}>B</button>
-                    <button type="button" onClick={() => insertMarkdown('_', '_')} title="Italic" style={{ padding: '2px 6px', cursor: 'pointer' }}>I</button>
-                    <button type="button" onClick={() => insertMarkdown('## ', '')} title="Heading 2" style={{ padding: '2px 6px', cursor: 'pointer' }}>H2</button>
-                    <button type="button" onClick={() => insertMarkdown('- ', '')} title="Bullet List" style={{ padding: '2px 6px', cursor: 'pointer' }}>•</button>
-                    <button type="button" onClick={() => insertMarkdown('[', '](url)')} title="Link" style={{ padding: '2px 6px', cursor: 'pointer' }}>🔗</button>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', background: '#eee', borderRadius: '4px', overflow: 'hidden' }}>
+                      <button type="button" onClick={() => setPreviewMode(false)} style={{ padding: '4px 12px', border: 'none', background: !previewMode ? 'var(--accent-red)' : 'transparent', color: !previewMode ? '#fff' : '#333', cursor: 'pointer' }}>Write</button>
+                      <button type="button" onClick={() => setPreviewMode(true)} style={{ padding: '4px 12px', border: 'none', background: previewMode ? 'var(--accent-red)' : 'transparent', color: previewMode ? '#fff' : '#333', cursor: 'pointer' }}>Preview</button>
+                    </div>
+                    {!previewMode && (
+                      <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '4px' }}>
+                        <button type="button" onClick={() => insertMarkdown('**', '**')} title="Bold" style={{ padding: '2px 6px', cursor: 'pointer' }}>B</button>
+                        <button type="button" onClick={() => insertMarkdown('_', '_')} title="Italic" style={{ padding: '2px 6px', cursor: 'pointer' }}>I</button>
+                        <button type="button" onClick={() => insertMarkdown('## ', '')} title="Heading 2" style={{ padding: '2px 6px', cursor: 'pointer' }}>H2</button>
+                        <button type="button" onClick={() => insertMarkdown('- ', '')} title="Bullet List" style={{ padding: '2px 6px', cursor: 'pointer' }}>•</button>
+                        <button type="button" onClick={() => insertMarkdown('[', '](url)')} title="Link" style={{ padding: '2px 6px', cursor: 'pointer' }}>🔗</button>
+                      </div>
+                    )}
                   </div>
                 </label>
-                <textarea 
-                  id="markdown-editor"
-                  required 
-                  rows="15" 
-                  value={formData.content} 
-                  onChange={e => setFormData({...formData, content: e.target.value})} 
-                  style={{ width: '100%', padding: '8px', marginTop: '5px', fontFamily: 'monospace', fontSize: '14px' }}
-                ></textarea>
+                {previewMode ? (
+                  <div className="markdown-preview" style={{ width: '100%', minHeight: '320px', maxHeight: '500px', padding: '16px', marginTop: '5px', border: '1px solid #ccc', borderRadius: '4px', background: '#fcfcfc', overflowY: 'auto', fontFamily: 'sans-serif' }}>
+                    <ReactMarkdown>{formData.content || "*Nothing to preview*"}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <textarea 
+                    id="markdown-editor"
+                    required 
+                    rows="15" 
+                    value={formData.content} 
+                    onChange={e => setFormData({...formData, content: e.target.value})} 
+                    style={{ width: '100%', padding: '8px', marginTop: '5px', fontFamily: 'monospace', fontSize: '14px' }}
+                  ></textarea>
+                )}
               </div>
 
               <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
