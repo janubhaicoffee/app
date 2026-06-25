@@ -1,7 +1,7 @@
 import { createShipment } from "@/lib/nimbuspost";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabaseWrapper';
 import { Resend } from 'resend';
 import { calculateOrderTotal, getProductCatalog } from "@/lib/products";
 
@@ -56,58 +56,82 @@ export async function POST(request) {
     }
 
     const orderNumber = `JB-${Math.floor(Date.now() / 1000)}`;
-    const weight = cartItems.reduce((acc, item) => acc + (500 * item.quantity), 0) || 500;
 
-    // 2. Prepare order payload for Nimbuspost
-    const orderData = {
-      order_number: orderNumber,
-      shipping_charges: parseFloat(shippingRate.shipping_cost),
-      discount: 0,
-      cod_charges: 0,
-      payment_type: "prepaid", // We don't have COD
-      order_amount: finalTotal,
-      package_weight: weight,
-      package_length: 10,
-      package_breadth: 10,
-      package_height: 10,
-      request_auto_pickup: "yes", // Crucial: automatically schedule pickup!
-      consignee: {
-        name: formData.name,
-        address: formData.address,
-        address_2: "",
-        city: formData.city,
-        state: formData.city, // If state is missing, fallback to city
-        pincode: formData.pincode,
-        phone: formData.phone
-      },
-      pickup: {
-        warehouse_name: "Janu Bhai HQ",
-        name: "Janu Bhai Team",
-        address: "Janu Bhai Fulfillment Center",
-        address_2: "",
-        city: "New Delhi",
-        state: "Delhi",
-        pincode: process.env.NIMBUSPOST_WAREHOUSE_PINCODE || "110001",
-        phone: "9999999999"
-      },
-      order_items: cartItems.map(item => ({
-        name: item.name,
-        qty: item.quantity.toString(),
-        price: item.price.toString(),
-        sku: item.id
-      })),
-      courier_id: shippingRate.courier_id.toString()
-    };
+    const catalog = await getProductCatalog();
+    const productMap = catalog.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
+    
+    const coffeeItems = cartItems.filter(item => productMap[item.id]?.category !== 'merch');
+    const merchItems = cartItems.filter(item => productMap[item.id]?.category === 'merch');
 
-    // 3. Create the shipment
     let awbNumber = null;
     let shipmentData = null;
-    try {
-      shipmentData = await createShipment(orderData);
-      awbNumber = shipmentData.awb_number;
-    } catch (shipmentErr) {
-      console.error("Failed to create Nimbuspost shipment:", shipmentErr);
-      // We will still process the order in DB even if shipping fails, but flag it
+    let qikinkOrderData = null;
+
+    // Process Coffee items via Nimbuspost
+    if (coffeeItems.length > 0) {
+      const weight = coffeeItems.reduce((acc, item) => acc + ((productMap[item.id]?.weight || 500) * item.quantity), 0);
+      
+      const orderData = {
+        order_number: orderNumber + (merchItems.length > 0 ? "-C" : ""),
+        shipping_charges: parseFloat(shippingRate.shipping_cost),
+        discount: 0,
+        cod_charges: 0,
+        payment_type: "prepaid",
+        order_amount: finalTotal,
+        package_weight: weight,
+        package_length: 10,
+        package_breadth: 10,
+        package_height: 10,
+        request_auto_pickup: "yes",
+        consignee: {
+          name: formData.name,
+          address: formData.address,
+          address_2: "",
+          city: formData.city,
+          state: formData.city,
+          pincode: formData.pincode,
+          phone: formData.phone
+        },
+        pickup: {
+          warehouse_name: "Janu Bhai HQ",
+          name: "Janu Bhai Team",
+          address: "Janu Bhai Fulfillment Center",
+          address_2: "",
+          city: "New Delhi",
+          state: "Delhi",
+          pincode: process.env.NIMBUSPOST_WAREHOUSE_PINCODE || "110001",
+          phone: "9999999999"
+        },
+        order_items: coffeeItems.map(item => ({
+          name: item.name,
+          qty: item.quantity.toString(),
+          price: item.price.toString(),
+          sku: item.id
+        })),
+        courier_id: (shippingRate.courier_id === 'qikink' ? 1 : shippingRate.courier_id).toString()
+      };
+
+      try {
+        shipmentData = await createShipment(orderData);
+        awbNumber = shipmentData.awb_number;
+      } catch (shipmentErr) {
+        console.error("Failed to create Nimbuspost shipment:", shipmentErr);
+      }
+    }
+
+    // Process Merch items via Qikink
+    if (merchItems.length > 0) {
+      try {
+        const { createQikinkOrder } = await import('@/lib/qikink');
+        qikinkOrderData = await createQikinkOrder({
+          orderNumber: orderNumber + (coffeeItems.length > 0 ? "-M" : ""),
+          finalTotal: finalTotal,
+          formData: formData,
+          merchItems: merchItems
+        });
+      } catch (qikinkErr) {
+        console.error("Failed to create Qikink order:", qikinkErr);
+      }
     }
 
     // 4. Save Order to Supabase
@@ -121,7 +145,7 @@ export async function POST(request) {
         customer_email: formData.email || null,
         customer_phone: formData.phone || null,
         total_amount: finalTotal,
-        status: awbNumber ? "processing" : "payment_successful_shipping_failed",
+        status: (awbNumber || qikinkOrderData) ? "processing" : "payment_successful_shipping_failed",
         razorpay_order_id: isSubscription ? null : razorpayOrderId,
         razorpay_payment_id: paymentId,
         awb_number: awbNumber,
@@ -158,9 +182,7 @@ export async function POST(request) {
       throw new Error("Database insertion failed");
     }
 
-    // 5. Save Order Items
-    const catalog = await getProductCatalog();
-    const productMap = catalog.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
+    // 5. Save Order Items (catalog and productMap already created)
     
     const orderItemsToInsert = cartItems.map(item => ({
       order_id: orderRow.id,

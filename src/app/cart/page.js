@@ -4,11 +4,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import { serializeCart } from "@/lib/cartHydration";
 import "./page.css";
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, getCartTotal } = useCart();
   const router = useRouter();
+
+  const handleShareCart = () => {
+    const payload = serializeCart(cartItems);
+    if (payload) {
+      const shareUrl = `${window.location.origin}/stash/${payload}`;
+      navigator.clipboard.writeText(shareUrl);
+      alert("Copied shareable cart session link! 📋");
+    }
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -71,9 +81,18 @@ export default function CartPage() {
             <button className="cart-checkout-btn pulse-hover" onClick={() => router.push('/checkout')}>
               PROCEED TO CHECKOUT
             </button>
+            
+            <button 
+              className="btn-secondary"
+              onClick={handleShareCart}
+              style={{ width: '100%', marginTop: '1rem', padding: '12px', fontSize: '0.85rem', fontWeight: '800', borderStyle: 'dashed' }}
+            >
+              SHARE ACTIVE CART 🔗
+            </button>
           </div>
         </div>
       </div>
     </main>
   );
 }
+

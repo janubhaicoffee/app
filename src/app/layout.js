@@ -4,6 +4,7 @@ import TopBar from "@/components/TopBar";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "react-hot-toast";
+import InterceptorModal from "@/components/InterceptorModal";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -85,6 +86,7 @@ export default function RootLayout({ children }) {
         <Toaster position="top-center" />
         <CartProvider>
           <TopBar />
+          <InterceptorModal />
           {children}
           <Footer />
         </CartProvider>

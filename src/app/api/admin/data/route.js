@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabaseWrapper";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
@@ -87,10 +87,22 @@ export async function GET(request) {
       const { data: products, error } = await supabaseAdmin
         .from('products')
         .select('*')
+        .or('category.is.null,category.neq.merch')
         .order('id', { ascending: true });
       
       if (error) throw error;
       return NextResponse.json({ data: products });
+    }
+
+    if (type === "merch") {
+      const { data: merch, error } = await supabaseAdmin
+        .from('products')
+        .select('*')
+        .eq('category', 'merch')
+        .order('id', { ascending: true });
+      
+      if (error) throw error;
+      return NextResponse.json({ data: merch });
     }
 
     if (type === "orders") {

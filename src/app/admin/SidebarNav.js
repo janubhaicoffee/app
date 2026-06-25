@@ -37,6 +37,9 @@ export default function SidebarNav() {
       <Link href="/admin/products" className="admin-nav-link">
         <Package size={20} /> Products
       </Link>
+      <Link href="/admin/merch" className="admin-nav-link">
+        <Package size={20} /> Merch
+      </Link>
       <Link href="/admin/orders" className="admin-nav-link" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <ShoppingCart size={20} /> Orders

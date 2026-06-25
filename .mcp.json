@@ -8,6 +8,10 @@
       "env": {
         "BRAINSYNC_ENV_FILE": "C:\\Users\\hudav\\.bsync_core\\app\\mcp-secret-env.json"
       }
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp"
     }
   }
 }

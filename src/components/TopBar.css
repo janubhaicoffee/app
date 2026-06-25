@@ -157,40 +157,120 @@
 }
 
 /* Mobile Responsiveness */
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 90;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-menu-header {
+  display: none;
+}
+
+.mobile-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chevron {
+  transition: transform 0.3s ease;
+}
+
+.chevron.rotate {
+  transform: rotate(90deg);
+}
+
 @media (max-width: 768px) {
   .mobile-menu-btn {
-    display: block;
-    order: -1; /* Move to the left if desired, or keep as is. Let's keep natural order */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 101;
   }
   
+  .mobile-overlay {
+    display: block;
+    opacity: 1;
+  }
+  
+  .mobile-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+  }
+
   .nav-menu {
-    display: none;
-    position: absolute;
-    top: 90px;
-    left: 0;
-    right: 0;
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 80%;
+    max-width: 350px;
+    height: 100vh;
     background-color: var(--bg-color);
     flex-direction: column;
-    padding: 20px;
-    border-bottom: 2px solid var(--text-primary);
-    box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    padding: 30px 20px;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+    z-index: 100;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    align-items: flex-start;
+    gap: 1.5rem;
+    overflow-y: auto;
   }
   
   .nav-menu.open {
-    display: flex;
+    left: 0;
   }
   
+  .nav-link {
+    font-size: 1.4rem;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .dropdown.mobile-dropdown {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+  }
+
   .dropdown-menu-wrapper {
     position: static;
     display: block;
+    width: 100%;
+    padding-top: 10px;
   }
   
   .dropdown-menu {
     box-shadow: none;
     border: none;
-    border-left: 2px dashed var(--text-primary);
-    padding-left: 10px;
+    border-left: 2px solid var(--accent-red);
+    padding-left: 15px;
     margin-left: 10px;
+    background: transparent;
+    width: 100%;
+  }
+  
+  .dropdown-item {
+    font-size: 1.1rem;
+    padding: 10px 0;
+    border-bottom: none;
   }
   
   .dropdown-menu::before {

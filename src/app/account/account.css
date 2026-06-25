@@ -243,3 +243,215 @@
   transform: translateY(-2px);
   box-shadow: 6px 6px 0px #000;
 }
+
+/* Account Progression Tab Styles */
+.progression-container {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.lore-card {
+  background: linear-gradient(135deg, var(--bg-color-dark) 0%, #fff 100%);
+  border: 2px solid var(--text-primary);
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 4px 4px 0px var(--text-primary);
+  position: relative;
+}
+
+.tier-title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--text-primary);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.tier-badge {
+  background: var(--accent-red);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.progress-bar-outer {
+  background: var(--border-color);
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--text-primary);
+  position: relative;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-red) 100%);
+  border-radius: 10px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.points-text-summary {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.progress-bar-outer {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar-glow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.4), rgba(255, 255, 255, 0.5), rgba(255, 215, 0, 0.4), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+
+.ledger-card-container {
+  margin-top: 30px;
+}
+
+.ledger-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.ledger-card-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: #fcfcfc;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  cursor: default;
+  transition: border-color 0.2s;
+}
+
+.ledger-card-item:hover {
+  border-color: var(--text-primary);
+}
+
+.ledger-card-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ledger-action-type {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.ledger-date {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.ledger-card-right {
+  display: flex;
+  align-items: center;
+}
+
+.ledger-points {
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: #2e7d32;
+  background: rgba(46, 125, 50, 0.08);
+  padding: 4px 14px;
+  border-radius: 16px;
+}
+
+/* Delivery Optimizer styles */
+.optimizer-form {
+  background: #fcfcfc;
+  border: 1px solid var(--border-color);
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.checkbox-item input {
+  width: 16px;
+  height: 16px;
+}
+
+.matrix-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-top: 25px;
+}
+
+@media (min-width: 768px) {
+  .matrix-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.matrix-card {
+  background: #fff;
+  border: 2px solid var(--text-primary);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 4px 4px 0px var(--text-primary);
+}
+
+.matrix-card h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+  font-size: 1.15rem;
+  text-transform: uppercase;
+}
+
+.timeline-item-matrix {
+  border-left: 2px solid var(--accent-red);
+  padding-left: 15px;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.timeline-item-matrix::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 5px;
+  width: 10px;
+  height: 10px;
+  background: var(--accent-red);
+  border-radius: 50%;
+}
+

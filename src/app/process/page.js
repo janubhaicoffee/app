@@ -1,21 +1,12 @@
 "use client";
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Leaf, Filter, Sun, Flame, Snowflake, Coffee, Check } from "lucide-react";
 import "./process.css";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
-};
-
-const slideInLeft = {
-  hidden: { opacity: 0, x: -50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut" } }
-};
-
-const slideInRight = {
-  hidden: { opacity: 0, x: 50 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: "easeOut" } }
 };
 
 const scaleIn = {
@@ -26,35 +17,102 @@ const scaleIn = {
 const timelineSteps = [
   {
     title: "Handpicked",
-    desc: "Only ripe cherries are selected with care.",
-    icon: <Leaf size={40} />
+    desc: "Only ripe cherries are selected with care from the high altitudes of Chikmagalur.",
+    icon: <Leaf size={28} />,
+    videoUrl: "https://player.vimeo.com/external/477169493.sd.mp4?s=d0db2d326f1dc7de99c5625ff11cc28f7311b5e2&profile_id=165&oauth2_token_id=57447761"
   },
   {
     title: "Carefully Sorted",
-    desc: "Only the best cherries make the cut.",
-    icon: <Filter size={40} />
+    desc: "Only the best beans make the cut, eliminating any defectives for consistent flavour profiles.",
+    icon: <Filter size={28} />,
+    videoUrl: "https://player.vimeo.com/external/416041071.sd.mp4?s=254641c8f1d5336e76cf08db5b94f061f2fde1c8&profile_id=165&oauth2_token_id=57447761"
   },
   {
     title: "Sun Dried",
-    desc: "Naturally sun dried to lock in flavour.",
-    icon: <Sun size={40} />
+    desc: "Naturally sun dried to lock in full-bodied sweetness and complexity.",
+    icon: <Sun size={28} />,
+    videoUrl: "https://player.vimeo.com/external/517616641.sd.mp4?s=1df0efb8b20ff44e83c7138b3f12440938b812b1&profile_id=165&oauth2_token_id=57447761"
   },
   {
     title: "Expertly Roasted",
-    desc: "Roasted in small batches to bring out the best aroma and balance.",
-    icon: <Flame size={40} />
+    desc: "Roasted in small batches by master roasters to draw out rich aroma and perfect balance.",
+    icon: <Flame size={28} />,
+    videoUrl: "https://player.vimeo.com/external/435674703.sd.mp4?s=74b6ff9bc0bf476f5712e529deec0b666a4bc27a&profile_id=165&oauth2_token_id=57447761"
   },
   {
     title: "Freeze Dried",
-    desc: "After roasting, beans are freeze dried to preserve freshness, aroma and natural oils.",
-    icon: <Snowflake size={40} />
+    desc: "Beans are instantly freeze-dried, locking in the natural essential oils and fresh aromas.",
+    icon: <Snowflake size={28} />,
+    videoUrl: "https://player.vimeo.com/external/554988719.sd.mp4?s=9108b3a0cc30fa392cc632279184518cdbc87f17&profile_id=165&oauth2_token_id=57447761"
   },
   {
     title: "Served Fresh",
-    desc: "Sealed for freshness and served in our cafe for the perfect cup every time.",
-    icon: <Coffee size={40} />
+    desc: "Sealed airtight and served directly to deliver the ultimate coffee experience.",
+    icon: <Coffee size={28} />,
+    videoUrl: "https://player.vimeo.com/external/391586552.sd.mp4?s=33045860d5bfa780d68a9ad059fb27cf5c0cb4eb&profile_id=165&oauth2_token_id=57447761"
   }
 ];
+
+function TimelineNode({ step, index }) {
+  const containerRef = useRef(null);
+  
+  // Track scroll position of this timeline node relative to the viewport
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "center center"]
+  });
+
+  // documentary-style spatial transformations
+  const opacity = useTransform(scrollYProgress, [0, 0.6, 1], [0.1, 1, 1]);
+  const scale = useTransform(scrollYProgress, [0, 0.6, 1], [0.85, 1, 1]);
+  const y = useTransform(scrollYProgress, [0, 0.6, 1], [80, 0, 0]);
+
+  const isEven = index % 2 === 1;
+
+  return (
+    <motion.div
+      ref={containerRef}
+      style={{ opacity, scale, y }}
+      className={`timeline-step-row ${isEven ? 'even-row' : 'odd-row'}`}
+      key={index}
+    >
+      {/* Video Container with Hover Zoom */}
+      <motion.div
+        className="step-media-wrapper vintage-border"
+        whileHover={{ scale: 1.04 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        <video
+          src={step.videoUrl}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="step-loop-video"
+        />
+        <motion.div
+          className="step-cream-overlay"
+          whileHover={{ opacity: 0.6 }}
+          transition={{ duration: 0.3 }}
+        />
+      </motion.div>
+
+      {/* Content Container with Hover Lift */}
+      <motion.div
+        className="step-card-content"
+        whileHover={{ y: -4, boxShadow: '6px 8px 0px rgba(62, 39, 35, 0.15)' }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        <div className="step-badge-node">
+          <span className="step-icon-inner">{step.icon}</span>
+          <span className="step-number-text">Phase 0{index + 1}</span>
+        </div>
+        <h3 className="step-title-node">{step.title}</h3>
+        <p className="step-desc-node">{step.desc}</p>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 export default function ProcessPage() {
   return (
@@ -77,13 +135,13 @@ export default function ProcessPage() {
 
           <p className="hero-description">
             Our coffee comes from the lush hills of Chikmagaluru, Karnataka 
-            one of India's most celebrated coffee growing regions, known for its 
+            one of India&apos;s most celebrated coffee growing regions, known for its 
             rich soil, perfect climate and passion for quality.
           </p>
         </motion.div>
       </section>
 
-      {/* Timeline Section */}
+      {/* Spatial Timeline Section */}
       <section className="process-timeline-section">
         <motion.h2 
           className="section-title"
@@ -95,35 +153,10 @@ export default function ProcessPage() {
           From Farm to Cup
         </motion.h2>
 
-        <div className="timeline-container">
-          {timelineSteps.map((step, index) => {
-            const isEven = index % 2 === 1; // 0-indexed, so 1,3,5 are "even" visual steps
-            
-            return (
-              <div className="timeline-step" key={index}>
-                <motion.div 
-                  className="step-icon-container"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: "-100px" }}
-                  variants={scaleIn}
-                >
-                  <div className="step-icon">{step.icon}</div>
-                </motion.div>
-
-                <motion.div 
-                  className="step-content"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: "-100px" }}
-                  variants={isEven ? slideInRight : slideInLeft}
-                >
-                  <h3 className="step-title">{step.title}</h3>
-                  <p className="step-desc">{step.desc}</p>
-                </motion.div>
-              </div>
-            );
-          })}
+        <div className="spatial-timeline-container">
+          {timelineSteps.map((step, index) => (
+            <TimelineNode step={step} index={index} key={index} />
+          ))}
         </div>
       </section>
 

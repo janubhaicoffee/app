@@ -5,15 +5,40 @@ const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
+  const [interceptorItem, setInterceptorItem] = useState(null);
 
-  // Load from local storage on mount
+  // Load from local storage on mount and check for hydrated session cookie
   useEffect(() => {
     const savedCart = localStorage.getItem('janu_bhai_cart');
+    let initialCart = [];
     if (savedCart) {
       try {
-        setCartItems(JSON.parse(savedCart));
+        initialCart = JSON.parse(savedCart);
+        setCartItems(initialCart);
       } catch (e) {
         console.error("Failed to parse cart");
+      }
+    }
+
+    // Hydration check from session cookie
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    };
+
+    const cartCookie = getCookie('janu_bhai_cart_session');
+    if (cartCookie) {
+      try {
+        const hydratedItems = JSON.parse(decodeURIComponent(cartCookie));
+        if (Array.isArray(hydratedItems) && hydratedItems.length > 0) {
+          setCartItems(hydratedItems);
+          // Delete cookie by setting expiry
+          document.cookie = "janu_bhai_cart_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        }
+      } catch (e) {
+        console.error("Failed to parse hydrated cart session cookie:", e);
       }
     }
   }, []);
@@ -24,6 +49,12 @@ export function CartProvider({ children }) {
   }, [cartItems]);
 
   const addToCart = (product) => {
+    // Intercept if it's the high-intensity variant (thodi-hard-extreme) and not confirmed
+    if (product.variantSlug === 'thodi-hard-extreme' && !product.confirmed) {
+      setInterceptorItem(product);
+      return; // Freeze the mutation event
+    }
+
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
@@ -33,6 +64,22 @@ export function CartProvider({ children }) {
       }
       return [...prev, product];
     });
+  };
+
+  const confirmInterceptor = () => {
+    if (interceptorItem) {
+      const itemToPush = { ...interceptorItem, confirmed: true };
+      setCartItems(prev => {
+        const existing = prev.find(item => item.id === itemToPush.id);
+        if (existing) {
+          return prev.map(item => 
+            item.id === itemToPush.id ? { ...item, quantity: item.quantity + itemToPush.quantity } : item
+          );
+        }
+        return [...prev, itemToPush];
+      });
+      setInterceptorItem(null);
+    }
   };
 
   const updateQuantity = (id, quantity) => {
@@ -62,6 +109,9 @@ export function CartProvider({ children }) {
   return (
     <CartContext.Provider value={{
       cartItems,
+      interceptorItem,
+      setInterceptorItem,
+      confirmInterceptor,
       addToCart,
       updateQuantity,
       removeFromCart,
