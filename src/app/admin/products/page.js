@@ -6,7 +6,7 @@ export default function AdminProducts() {
   const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [formData, setFormData] = useState({ id: '', name: '', price: '', stock: '', weight: '', description: '', image_url: '', category: '', seo_title: '', seo_description: '' });
+  const [formData, setFormData] = useState({ id: '', name: '', price: '', stock: '', weight: '', description: '', image_url: '', category: '', seo_title: '', seo_description: '', arabica_pct: '', chicory_pct: '', robusta_pct: '' });
 
   useEffect(() => {
     fetchProducts();
@@ -35,11 +35,12 @@ export default function AdminProducts() {
         id: product.id, name: product.name, price: product.price, 
         stock: product.stock, weight: product.weight || '', 
         description: product.description || '', image_url: product.image_url || '',
-        category: product.category || '', seo_title: product.seo_title || '', seo_description: product.seo_description || ''
+        category: product.category || '', seo_title: product.seo_title || '', seo_description: product.seo_description || '',
+        arabica_pct: product.arabica_pct ?? '', chicory_pct: product.chicory_pct ?? '', robusta_pct: product.robusta_pct ?? ''
       });
     } else {
       setEditingProduct(null);
-      setFormData({ id: '', name: '', price: '', stock: '', weight: '', description: '', image_url: '', category: '', seo_title: '', seo_description: '' });
+      setFormData({ id: '', name: '', price: '', stock: '', weight: '', description: '', image_url: '', category: '', seo_title: '', seo_description: '', arabica_pct: '', chicory_pct: '', robusta_pct: '' });
     }
     setIsModalOpen(true);
   };
@@ -48,7 +49,7 @@ export default function AdminProducts() {
     e.preventDefault();
     const payload = {
       id: formData.id,
-      name: formData.name, // Fixed fallback
+      name: formData.name,
       price: parseFloat(formData.price),
       stock: parseInt(formData.stock),
       weight: parseFloat(formData.weight),
@@ -56,7 +57,10 @@ export default function AdminProducts() {
       image_url: formData.image_url,
       category: formData.category,
       seo_title: formData.seo_title,
-      seo_description: formData.seo_description
+      seo_description: formData.seo_description,
+      arabica_pct: formData.arabica_pct ? parseInt(formData.arabica_pct) : 0,
+      chicory_pct: formData.chicory_pct ? parseInt(formData.chicory_pct) : 0,
+      robusta_pct: formData.robusta_pct ? parseInt(formData.robusta_pct) : 0
     };
 
     try {
@@ -179,6 +183,25 @@ export default function AdminProducts() {
                 <label>Image URL</label>
                 <input type="text" value={formData.image_url} onChange={e => setFormData({...formData, image_url: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} />
               </div>
+
+              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                <h3 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem' }}>Blend Composition (%)</h3>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <label>Arabica %</label>
+                    <input type="number" min="0" max="100" value={formData.arabica_pct} onChange={e => setFormData({...formData, arabica_pct: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label>Chicory %</label>
+                    <input type="number" min="0" max="100" value={formData.chicory_pct} onChange={e => setFormData({...formData, chicory_pct: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label>Robusta %</label>
+                    <input type="number" min="0" max="100" value={formData.robusta_pct} onChange={e => setFormData({...formData, robusta_pct: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }} />
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label>Description</label>
                 <textarea rows="3" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: '8px', marginTop: '5px' }}></textarea>
