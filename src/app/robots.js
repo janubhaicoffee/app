@@ -3,7 +3,7 @@ export default function robots() {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/private/', '/checkout/'],
+      disallow: ['/private/', '/checkout/', '/admin/', '/api/', '/account/'],
     },
     sitemap: 'https://janubhaicoffee.com/sitemap.xml',
   };

@@ -59,8 +59,27 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Janu Bhai Coffee",
+    "url": "https://janubhaicoffee.com",
+    "logo": "https://janubhaicoffee.com/icon.png",
+    "description": "Authentic, small-batch roasted coffee from the hills of Chikmagaluru. Available for retail and commercial wholesale.",
+    "sameAs": [
+      "https://www.instagram.com/janubhaicoffee",
+      "https://twitter.com/janubhaicoffee"
+    ]
+  };
+
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className={`${playfair.variable} ${inter.variable}`}>
         <CartProvider>
           <TopBar />
