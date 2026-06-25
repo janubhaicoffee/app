@@ -40,7 +40,7 @@ export async function POST(req) {
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
     return NextResponse.json(
-      { error: 'Error creating order' },
+      { error: error.message || 'Failed to initialize payment gateway' },
       { status: 500 }
     );
   }

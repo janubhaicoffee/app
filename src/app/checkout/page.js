@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import "./page.css";
 
 const facts = [
@@ -31,6 +32,7 @@ export default function CheckoutPage() {
   const [shippingRate, setShippingRate] = useState(null);
   const [shippingLoading, setShippingLoading] = useState(false);
   const [shippingError, setShippingError] = useState("");
+  const [paymentLoading, setPaymentLoading] = useState(false);
   
   // Checkout Assistant State
   const [assistantMessage, setAssistantMessage] = useState("Hi! I'm your Janu Bhai assistant. Need help with your address?");
@@ -189,6 +191,8 @@ export default function CheckoutPage() {
   const handlePayment = async (e) => {
     e.preventDefault();
     if (cartItems.length === 0) return;
+    
+    setPaymentLoading(true);
 
     try {
       let rzpOrderId = null;
@@ -202,7 +206,8 @@ export default function CheckoutPage() {
         });
         const data = await res.json();
         if (!data.subscriptionId) {
-          alert("Failed to create subscription: " + (data.error || ""));
+          toast.error("Failed to setup subscription: " + (data.error || "Unknown error"));
+          setPaymentLoading(false);
           return;
         }
         subId = data.subscriptionId;
@@ -217,7 +222,8 @@ export default function CheckoutPage() {
         });
         const data = await res.json();
         if (!data.orderId) {
-          alert("Failed to create order");
+          toast.error("Failed to initialize payment: " + (data.error || "Unknown error"));
+          setPaymentLoading(false);
           return;
         }
         rzpOrderId = data.orderId;
@@ -226,6 +232,7 @@ export default function CheckoutPage() {
       const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
       
       const completeOrder = async (paymentId, orderId, signature) => {
+        const toastId = toast.loading("Confirming your order...");
         try {
           const res = await fetch('/api/order/complete', {
             method: 'POST',
@@ -248,20 +255,23 @@ export default function CheckoutPage() {
           });
           const data = await res.json();
           if (data.success) {
-            alert(`Order Placed! AWB Tracking: ${data.awb}`);
+            toast.success(`Order Placed Successfully!`, { id: toastId });
             clearCart();
             router.push('/account');
           } else {
-            alert("Order completion failed: " + data.error);
+            toast.error("Order completion failed: " + data.error, { id: toastId });
+            setPaymentLoading(false);
           }
         } catch (e) {
           console.error(e);
-          alert("Error finalizing order.");
+          toast.error("Error finalizing order. Please contact support.", { id: toastId });
+          setPaymentLoading(false);
         }
       };
 
       if (!keyId) {
-        alert("Razorpay Key is missing");
+        toast.error("Razorpay Configuration Missing. Please contact support.");
+        setPaymentLoading(false);
         return;
       }
 
@@ -280,6 +290,11 @@ export default function CheckoutPage() {
             response.razorpay_signature
           );
         },
+        modal: {
+          ondismiss: function() {
+            setPaymentLoading(false);
+          }
+        },
         prefill: {
           name: formData.name,
           email: formData.email,
@@ -291,10 +306,15 @@ export default function CheckoutPage() {
       };
 
       const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+        toast.error(`Payment Failed: ${response.error.description}`);
+        setPaymentLoading(false);
+      });
       rzp.open();
     } catch (error) {
       console.error(error);
-      alert("Payment failed to initialize");
+      toast.error("Payment system failed to initialize. Please try again.");
+      setPaymentLoading(false);
     }
   };
 
@@ -370,8 +390,8 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              <button type="submit" className="btn-primary full-width mt-20 pulse-hover" disabled={shippingLoading || !!shippingError || formData.pincode.length !== 6}>
-                PAY ₹ {finalTotal}
+              <button type="submit" className="btn-primary full-width mt-20 pulse-hover" disabled={shippingLoading || !!shippingError || formData.pincode.length !== 6 || paymentLoading}>
+                {paymentLoading ? 'PROCESSING...' : `PAY ₹ ${finalTotal}`}
               </button>
             </form>
           </div>

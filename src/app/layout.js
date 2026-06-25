@@ -3,6 +3,7 @@ import "./globals.css";
 import TopBar from "@/components/TopBar";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/context/CartContext";
+import { Toaster } from "react-hot-toast";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -81,6 +82,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={`${playfair.variable} ${inter.variable}`}>
+        <Toaster position="top-center" />
         <CartProvider>
           <TopBar />
           {children}

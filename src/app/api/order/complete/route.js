@@ -220,7 +220,7 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    console.error("Order Completion Error (Suppressed detailed error)");
-    return NextResponse.json({ success: false, error: "An internal server error occurred" }, { status: 500 });
+    console.error("Order Completion Error:", error);
+    return NextResponse.json({ success: false, error: error.message || "An internal server error occurred" }, { status: 500 });
   }
 }
