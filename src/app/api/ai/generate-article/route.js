@@ -42,7 +42,8 @@ export async function POST(req) {
     2. Include a catchy H1 Title at the very beginning.
     3. Use semantic HTML headers (H2, H3).
     4. Keep the tone authentic, premium, yet accessible (desi but clean).
-    5. Do not include any generic AI introduction text like "Here is an article", just return the pure markdown content.`;
+    5. VERY IMPORTANT: Automatically insert high-quality images throughout the article using this exact markdown format: ![Alt text](https://image.pollinations.ai/prompt/detailed%20image%20description%20premium%20coffee%20photography?nologo=true&width=800&height=400). You MUST URL-encode the prompt inside the link. Insert a hero image immediately after the H1 title, and at least 1-2 more relevant images inside the body.
+    6. Do not include any generic AI introduction text like "Here is an article", just return the pure markdown content.`;
 
     const payload = {
       "model": "minimaxai/minimax-m3",

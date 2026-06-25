@@ -16,6 +16,8 @@ export default function AdminArticles() {
   
   // AI Tools State
   const [imagePrompt, setImagePrompt] = useState("");
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState(null);
   const [isAiEditing, setIsAiEditing] = useState(false);
 
   useEffect(() => {
@@ -81,6 +83,7 @@ export default function AdminArticles() {
       published: !!article.published
     });
     setImagePrompt("");
+    setGeneratedImageUrl(null);
     setPreviewMode(false);
     setIsModalOpen(true);
   };
@@ -117,11 +120,36 @@ export default function AdminArticles() {
         setIsModalOpen(false);
         fetchArticles();
       } else {
-        alert("Failed to update article.");
+        const errData = await res.json();
+        alert("Failed to update article: " + (errData.error || "Unknown error"));
       }
     } catch (e) {
       console.error(e);
       alert("Error updating article.");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this article? This cannot be undone.")) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch("/api/admin/data", {
+        method: "POST",
+        headers: { 
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ action: "delete_article", id })
+      });
+      if (res.ok) {
+        fetchArticles();
+      } else {
+        const err = await res.json();
+        alert("Failed to delete article: " + (err.error || ""));
+      }
+    } catch (e) {
+      alert("Error deleting article");
     }
   };
 
@@ -143,9 +171,27 @@ export default function AdminArticles() {
 
   const handleGenerateImage = () => {
     if (!imagePrompt.trim()) return alert("Please enter an image prompt.");
+    setGeneratingImage(true);
+    setGeneratedImageUrl(null);
     const encodedPrompt = encodeURIComponent(imagePrompt.trim() + " premium quality photography coffee aesthetic");
     const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true&width=800&height=500`;
-    insertMarkdown(`\n![${imagePrompt}](${imageUrl})\n\n`);
+    
+    const img = new window.Image();
+    img.onload = () => {
+      setGeneratingImage(false);
+      setGeneratedImageUrl(imageUrl);
+    };
+    img.onerror = () => {
+      setGeneratingImage(false);
+      alert("Failed to generate image.");
+    };
+    img.src = imageUrl;
+  };
+
+  const handleInsertImage = () => {
+    if (!generatedImageUrl) return;
+    insertMarkdown(`\n![${imagePrompt}](${generatedImageUrl})\n\n`);
+    setGeneratedImageUrl(null);
     setImagePrompt("");
   };
 
@@ -226,6 +272,7 @@ export default function AdminArticles() {
                   <td>{article.published ? "Published" : "Draft"}</td>
                   <td>
                     <button className="admin-btn-outline" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem', marginRight: '0.5rem' }} onClick={() => openModal(article)}>Edit</button>
+                    <button className="admin-btn-outline" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem', marginRight: '0.5rem', borderColor: 'var(--accent-red)', color: 'var(--accent-red)' }} onClick={() => handleDelete(article.id)}>Delete</button>
                     {article.published && (
                       <a href={`/articles/${article.slug}`} target="_blank" rel="noopener noreferrer">
                         <button className="admin-btn" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}>View Live</button>
@@ -272,9 +319,21 @@ export default function AdminArticles() {
                     onChange={(e) => setImagePrompt(e.target.value)}
                     placeholder="e.g. A steaming cup of coffee in a cozy cafe..."
                     style={{ flex: 1, padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    disabled={generatingImage}
                   />
-                  <button type="button" onClick={handleGenerateImage} style={{ background: 'var(--text-primary)', color: '#fff', border: 'none', padding: '0 1rem', borderRadius: '4px', cursor: 'pointer' }}>Insert Image</button>
+                  <button type="button" onClick={handleGenerateImage} disabled={generatingImage} style={{ background: 'var(--text-primary)', color: '#fff', border: 'none', padding: '0 1rem', borderRadius: '4px', cursor: 'pointer' }}>
+                    {generatingImage ? "Generating..." : "Generate Image"}
+                  </button>
                 </div>
+                {generatedImageUrl && (
+                  <div style={{ marginTop: '1rem', borderTop: '1px solid #ddd', paddingTop: '1rem', textAlign: 'center' }}>
+                    <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Generated Image Preview:</p>
+                    <img src={generatedImageUrl} alt="Generated Preview" style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                    <button type="button" onClick={handleInsertImage} style={{ display: 'block', margin: '1rem auto 0', background: 'var(--accent-red)', color: '#fff', border: 'none', padding: '0.5rem 1.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                      ✨ Insert into Article
+                    </button>
+                  </div>
+                )}
               </div>
               
               <div>

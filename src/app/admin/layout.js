@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { LayoutDashboard, Package, ShoppingCart, Users, FileText, Settings, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import AdminGuard from "@/components/AdminGuard";
+import SidebarNav from "./SidebarNav";
 import "./admin.css";
 
 export const metadata = {
@@ -21,26 +22,7 @@ export default function AdminLayout({ children }) {
           <p>Admin Portal</p>
         </div>
         
-        <nav className="admin-nav">
-          <Link href="/admin" className="admin-nav-link">
-            <LayoutDashboard size={20} /> Dashboard
-          </Link>
-          <Link href="/admin/products" className="admin-nav-link">
-            <Package size={20} /> Products
-          </Link>
-          <Link href="/admin/orders" className="admin-nav-link">
-            <ShoppingCart size={20} /> Orders
-          </Link>
-          <Link href="/admin/customers" className="admin-nav-link">
-            <Users size={20} /> Customers
-          </Link>
-          <Link href="/admin/articles" className="admin-nav-link">
-            <FileText size={20} /> Articles (AI)
-          </Link>
-          <Link href="/admin/settings" className="admin-nav-link">
-            <Settings size={20} /> Settings
-          </Link>
-        </nav>
+        <SidebarNav />
 
         <div className="admin-footer-nav">
           <Link href="/" className="admin-nav-link text-danger">

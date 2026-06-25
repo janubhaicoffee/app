@@ -40,15 +40,36 @@ export async function GET(request) {
         supabaseAdmin.from('customers').select('*', { count: 'exact', head: true }),
         supabaseAdmin.from('orders').select('*', { count: 'exact', head: true }),
         supabaseAdmin.from('articles').select('*', { count: 'exact', head: true }),
-        supabaseAdmin.from('orders').select('total_amount, status')
+        supabaseAdmin.from('orders').select('total_amount, status, created_at')
       ]);
 
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const chartDataMap = {};
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        chartDataMap[dateStr] = { date: dateStr, revenue: 0, orders: 0 };
+      }
+
       const revenue = (allOrders || []).reduce((sum, order) => {
-        if (['paid', 'processing', 'shipped', 'delivered'].includes(order.status)) {
-          return sum + (order.total_amount || 0);
+        const isValid = ['paid', 'processing', 'shipped', 'delivered'].includes(order.status);
+        if (isValid && order.created_at) {
+          const d = new Date(order.created_at);
+          if (d >= thirtyDaysAgo) {
+            const dateStr = d.toISOString().split('T')[0];
+            if (chartDataMap[dateStr]) {
+              chartDataMap[dateStr].revenue += (order.total_amount || 0);
+              chartDataMap[dateStr].orders += 1;
+            }
+          }
         }
-        return sum;
+        return isValid ? sum + (order.total_amount || 0) : sum;
       }, 0);
+
+      const chartData = Object.values(chartDataMap);
 
       return NextResponse.json({
         data: {
@@ -56,7 +77,8 @@ export async function GET(request) {
           customers: cCount || 0,
           orders: oCount || 0,
           articles: aCount || 0,
-          revenue: revenue
+          revenue: revenue,
+          chartData: chartData
         }
       });
     }
@@ -155,6 +177,10 @@ export async function POST(request) {
       const { data, error } = await supabaseAdmin.from('products').update(payload).eq('id', id);
       if (error) throw error;
       return NextResponse.json({ success: true });
+    } else if (action === "update_order") {
+      const { data, error } = await supabaseAdmin.from('orders').update(payload).eq('id', id);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
     } else if (action === "update_article") {
       const { data, error } = await supabaseAdmin.from('articles').update(payload).eq('id', id);
       if (error) throw error;
@@ -163,11 +189,15 @@ export async function POST(request) {
       const { error } = await supabaseAdmin.from('store_settings').upsert({ id: 'global', ...payload, updated_at: new Date().toISOString() });
       if (error) throw error;
       return NextResponse.json({ success: true });
+    } else if (action === "delete_article") {
+      const { error } = await supabaseAdmin.from('articles').delete().eq('id', id);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
     console.error("Admin API POST Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: error.message || JSON.stringify(error) || "Internal Server Error" }, { status: 500 });
   }
 }

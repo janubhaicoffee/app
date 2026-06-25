@@ -3,7 +3,7 @@ import ProductClient from "./ProductClient";
 import "../product.css";
 
 export async function generateMetadata({ params }) {
-  const { id } = params;
+  const { id } = await params;
   const { data: product } = await supabase
     .from('products')
     .select('name, description, seo_title, seo_description')
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function ProductPage({ params }) {
-  const { id } = params;
+  const { id } = await params;
   const { data: product } = await supabase
     .from('products')
     .select('*')

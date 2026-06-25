@@ -35,13 +35,39 @@ export default function AdminCustomers() {
     fetchCustomers();
   }, []);
 
+  const exportCSV = () => {
+    if (customers.length === 0) return;
+    const headers = ["ID", "Name", "Email", "Phone", "Joined Date"];
+    const csvRows = [headers.join(",")];
+    
+    customers.forEach(c => {
+      const row = [
+        c.id,
+        `"${c.name || ''}"`,
+        `"${c.email || ''}"`,
+        `"${c.phone || ''}"`,
+        new Date(c.created_at).toISOString().split('T')[0]
+      ];
+      csvRows.push(row.join(","));
+    });
+    
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `customers_export_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   if (loading) return <div style={{ padding: '2rem' }}>Loading customers...</div>;
   if (error) return <div style={{ padding: '2rem', color: 'red' }}>Error: {error}</div>;
 
   return (
     <div>
-      <div className="admin-header">
+      <div className="admin-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>Customers Directory</h1>
+        <button className="admin-btn" onClick={exportCSV}>Download CSV</button>
       </div>
 
       <div className="admin-card">

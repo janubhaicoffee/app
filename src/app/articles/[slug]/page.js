@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin as supabase } from "@/lib/supabaseAdmin";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 function AnimatedNumber({ value, isCurrency = false }) {
   const [displayValue, setDisplayValue] = useState(0);
@@ -13,9 +14,8 @@ function AnimatedNumber({ value, isCurrency = false }) {
       return;
     }
     
-    // Duration of animation in ms
     const duration = 1500;
-    const incrementTime = 30; // ms per frame
+    const incrementTime = 30;
     const steps = duration / incrementTime;
     const stepValue = end / steps;
 
@@ -44,7 +44,8 @@ export default function AdminDashboard() {
     customers: 0,
     orders: 0,
     articles: 0,
-    revenue: 0
+    revenue: 0,
+    chartData: []
   });
 
   const [loading, setLoading] = useState(true);
@@ -67,7 +68,8 @@ export default function AdminDashboard() {
               customers: json.data.customers || 0,
               orders: json.data.orders || 0,
               articles: json.data.articles || 0,
-              revenue: json.data.revenue || 0
+              revenue: json.data.revenue || 0,
+              chartData: json.data.chartData || []
             });
           }
         }
@@ -79,7 +81,6 @@ export default function AdminDashboard() {
     }
     loadStats();
     
-    // Auto-refresh stats every 30 seconds for a real-time feel
     const interval = setInterval(loadStats, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -115,6 +116,38 @@ export default function AdminDashboard() {
           <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: 0, color: 'var(--primary-color)' }}>
             <AnimatedNumber value={stats.products} />
           </p>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+        <div className="admin-card">
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.2rem' }}>Revenue (Last 30 Days)</h2>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <LineChart data={stats.chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                <XAxis dataKey="date" tick={{fontSize: 12}} tickFormatter={(val) => val.split('-').slice(1).join('/')} />
+                <YAxis tick={{fontSize: 12}} />
+                <Tooltip formatter={(value) => [`₹${value}`, "Revenue"]} labelFormatter={(label) => `Date: ${label}`} />
+                <Line type="monotone" dataKey="revenue" stroke="#4caf50" strokeWidth={3} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="admin-card">
+          <h2 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.2rem' }}>Orders (Last 30 Days)</h2>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <BarChart data={stats.chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                <XAxis dataKey="date" tick={{fontSize: 12}} tickFormatter={(val) => val.split('-').slice(1).join('/')} />
+                <YAxis tick={{fontSize: 12}} allowDecimals={false} />
+                <Tooltip formatter={(value) => [value, "Orders"]} labelFormatter={(label) => `Date: ${label}`} />
+                <Bar dataKey="orders" fill="var(--accent-red)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
