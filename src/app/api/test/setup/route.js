@@ -43,29 +43,6 @@ export async function POST(request) {
       return NextResponse.json({ success: true, message: `Cleaned up data for ${targetEmail}` });
     }
 
-    if (action === "seed-mystery-drop") {
-      // Ensure the token exists
-      const targetToken = token || "SECRET-ARABICA-50";
-      
-      // Remove existing if any
-      db.mystery_drops = db.mystery_drops.filter(
-        d => d.physical_token?.toUpperCase() !== targetToken.toUpperCase()
-      );
-
-      db.mystery_drops.push({
-        id: "secret-arabica-50",
-        physical_token: targetToken,
-        name: "Secret Arabica Gold",
-        origin_masked: "Chikmagalur Peak",
-        roast_level: "Medium-Dark",
-        tasting_notes: "Honey, Milk Chocolate, Jasmine",
-        created_at: new Date().toISOString()
-      });
-
-      writeDb(db);
-      return NextResponse.json({ success: true, message: `Seeded mystery drop ${targetToken}` });
-    }
-
     if (action === "seed-user-progression") {
       const targetEmail = (email || "testuser@example.com").toLowerCase();
       const targetPoints = points !== undefined ? Number(points) : 15;

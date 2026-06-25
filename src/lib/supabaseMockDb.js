@@ -10,7 +10,6 @@ try {
 export function readDb() {
   if (!fs || !DB_PATH) {
     return {
-      mystery_drops: [],
       user_profiles: [],
       points_ledger: [],
       orders: [],
@@ -20,17 +19,6 @@ export function readDb() {
   }
   if (!fs.existsSync(DB_PATH)) {
     const initialDb = {
-      mystery_drops: [
-        {
-          id: "secret-arabica-50",
-          physical_token: "SECRET-ARABICA-50",
-          name: "Secret Arabica Gold",
-          origin_masked: "Chikmagalur Peak",
-          roast_level: "Medium-Dark",
-          tasting_notes: "Honey, Milk Chocolate, Jasmine",
-          created_at: new Date().toISOString()
-        }
-      ],
       user_profiles: [],
       points_ledger: [],
       orders: [],
@@ -307,7 +295,7 @@ export class MockSupabaseClient {
   }
 
   from(table) {
-    const mockTables = ['mystery_drops', 'user_profiles', 'points_ledger', 'orders', 'order_items', 'subscriptions'];
+    const mockTables = ['user_profiles', 'points_ledger', 'orders', 'order_items', 'subscriptions'];
     if (mockTables.includes(table)) {
       const builder = new MockQueryBuilder(table);
       const originalExecute = builder.execute.bind(builder);

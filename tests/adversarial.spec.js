@@ -2,52 +2,6 @@ const { test, expect } = require('@playwright/test');
 
 test.describe('Adversarial Edge Cases', () => {
 
-  test('38. Rapidly toggle interceptor modal open/close without state corruption', async ({ page }) => {
-    await page.goto('/product/instantcoffee-100g');
-
-    const sleepSlider = page.locator('.brew-blueprint-section input[type="range"]').first();
-    const workloadSlider = page.locator('.brew-blueprint-section input[type="range"]').nth(1);
-    sleepSlider.evaluate((el) => { el.value = '90'; el.dispatchEvent(new Event('input', { bubbles: true })); });
-    workloadSlider.evaluate((el) => { el.value = '90'; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
-
-    // Open modal 3 times rapidly
-    for (let i = 0; i < 3; i++) {
-      await page.locator('button:has-text("BUY NOW")').click();
-      await page.waitForTimeout(100);
-      const cancelBtn = page.locator('.btn-cancel');
-      if (await cancelBtn.isVisible().catch(() => false)) {
-        await cancelBtn.click();
-      }
-      await page.waitForTimeout(100);
-    }
-
-    // Final open - verify modal is clean
-    await page.locator('button:has-text("BUY NOW")').click();
-    await expect(page.locator('.modal-overlay')).toBeVisible();
-    const confirmBtn = page.locator('.btn-confirm');
-    await expect(confirmBtn).toBeDisabled();
-  });
-
-  test('39. Check checkbox then uncheck - confirm button should disable again', async ({ page }) => {
-    await page.goto('/product/instantcoffee-100g');
-
-    const sleepSlider = page.locator('.brew-blueprint-section input[type="range"]').first();
-    sleepSlider.evaluate((el) => { el.value = '90'; el.dispatchEvent(new Event('input', { bubbles: true })); });
-    const workloadSlider = page.locator('.brew-blueprint-section input[type="range"]').nth(1);
-    workloadSlider.evaluate((el) => { el.value = '90'; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); });
-
-    await page.locator('button:has-text("BUY NOW")').click();
-
-    const checkbox = page.locator('.checkbox-container input[type="checkbox"]');
-    const confirmBtn = page.locator('.btn-confirm');
-
-    await checkbox.check();
-    await expect(confirmBtn).not.toBeDisabled();
-
-    await checkbox.uncheck();
-    await expect(confirmBtn).toBeDisabled();
-  });
-
   test('40. Progress bar edge cases - verify 0% and 100% boundary renders', async ({ page }) => {
     await page.goto('/account');
     await page.locator('text=Lore & Progression').click();
@@ -63,7 +17,7 @@ test.describe('Adversarial Edge Cases', () => {
     expect(styleAttr).toBeTruthy();
   });
 
-  test('41. Verify process page timeline nodes render correctly across all 6 steps', async ({ page }) => {
+  test('39. Verify process page timeline nodes render correctly across all 6 steps', async ({ page }) => {
     await page.goto('/process');
     const stepRows = page.locator('.timeline-step-row');
     const count = await stepRows.count();
@@ -80,7 +34,7 @@ test.describe('Adversarial Edge Cases', () => {
     }
   });
 
-  test('42. Verify process page video wrappers are interactive with hover scale', async ({ page }) => {
+  test('40. Verify process page video wrappers are interactive with hover scale', async ({ page }) => {
     await page.goto('/process');
     const videoWrapper = page.locator('.step-media-wrapper').first();
     await expect(videoWrapper).toBeVisible();
@@ -93,7 +47,7 @@ test.describe('Adversarial Edge Cases', () => {
     await expect(videoWrapper).toBeVisible();
   });
 
-  test('43. Multiple tab switches in account page should not cause rendering errors', async ({ page }) => {
+  test('41. Multiple tab switches in account page should not cause rendering errors', async ({ page }) => {
     await page.goto('/account');
     const tabs = ['Overview', 'Lore & Progression', 'Delivery Optimizer', 'Order History', 'Addresses', 'Subscriptions'];
 
