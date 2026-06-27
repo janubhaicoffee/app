@@ -9,19 +9,16 @@ export async function GET(request) {
     }
 
     const token = authHeader.split(" ")[1];
-
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // Verify token using admin client
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    // Verify admin privileges
     const adminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
     if (!adminEmails.includes(user.email?.toLowerCase())) {
       return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
@@ -45,7 +42,7 @@ export async function GET(request) {
 
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
+
       const chartDataMap = {};
       for (let i = 29; i >= 0; i--) {
         const d = new Date();
@@ -88,8 +85,9 @@ export async function GET(request) {
         .from('products')
         .select('*')
         .or('category.is.null,category.neq.merch')
-        .order('id', { ascending: true });
-      
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
       return NextResponse.json({ data: products });
     }
@@ -99,8 +97,9 @@ export async function GET(request) {
         .from('products')
         .select('*')
         .eq('category', 'merch')
-        .order('id', { ascending: true });
-      
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
       return NextResponse.json({ data: merch });
     }
@@ -110,7 +109,7 @@ export async function GET(request) {
         .from('orders')
         .select('*, order_items(*)')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return NextResponse.json({ data: orders });
     }
@@ -120,7 +119,7 @@ export async function GET(request) {
         .from('customers')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return NextResponse.json({ data: customers });
     }
@@ -130,7 +129,7 @@ export async function GET(request) {
         .from('articles')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return NextResponse.json({ data: articles });
     }
@@ -141,16 +140,16 @@ export async function GET(request) {
         .select('*')
         .eq('id', 'global')
         .single();
-      
+
       if (error && error.code !== 'PGRST116') throw error;
-      return NextResponse.json({ 
-        data: settings || { 
-          id: 'global', 
-          store_name: 'Janu Bhai Coffee', 
-          support_email: 'support@janubhaicoffee.com', 
-          free_shipping_threshold: 1000, 
-          razorpay_mode: 'test' 
-        } 
+      return NextResponse.json({
+        data: settings || {
+          id: 'global',
+          store_name: 'Janu Bhai Coffee',
+          support_email: 'support@janubhaicoffee.com',
+          free_shipping_threshold: 1000,
+          razorpay_mode: 'test'
+        }
       });
     }
 
@@ -182,13 +181,44 @@ export async function POST(request) {
     const { action, payload, id } = body;
 
     if (action === "create_product") {
-      const { data, error } = await supabaseAdmin.from('products').insert([payload]);
+      const insertPayload = {
+        ...payload,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      const { data, error } = await supabaseAdmin.from('products').insert([insertPayload]);
       if (error) throw error;
       return NextResponse.json({ success: true });
     } else if (action === "update_product") {
+      if (!id) return NextResponse.json({ error: "Missing product id" }, { status: 400 });
+
       const { data, error } = await supabaseAdmin.from('products').update(payload).eq('id', id);
       if (error) throw error;
       return NextResponse.json({ success: true });
+    } else if (action === "delete_product") {
+      if (!id) return NextResponse.json({ error: "Missing product id" }, { status: 400 });
+
+      const { error } = await supabaseAdmin.from('products').delete().eq('id', id);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
+    } else if (action === "duplicate_product") {
+      if (!id) return NextResponse.json({ error: "Missing product id" }, { status: 400 });
+
+      const { data: original, error: fetchError } = await supabaseAdmin.from('products').select('*').eq('id', id).single();
+      if (fetchError) throw fetchError;
+      if (!original) return NextResponse.json({ error: "Product not found" }, { status: 404 });
+
+      const newId = `${original.id}-copy`;
+      const { error: insertError } = await supabaseAdmin.from('products').insert([{
+        ...original,
+        id: newId,
+        name: `${original.name} (Copy)`,
+        status: 'draft',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }]);
+      if (insertError) throw insertError;
+      return NextResponse.json({ success: true, newId });
     } else if (action === "update_order") {
       const { data, error } = await supabaseAdmin.from('orders').update(payload).eq('id', id);
       if (error) throw error;

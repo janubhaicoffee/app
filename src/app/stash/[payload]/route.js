@@ -20,26 +20,8 @@ export async function GET(request, { params }) {
   const hydratedCart = [];
   
   try {
-    // Separate variant items vs base product items
-    const variantSlugs = items.filter(i => i.variantSlug).map(i => i.variantSlug);
-    const productIds = items.filter(i => !i.variantSlug).map(i => i.id);
+    const productIds = items.map(i => i.id);
     
-    // Query Supabase in batch for variants
-    let variantsMap = {};
-    if (variantSlugs.length > 0) {
-      const { data: variants, error } = await supabase
-        .from('coffee_variants')
-        .select('*, products:product_id (name, image_url)')
-        .in('slug', variantSlugs);
-        
-      if (!error && variants) {
-        variants.forEach(v => {
-          variantsMap[v.slug] = v;
-        });
-      }
-    }
-    
-    // Query Supabase in batch for products
     let productsMap = {};
     if (productIds.length > 0) {
       const { data: products, error } = await supabase
@@ -54,38 +36,19 @@ export async function GET(request, { params }) {
       }
     }
     
-    // Validate stock and rebuild cart
     for (const item of items) {
-      if (item.variantSlug) {
-        const dbVar = variantsMap[item.variantSlug];
-        if (dbVar && dbVar.stock > 0) {
-          const clampedQty = Math.min(item.quantity, dbVar.stock);
-          hydratedCart.push({
-            id: dbVar.id,
-            name: `${dbVar.products?.name || 'Coffee'} (${dbVar.name})`,
-            price: dbVar.price,
-            image: dbVar.products?.image_url || "/product/100gram/100gramfront.png",
-            quantity: clampedQty,
-            variantSlug: dbVar.slug,
-            isVariant: true,
-            subscription: item.subscription || null,
-            isGift: item.isGift || false
-          });
-        }
-      } else {
-        const dbProd = productsMap[item.id];
-        if (dbProd && dbProd.stock > 0) {
-          const clampedQty = Math.min(item.quantity, dbProd.stock);
-          hydratedCart.push({
-            id: dbProd.id,
-            name: dbProd.name,
-            price: dbProd.price,
-            image: dbProd.image_url || "/product/100gram/100gramfront.png",
-            quantity: clampedQty,
-            subscription: item.subscription || null,
-            isGift: item.isGift || false
-          });
-        }
+      const dbProd = productsMap[item.id];
+      if (dbProd && dbProd.stock > 0) {
+        const clampedQty = Math.min(item.quantity, dbProd.stock);
+        hydratedCart.push({
+          id: dbProd.id,
+          name: dbProd.name,
+          price: dbProd.price,
+          image: dbProd.image_url || "/product/100gram/100gramfront.png",
+          quantity: clampedQty,
+          subscription: item.subscription || null,
+          isGift: item.isGift || false
+        });
       }
     }
     

@@ -3,28 +3,13 @@ import { useState, useEffect, useRef } from "react";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import ImageGallery from "@/components/ImageGallery";
-import { getMatchingVariant } from "@/actions/variants";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Truck, Leaf, ShieldCheck, Sparkles,
   ShoppingCart, Zap, Repeat,
-  Droplets, Wheat, Beef, Cookie, Activity
+  Droplets, Wheat, Beef, Cookie, Activity, RefreshCw
 } from "lucide-react";
-
-const INTENSITY_COLORS = {
-  mild: { bg: "#81C784", label: "Mild" },
-  medium: { bg: "#FFB300", label: "Medium" },
-  strong: { bg: "#E65100", label: "Strong" },
-  extreme: { bg: "#B71C1C", label: "Extreme" },
-};
-
-function getIntensityColor(intensity) {
-  if (intensity <= 25) return INTENSITY_COLORS.mild;
-  if (intensity <= 50) return INTENSITY_COLORS.medium;
-  if (intensity <= 75) return INTENSITY_COLORS.strong;
-  return INTENSITY_COLORS.extreme;
-}
 
 function getBlendData(product) {
   const a = product.arabica_pct || 0;
@@ -58,7 +43,6 @@ function BlendBadge({ product }) {
     );
   }
 
-  const totalWidth = 100;
   return (
     <motion.div
       className="blend-badge"
@@ -109,14 +93,6 @@ function AnimatedDescription({ text }) {
     </motion.p>
   );
 }
-
-const NUTRITION_ITEMS = [
-  { key: "Energy", value: "354 kcal", pct: 18, color: "#FFB300", icon: Zap },
-  { key: "Protein", value: "9 g", pct: 18, color: "#5D4037", icon: Beef },
-  { key: "Fat", value: "14.4 g", pct: 22, color: "#E65100", icon: Droplets },
-  { key: "Carbs", value: "58.7 g", pct: 22, color: "#8D6E63", icon: Wheat },
-  { key: "Sugar", value: "0 g", pct: 0, color: "#B71C1C", icon: Cookie },
-];
 
 function NutritionCard({ item, index }) {
   const Icon = item.icon;
@@ -172,7 +148,7 @@ function NutritionBar({ pct, color }) {
   );
 }
 
-function StockIndicator({ isOutOfStock, stock, isVariantActive }) {
+function StockIndicator({ isOutOfStock, stock }) {
   let dotClass, textClass, label;
   if (isOutOfStock) {
     dotClass = "stock-dot-out";
@@ -218,8 +194,29 @@ const TRUST_ITEMS = [
   { icon: Sparkles, label: "100% pure ingredients" },
 ];
 
+function getNutritionItems(product) {
+  const n = product.nutrition;
+  if (n && (n.energy || n.protein || n.fat || n.carbs || n.sugar !== undefined)) {
+    return [
+      { key: "Energy", value: n.energy ? `${n.energy} kcal` : "—", pct: Math.min(parseFloat(n.energy) / 5 || 0, 100), color: "#FFB300", icon: Zap },
+      { key: "Protein", value: n.protein ? `${n.protein} g` : "—", pct: Math.min(parseFloat(n.protein) * 2 || 0, 100), color: "#5D4037", icon: Beef },
+      { key: "Fat", value: n.fat ? `${n.fat} g` : "—", pct: Math.min(parseFloat(n.fat) * 1.5 || 0, 100), color: "#E65100", icon: Droplets },
+      { key: "Carbs", value: n.carbs ? `${n.carbs} g` : "—", pct: Math.min(parseFloat(n.carbs) * 1.5 || 0, 100), color: "#8D6E63", icon: Wheat },
+      { key: "Sugar", value: n.sugar !== undefined ? `${n.sugar} g` : "—", pct: parseFloat(n.sugar) * 4 || 0, color: "#B71C1C", icon: Cookie },
+    ];
+  }
+  return [
+    { key: "Energy", value: "354 kcal", pct: 18, color: "#FFB300", icon: Zap },
+    { key: "Protein", value: "9 g", pct: 18, color: "#5D4037", icon: Beef },
+    { key: "Fat", value: "14.4 g", pct: 22, color: "#E65100", icon: Droplets },
+    { key: "Carbs", value: "58.7 g", pct: 22, color: "#8D6E63", icon: Wheat },
+    { key: "Sugar", value: "0 g", pct: 0, color: "#B71C1C", icon: Cookie },
+  ];
+}
+
 export default function ProductClient({ initialProduct }) {
-  const [product] = useState(initialProduct);
+  const [product, setProduct] = useState(initialProduct);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [subFrequency, setSubFrequency] = useState("weekly");
   const { addToCart, clearCart } = useCart();
   const router = useRouter();
@@ -227,64 +224,38 @@ export default function ProductClient({ initialProduct }) {
   const [activeTab, setActiveTab] = useState("buy");
   const [showAddMoreHint, setShowAddMoreHint] = useState(false);
 
-  const [activeVariant, setActiveVariant] = useState(null);
-  const [allVariants, setAllVariants] = useState([]);
-
-  const [productStock, setProductStock] = useState(product ? product.stock : 0);
-  const [activeVariantStock, setActiveVariantStock] = useState(0);
-
   const [showMobileBar, setShowMobileBar] = useState(true);
   const lastScrollY = useRef(0);
+  const prevProductRef = useRef(initialProduct);
 
-  useEffect(() => {
-    if (!product) return;
-    let active = true;
-
-    async function fetchVariant() {
-      const res = await getMatchingVariant(product.id, 50, 50);
-      if (active) {
-        if (res.variant) {
-          setActiveVariant(res.variant);
-          setActiveVariantStock(res.variant.stock);
-        }
-        if (res.allVariants) {
-          setAllVariants(res.allVariants);
-        }
-      }
-    }
-    fetchVariant();
-
-    return () => { active = false; };
-  }, [product]);
-
+  // Full real-time sync: subscribe to ALL product changes
   useEffect(() => {
     if (!product) return;
 
     const channel = supabase
-      .channel(`realtime-scarcity-${product.id}`)
+      .channel(`product-live-${product.id}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'products', filter: `id=eq.${product.id}` },
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products',
+          filter: `id=eq.${product.id}`
+        },
         (payload) => {
-          setProductStock(payload.new.stock);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'coffee_variants' },
-        (payload) => {
-          if (activeVariant && payload.new.id === activeVariant.id) {
-            setActiveVariantStock(payload.new.stock);
+          if (payload.eventType === 'DELETE') {
+            setProduct(null);
+            return;
           }
-          setAllVariants(prev =>
-            prev.map(v => v.id === payload.new.id ? { ...v, stock: payload.new.stock } : v)
-          );
+          setIsUpdating(true);
+          setProduct(prev => ({ ...prev, ...payload.new }));
+          setTimeout(() => setIsUpdating(false), 600);
         }
       )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [product, activeVariant]);
+  }, [product?.id]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -301,19 +272,14 @@ export default function ProductClient({ initialProduct }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleSelectVariant = (variant) => {
-    setActiveVariant(variant);
-    setActiveVariantStock(variant.stock);
-  };
-
   if (!product) {
     return (
       <main className="product-page">
         <div className="container not-found">
-          <h1>Product Not Found</h1>
-          <p>The coffee you are looking for is currently unavailable or doesn&apos;t exist.</p>
+          <h1>Product Not Available</h1>
+          <p>This product is no longer available or has been removed.</p>
           <button className="btn-primary" onClick={() => router.push("/")}>
-            Return Home
+            Browse Coffee
           </button>
         </div>
       </main>
@@ -321,23 +287,13 @@ export default function ProductClient({ initialProduct }) {
   }
 
   const handleAddToCart = () => {
-    const itemToAdd = activeVariant
-      ? {
-          id: activeVariant.id,
-          name: `${product.name} (${activeVariant.name})`,
-          price: activeVariant.price,
-          image: product.image_url || "/product/100gram/100gramfront.png",
-          quantity: 1,
-          variantSlug: activeVariant.slug,
-          isVariant: true,
-        }
-      : {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image_url || "/product/100gram/100gramfront.png",
-          quantity: 1,
-        };
+    const itemToAdd = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image_url || "/product/100gram/100gramfront.png",
+      quantity: 1,
+    };
     addToCart(itemToAdd);
     setShowAddMoreHint(true);
     setTimeout(() => setShowAddMoreHint(false), 3000);
@@ -345,90 +301,69 @@ export default function ProductClient({ initialProduct }) {
 
   const handleBuyNow = () => {
     clearCart();
-    const itemToAdd = activeVariant
-      ? {
-          id: activeVariant.id,
-          name: `${product.name} (${activeVariant.name})`,
-          price: activeVariant.price,
-          image: product.image_url || "/product/100gram/100gramfront.png",
-          quantity: 1,
-          variantSlug: activeVariant.slug,
-          isVariant: true,
-        }
-      : {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image_url || "/product/100gram/100gramfront.png",
-          quantity: 1,
-        };
+    const itemToAdd = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image_url || "/product/100gram/100gramfront.png",
+      quantity: 1,
+    };
     addToCart(itemToAdd);
     router.push("/checkout?mode=standard");
   };
 
   const handleSubscribe = () => {
     clearCart();
-    const itemToAdd = activeVariant
-      ? {
-          id: activeVariant.id,
-          name: `${product.name} (${activeVariant.name})`,
-          price: activeVariant.price,
-          image: product.image_url || "/product/100gram/100gramfront.png",
-          quantity: 1,
-          variantSlug: activeVariant.slug,
-          isVariant: true,
-          subscription: subFrequency,
-        }
-      : {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image_url || "/product/100gram/100gramfront.png",
-          quantity: 1,
-          subscription: subFrequency,
-        };
+    const itemToAdd = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image_url || "/product/100gram/100gramfront.png",
+      quantity: 1,
+      subscription: subFrequency,
+    };
     addToCart(itemToAdd);
     router.push(`/checkout?mode=subscription&frequency=${subFrequency}`);
   };
 
   const handleGift = () => {
     clearCart();
-    const itemToAdd = activeVariant
-      ? {
-          id: activeVariant.id,
-          name: `${product.name} (${activeVariant.name})`,
-          price: activeVariant.price,
-          image: product.image_url || "/product/100gram/100gramfront.png",
-          quantity: 1,
-          variantSlug: activeVariant.slug,
-          isVariant: true,
-          isGift: true,
-        }
-      : {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image_url || "/product/100gram/100gramfront.png",
-          quantity: 1,
-          isGift: true,
-        };
+    const itemToAdd = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image_url || "/product/100gram/100gramfront.png",
+      quantity: 1,
+      isGift: true,
+    };
     addToCart(itemToAdd);
     router.push("/checkout?mode=gift");
   };
 
-  const frontImage = product.image_url || "/product/100gram/100gramfront.png";
-  const backImage = "/product/100gram/100gramback.png";
+  const productStatus = product.status || "published";
+  const isUnavailable = productStatus !== "published" || product.stock <= 0;
 
-  const isOutOfStock = activeVariant ? activeVariantStock <= 0 : productStock <= 0;
-  const displayStock = activeVariant ? activeVariantStock : productStock;
-  const activePrice = activeVariant ? activeVariant.price : product.price;
+  const frontImage = product.image_url || "/product/100gram/100gramfront.png";
+  const galleryImages = product.gallery_images || [];
+  const backImage = galleryImages[0] || "/product/100gram/100gramback.png";
+
+  const isOutOfStock = product.stock <= 0;
+  const hasSalePrice = product.compare_at_price && product.compare_at_price > product.price;
+  const discountPct = hasSalePrice ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0;
+  const nutritionItems = getNutritionItems(product);
 
   return (
     <>
+      {isUpdating && (
+        <div className="live-update-banner">
+          <RefreshCw size={14} className="spin" />
+          Product updated by admin
+        </div>
+      )}
+
       <main className="product-page">
         <div className="container">
           <div className="product-hero">
-            {/* Image Section */}
             <motion.div
               className="product-image-section"
               initial={{ opacity: 0, y: 30 }}
@@ -437,11 +372,16 @@ export default function ProductClient({ initialProduct }) {
             >
               <div className="image-wrapper">
                 <BlendBadge product={product} />
+                {discountPct > 0 && (
+                  <div className="sale-badge">-{discountPct}%</div>
+                )}
+                {isUnavailable && productStatus !== "published" && (
+                  <div className="status-overlay">{productStatus === "draft" ? "Draft" : "Archived"}</div>
+                )}
                 <ImageGallery frontImage={frontImage} backImage={backImage} />
               </div>
             </motion.div>
 
-            {/* Details Section */}
             <motion.div
               className="product-details-section"
               initial={{ opacity: 0, y: 30 }}
@@ -457,170 +397,150 @@ export default function ProductClient({ initialProduct }) {
 
               <AnimatedDescription text={product.description} />
 
-              {/* Price */}
               <motion.div
                 className="product-price"
-                key={activePrice}
+                key={product.price}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <span className="price-value">₹{activePrice}</span>
+                {hasSalePrice ? (
+                  <>
+                    <span className="price-value price-sale">₹{product.price}</span>
+                    <span className="price-compare">₹{product.compare_at_price}</span>
+                    <span className="price-discount">-{discountPct}%</span>
+                  </>
+                ) : (
+                  <span className="price-value">₹{product.price}</span>
+                )}
                 <span className="price-tax">(incl. of all taxes)</span>
               </motion.div>
 
-              {/* Variant Pills */}
-              {allVariants.length > 1 && (
-                <div className="variant-section">
-                  <span className="variant-label">Choose your strength</span>
-                  <div className="variant-pills">
-                    {allVariants.map((v) => {
-                      const intensity = getIntensityColor(v.intensity);
-                      const isActive = activeVariant?.id === v.id;
-                      return (
-                        <motion.button
-                          key={v.id}
-                          className={`variant-pill ${isActive ? "active" : ""}`}
-                          onClick={() => handleSelectVariant(v)}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.97 }}
-                        >
-                          <span
-                            className="variant-intensity"
-                            style={{ background: intensity.bg }}
-                          >
-                            {intensity.label[0]}
-                          </span>
-                          {v.name}
-                          <span className="variant-pill-price">₹{v.price}</span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Stock + Weight */}
               <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
                 <StockIndicator
                   isOutOfStock={isOutOfStock}
-                  stock={displayStock}
-                  isVariantActive={!!activeVariant}
+                  stock={product.stock}
                 />
                 <span className="weight-text">
                   <strong>Weight:</strong> {product.weight}g
                 </span>
               </div>
 
-              {/* Purchase Module */}
               <motion.div
                 className="purchase-card"
-                style={{ opacity: isOutOfStock ? 0.5 : 1, pointerEvents: isOutOfStock ? "none" : "auto" }}
+                style={{ opacity: isUnavailable ? 0.5 : 1, pointerEvents: isUnavailable ? "none" : "auto" }}
               >
-                <div className="purchase-tabs">
-                  {["buy", "subscribe", "gift"].map((tab) => (
-                    <button
-                      key={tab}
-                      className={`tab-btn ${activeTab === tab ? "active" : ""}`}
-                      onClick={() => setActiveTab(tab)}
-                    >
-                      <span className="tab-btn-icon">
-                        {tab === "buy" && <ShoppingCart size={14} />}
-                        {tab === "subscribe" && <Repeat size={14} />}
-                        {tab === "gift" && <Zap size={14} />}
-                      </span>
-                      {tab === "buy" ? "Buy Once" : tab === "subscribe" ? "Subscribe" : "Gift"}
-                    </button>
-                  ))}
-                </div>
+                {isUnavailable && productStatus !== "published" ? (
+                  <div className="unavailable-notice">
+                    <p>This product is currently not available for purchase.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="purchase-tabs">
+                      {["buy", "subscribe", "gift"].map((tab) => (
+                        <button
+                          key={tab}
+                          className={`tab-btn ${activeTab === tab ? "active" : ""}`}
+                          onClick={() => setActiveTab(tab)}
+                        >
+                          <span className="tab-btn-icon">
+                            {tab === "buy" && <ShoppingCart size={14} />}
+                            {tab === "subscribe" && <Repeat size={14} />}
+                            {tab === "gift" && <Zap size={14} />}
+                          </span>
+                          {tab === "buy" ? "Buy Once" : tab === "subscribe" ? "Subscribe" : "Gift"}
+                        </button>
+                      ))}
+                    </div>
 
-                <div className="tab-content">
-                  <AnimatePresence mode="wait">
-                    {activeTab === "buy" && (
-                      <motion.div
-                        key="buy"
-                        className="tab-pane"
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <h3>Buy Once</h3>
-                        <p>One-time purchase. Delivered fresh to your doorstep.</p>
-                        <div className="actions-row">
-                          <div className="btn-cart-wrap">
-                            <button className="btn-secondary" onClick={handleAddToCart}>
-                              ADD TO CART
-                            </button>
-                            {showAddMoreHint && (
-                              <span className="add-more-hint">
-                                Tap again to add more!
-                              </span>
-                            )}
-                          </div>
-                          <button className="btn-primary" onClick={handleBuyNow}>
-                            BUY NOW
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {activeTab === "subscribe" && (
-                      <motion.div
-                        key="subscribe"
-                        className="tab-pane"
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <h3>Subscribe & Save</h3>
-                        <p>Never run out of coffee. Auto-delivered, cancel anytime.</p>
-                        <div className="actions-row">
-                          <select
-                            className="sub-freq-select"
-                            value={subFrequency}
-                            onChange={(e) => setSubFrequency(e.target.value)}
+                    <div className="tab-content">
+                      <AnimatePresence mode="wait">
+                        {activeTab === "buy" && (
+                          <motion.div
+                            key="buy"
+                            className="tab-pane"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.2 }}
                           >
-                            <option value="weekly">Deliver Weekly</option>
-                            <option value="monthly">Deliver Monthly</option>
-                          </select>
-                        </div>
-                        <button
-                          className="btn-primary"
-                          onClick={handleSubscribe}
-                          style={{ width: "100%", marginTop: 12 }}
-                        >
-                          SUBSCRIBE NOW
-                        </button>
-                      </motion.div>
-                    )}
+                            <h3>Buy Once</h3>
+                            <p>One-time purchase. Delivered fresh to your doorstep.</p>
+                            <div className="actions-row">
+                              <div className="btn-cart-wrap">
+                                <button className="btn-secondary" onClick={handleAddToCart}>
+                                  ADD TO CART
+                                </button>
+                                {showAddMoreHint && (
+                                  <span className="add-more-hint">
+                                    Tap again to add more!
+                                  </span>
+                                )}
+                              </div>
+                              <button className="btn-primary" onClick={handleBuyNow}>
+                                BUY NOW
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
 
-                    {activeTab === "gift" && (
-                      <motion.div
-                        key="gift"
-                        className="tab-pane"
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <h3>Send as a Gift</h3>
-                        <p>Ship directly to a friend with a claim token. No address needed!</p>
-                        <button
-                          className="btn-secondary"
-                          onClick={handleGift}
-                          style={{ width: "100%" }}
-                        >
-                          GIFT NOW
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                        {activeTab === "subscribe" && (
+                          <motion.div
+                            key="subscribe"
+                            className="tab-pane"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <h3>Subscribe & Save</h3>
+                            <p>Never run out of coffee. Auto-delivered, cancel anytime.</p>
+                            <div className="actions-row">
+                              <select
+                                className="sub-freq-select"
+                                value={subFrequency}
+                                onChange={(e) => setSubFrequency(e.target.value)}
+                              >
+                                <option value="weekly">Deliver Weekly</option>
+                                <option value="monthly">Deliver Monthly</option>
+                              </select>
+                            </div>
+                            <button
+                              className="btn-primary"
+                              onClick={handleSubscribe}
+                              style={{ width: "100%", marginTop: 12 }}
+                            >
+                              SUBSCRIBE NOW
+                            </button>
+                          </motion.div>
+                        )}
+
+                        {activeTab === "gift" && (
+                          <motion.div
+                            key="gift"
+                            className="tab-pane"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <h3>Send as a Gift</h3>
+                            <p>Ship directly to a friend with a claim token. No address needed!</p>
+                            <button
+                              className="btn-secondary"
+                              onClick={handleGift}
+                              style={{ width: "100%" }}
+                            >
+                              GIFT NOW
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </>
+                )}
               </motion.div>
 
-              {/* Trust Strip */}
               <motion.div
                 className="trust-strip"
                 initial={{ opacity: 0 }}
@@ -643,7 +563,6 @@ export default function ProductClient({ initialProduct }) {
                 ))}
               </motion.div>
 
-              {/* Nutrition */}
               <motion.div
                 className="nutrition-section"
                 initial={{ opacity: 0 }}
@@ -659,7 +578,7 @@ export default function ProductClient({ initialProduct }) {
                   </span>
                 </div>
                 <div className="nutrition-grid">
-                  {NUTRITION_ITEMS.map((item, i) => (
+                  {nutritionItems.map((item, i) => (
                     <NutritionCard key={item.key} item={item} index={i} />
                   ))}
                   <div className="nutrition-footer">
@@ -672,7 +591,6 @@ export default function ProductClient({ initialProduct }) {
         </div>
       </main>
 
-      {/* Mobile Sticky Bottom Bar */}
       <AnimatePresence>
         {showMobileBar && (
           <motion.div
@@ -684,22 +602,60 @@ export default function ProductClient({ initialProduct }) {
           >
             <div className="mobile-sticky-inner">
               <div className="mobile-sticky-price">
-                <span className="mobile-sticky-amount">₹{activePrice}</span>
+                <span className="mobile-sticky-amount">₹{product.price}</span>
                 <span className="mobile-sticky-label">
-                  {activeVariant ? activeVariant.name : product.name}
+                  {product.name}
                 </span>
               </div>
               <button
                 className="btn-primary mobile-sticky-btn"
                 onClick={handleAddToCart}
-                disabled={isOutOfStock}
+                disabled={isUnavailable}
               >
-                {isOutOfStock ? "OUT OF STOCK" : "ADD TO CART"}
+                {isUnavailable ? "UNAVAILABLE" : "ADD TO CART"}
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <style jsx global>{`
+        .live-update-banner {
+          position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+          background: var(--primary-color); color: #fff; text-align: center;
+          padding: 6px; font-size: 0.8rem; font-weight: 600;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .sale-badge {
+          position: absolute; top: 12px; right: 12px; z-index: 10;
+          background: #c62828; color: #fff; padding: 4px 10px;
+          border-radius: 100px; font-size: 0.78rem; font-weight: 800;
+          box-shadow: 0 2px 8px rgba(198,40,40,0.3);
+        }
+        .status-overlay {
+          position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+          background: rgba(0,0,0,0.7); color: #fff; padding: 8px 20px;
+          border-radius: 8px; font-weight: 800; text-transform: uppercase;
+          letter-spacing: 2px; z-index: 10; font-size: 1.1rem;
+        }
+        .price-sale { color: #c62828; }
+        .price-compare {
+          text-decoration: line-through; color: #999; font-size: 1.1rem;
+          margin-left: 8px; font-weight: 400;
+        }
+        .price-discount {
+          display: inline-block; background: #ffebee; color: #c62828;
+          padding: 2px 8px; border-radius: 100px; font-size: 0.78rem;
+          font-weight: 800; margin-left: 8px;
+        }
+        .unavailable-notice {
+          padding: 2rem; text-align: center; color: var(--text-secondary);
+        }
+        .unavailable-notice p { margin: 0; font-size: 1rem; }
+      `}</style>
     </>
   );
 }
