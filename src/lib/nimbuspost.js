@@ -31,7 +31,7 @@ export async function getAuthToken() {
     throw new Error(`Nimbuspost Auth Failed: ${data.message}`);
   }
 
-  // Token is valid for some time, usually a few hours. We'll cache it for 1 hour.
+  // Token is valid for some time. We'll cache it for 1 hour.
   cachedToken = data.data;
   const expiryDate = new Date();
   expiryDate.setHours(expiryDate.getHours() + 1);
@@ -74,7 +74,6 @@ export async function getShippingRates({ destination, payment_type = "prepaid", 
 export async function createShipment(orderData) {
   const token = await getAuthToken();
   
-  // orderData expects the structure defined in Nimbuspost API for /shipments
   const response = await fetch(`${NIMBUSPOST_BASE_URL}/shipments`, {
     method: "POST",
     headers: {

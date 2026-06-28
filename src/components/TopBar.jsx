@@ -67,25 +67,9 @@ export default function TopBar() {
             </button>
           </div>
 
-          <div 
-            className={`dropdown ${isMobileMenuOpen ? 'mobile-dropdown' : ''}`}
-            onMouseEnter={() => setIsDropdownOpen(true)}
-            onMouseLeave={() => setIsDropdownOpen(false)}
-          >
-            <button className="nav-link dropdown-toggle" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-              Coffee {isMobileMenuOpen ? <ChevronRight size={16} className={`chevron ${isDropdownOpen ? 'rotate' : ''}`} /> : <ChevronDown size={16} />}
-            </button>
-            {isDropdownOpen && (
-              <div className="dropdown-menu-wrapper">
-                <div className="dropdown-menu">
-                  {coffeeProducts.map(p => (
-                    <Link key={p.id} href={`/product/${p.id}`} className="dropdown-item">{p.name}</Link>
-                  ))}
-                  {coffeeProducts.length === 0 && <span className="dropdown-item">Loading...</span>}
-                </div>
-              </div>
-            )}
-          </div>
+          <Link href="/product/instantcoffee" className="nav-link">
+            Instant Coffee
+          </Link>
           
           <div 
             className="dropdown"

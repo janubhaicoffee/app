@@ -184,13 +184,20 @@ export async function POST(request) {
 
     // 5. Save Order Items (catalog and productMap already created)
     
-    const orderItemsToInsert = cartItems.map(item => ({
-      order_id: orderRow.id,
-      product_id: item.id.toString(),
-      product_name: item.name,
-      quantity: item.quantity,
-      price: productMap[item.id]?.price || 0 // Prevents price tampering
-    }));
+    const orderItemsToInsert = cartItems.map(item => {
+      let itemPrice = productMap[item.id]?.price || 0;
+      if (item.variant_id && productMap[item.id]?.variants) {
+         const v = productMap[item.id].variants.find(v => v.id === item.variant_id);
+         if (v) itemPrice = v.price;
+      }
+      return {
+        order_id: orderRow.id,
+        product_id: item.id.toString(),
+        product_name: item.name,
+        quantity: item.quantity,
+        price: itemPrice
+      };
+    });
 
     const { error: itemsError } = await supabase
       .from('order_items')
@@ -198,6 +205,25 @@ export async function POST(request) {
 
     if (itemsError) {
       console.error("Supabase Order Items Insert Error");
+    }
+
+    // 5.5 Deduct Stock
+    for (const item of cartItems) {
+      const p = productMap[item.id];
+      if (!p) continue;
+      
+      if (item.variant_id && p.variants && Array.isArray(p.variants)) {
+        const newVariants = p.variants.map(v => {
+          if (v.id === item.variant_id) {
+            return { ...v, stock: Math.max(0, v.stock - item.quantity) };
+          }
+          return v;
+        });
+        // We also update base product stock to reflect total variant stock roughly, or just let variants govern themselves.
+        await supabase.from('products').update({ variants: newVariants }).eq('id', p.id);
+      } else {
+        await supabase.from('products').update({ stock: Math.max(0, p.stock - item.quantity) }).eq('id', p.id);
+      }
     }
 
     // 6. Send Order Confirmation Email via Resend

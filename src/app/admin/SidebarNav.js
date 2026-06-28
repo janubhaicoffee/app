@@ -1,11 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { LayoutDashboard, Package, ShoppingCart, Users, FileText, Settings, LogOut } from "lucide-react";
+import {
+  LayoutDashboard, Package, ShoppingCart, Users, FileText,
+  Settings, LogOut, Tag, Star, BarChart3, Image, Truck,
+  PackageOpen, Shield, ChevronDown, ChevronRight
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function SidebarNav() {
   const [pendingOrders, setPendingOrders] = useState(0);
+  const [expandedMenus, setExpandedMenus] = useState({});
 
   useEffect(() => {
     const fetchPendingOrders = async () => {
@@ -22,43 +27,97 @@ export default function SidebarNav() {
         }
       } catch (err) {}
     };
-    
     fetchPendingOrders();
-    // Refresh every 30 seconds
     const interval = setInterval(fetchPendingOrders, 30000);
     return () => clearInterval(interval);
   }, []);
 
+  const toggleMenu = (menu) => {
+    setExpandedMenus(prev => ({ ...prev, [menu]: !prev[menu] }));
+  };
+
   return (
     <nav className="admin-nav">
-      <Link href="/admin" className="admin-nav-link">
-        <LayoutDashboard size={20} /> Dashboard
-      </Link>
-      <Link href="/admin/products" className="admin-nav-link">
-        <Package size={20} /> Products
-      </Link>
-      <Link href="/admin/merch" className="admin-nav-link">
-        <Package size={20} /> Merch
-      </Link>
-      <Link href="/admin/orders" className="admin-nav-link" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <ShoppingCart size={20} /> Orders
-        </div>
-        {pendingOrders > 0 && (
-          <span style={{ background: 'var(--accent-red)', color: '#fff', fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '10px', fontWeight: 'bold' }}>
-            {pendingOrders}
-          </span>
-        )}
-      </Link>
-      <Link href="/admin/customers" className="admin-nav-link">
-        <Users size={20} /> Customers
-      </Link>
-      <Link href="/admin/articles" className="admin-nav-link">
-        <FileText size={20} /> Articles (AI)
-      </Link>
-      <Link href="/admin/settings" className="admin-nav-link">
-        <Settings size={20} /> Settings
-      </Link>
+      <div className="admin-nav-group">
+        <span className="admin-nav-group-title">MAIN</span>
+        <Link href="/admin" className="admin-nav-link">
+          <LayoutDashboard size={20} /> Dashboard
+        </Link>
+      </div>
+
+      <div className="admin-nav-group">
+        <span className="admin-nav-group-title">CATALOG</span>
+        <Link href="/admin/products" className="admin-nav-link">
+          <Package size={20} /> Products
+        </Link>
+        <Link href="/admin/merch" className="admin-nav-link">
+          <PackageOpen size={20} /> Merch
+        </Link>
+        <Link href="/admin/inventory" className="admin-nav-link">
+          <Package size={20} /> Inventory
+        </Link>
+      </div>
+
+      <div className="admin-nav-group">
+        <span className="admin-nav-group-title">SALES</span>
+        <Link href="/admin/orders" className="admin-nav-link" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <ShoppingCart size={20} /> Orders
+          </div>
+          {pendingOrders > 0 && (
+            <span className="admin-badge">{pendingOrders}</span>
+          )}
+        </Link>
+        <Link href="/admin/coupons" className="admin-nav-link">
+          <Tag size={20} /> Coupons
+        </Link>
+      </div>
+
+      <div className="admin-nav-group">
+        <span className="admin-nav-group-title">CUSTOMERS</span>
+        <Link href="/admin/customers" className="admin-nav-link">
+          <Users size={20} /> Customers
+        </Link>
+        <Link href="/admin/reviews" className="admin-nav-link">
+          <Star size={20} /> Reviews
+        </Link>
+      </div>
+
+      <div className="admin-nav-group">
+        <span className="admin-nav-group-title">CONTENT</span>
+        <Link href="/admin/articles" className="admin-nav-link">
+          <FileText size={20} /> Articles (AI)
+        </Link>
+        <Link href="/admin/media" className="admin-nav-link">
+          <Image size={20} /> Media Library
+        </Link>
+      </div>
+
+      <div className="admin-nav-group">
+        <span className="admin-nav-group-title">ANALYTICS</span>
+        <Link href="/admin/analytics" className="admin-nav-link">
+          <BarChart3 size={20} /> Reports
+        </Link>
+      </div>
+
+      <div className="admin-nav-group">
+        <span className="admin-nav-group-title">SETTINGS</span>
+        <Link href="/admin/settings" className="admin-nav-link">
+          <Settings size={20} /> Store Settings
+        </Link>
+        <Link href="/admin/shipping" className="admin-nav-link">
+          <Truck size={20} /> Shipping Zones
+        </Link>
+        <Link href="/admin/staff" className="admin-nav-link">
+          <Shield size={20} /> Staff
+        </Link>
+      </div>
+
+      <div className="admin-footer-nav">
+        <Link href="/" className="admin-nav-link text-danger">
+          <LogOut size={20} /> Exit Admin
+        </Link>
+      </div>
     </nav>
   );
 }

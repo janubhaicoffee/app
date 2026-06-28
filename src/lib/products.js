@@ -8,7 +8,7 @@ export async function calculateOrderTotal(cartItems, shippingCost) {
   
   const { data: products, error } = await supabase
     .from('products')
-    .select('id, price, weight')
+    .select('id, price, weight, variants')
     .in('id', productIds);
 
   if (error) {
@@ -28,7 +28,14 @@ export async function calculateOrderTotal(cartItems, shippingCost) {
     if (!product) {
       throw new Error(`Product not found or unavailable: ${item.id}`);
     }
-    subtotal += product.price * item.quantity;
+    
+    let itemPrice = product.price;
+    if (item.variant_id && product.variants && Array.isArray(product.variants)) {
+      const variant = product.variants.find(v => v.id === item.variant_id);
+      if (variant) itemPrice = variant.price;
+    }
+
+    subtotal += itemPrice * item.quantity;
   }
 
   return subtotal + shippingCost;

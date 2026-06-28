@@ -215,8 +215,24 @@ function getNutritionItems(product) {
 }
 
 export default function ProductClient({ initialProduct }) {
-  const [product, setProduct] = useState(initialProduct);
+  const [rawProduct, setProduct] = useState(initialProduct);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedRoast, setSelectedRoast] = useState("Thoda Hard");
+  const [selectedWeight, setSelectedWeight] = useState(100);
+
+  const product = (() => {
+    if (!rawProduct) return null;
+    const variants = rawProduct.variants || [];
+    if (variants.length === 0) return rawProduct;
+    const currentVariant = variants.find(v => v.roast === selectedRoast && v.weight === selectedWeight) || variants[0];
+    return {
+      ...rawProduct,
+      ...currentVariant,
+      name: currentVariant.name || rawProduct.name,
+      id: rawProduct.id,
+      variant_id: currentVariant.id || null
+    };
+  })();
   const [subFrequency, setSubFrequency] = useState("weekly");
   const { addToCart, clearCart } = useCart();
   const router = useRouter();
@@ -230,17 +246,17 @@ export default function ProductClient({ initialProduct }) {
 
   // Full real-time sync: subscribe to ALL product changes
   useEffect(() => {
-    if (!product) return;
+    if (!rawProduct) return;
 
     const channel = supabase
-      .channel(`product-live-${product.id}`)
+      .channel(`product-live-${rawProduct.id}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'products',
-          filter: `id=eq.${product.id}`
+          filter: `id=eq.${rawProduct.id}`
         },
         (payload) => {
           if (payload.eventType === 'DELETE') {
@@ -255,7 +271,7 @@ export default function ProductClient({ initialProduct }) {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [product?.id]);
+  }, [rawProduct?.id]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -289,6 +305,7 @@ export default function ProductClient({ initialProduct }) {
   const handleAddToCart = () => {
     const itemToAdd = {
       id: product.id,
+      variant_id: product.variant_id,
       name: product.name,
       price: product.price,
       image: product.image_url || "/product/100gram/100gramfront.png",
@@ -303,6 +320,7 @@ export default function ProductClient({ initialProduct }) {
     clearCart();
     const itemToAdd = {
       id: product.id,
+      variant_id: product.variant_id,
       name: product.name,
       price: product.price,
       image: product.image_url || "/product/100gram/100gramfront.png",
@@ -316,6 +334,7 @@ export default function ProductClient({ initialProduct }) {
     clearCart();
     const itemToAdd = {
       id: product.id,
+      variant_id: product.variant_id,
       name: product.name,
       price: product.price,
       image: product.image_url || "/product/100gram/100gramfront.png",
@@ -330,6 +349,7 @@ export default function ProductClient({ initialProduct }) {
     clearCart();
     const itemToAdd = {
       id: product.id,
+      variant_id: product.variant_id,
       name: product.name,
       price: product.price,
       image: product.image_url || "/product/100gram/100gramfront.png",
@@ -397,6 +417,47 @@ export default function ProductClient({ initialProduct }) {
 
               <AnimatedDescription text={product.description} />
 
+              {(rawProduct?.variants?.length > 0) && (
+                <div className="variant-selectors">
+                  <div className="selector-group">
+                    <label>Roast / Blend</label>
+                    <div className="selector-options">
+                      {Array.from(new Set(rawProduct.variants.map(v => v.roast))).map(roast => (
+                        <button
+                          key={roast}
+                          className={`selector-btn ${selectedRoast === roast ? "active" : ""}`}
+                          onClick={() => {
+                            setSelectedRoast(roast);
+                            // Ensure weight is available for this roast
+                            const availableWeights = rawProduct.variants.filter(v => v.roast === roast).map(v => v.weight);
+                            if (!availableWeights.includes(selectedWeight) && availableWeights.length > 0) {
+                              setSelectedWeight(availableWeights[0]);
+                            }
+                          }}
+                        >
+                          {roast}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="selector-group">
+                    <label>Weight</label>
+                    <div className="selector-options">
+                      {Array.from(new Set(rawProduct.variants.filter(v => v.roast === selectedRoast).map(v => v.weight))).map(weight => (
+                        <button
+                          key={weight}
+                          className={`selector-btn ${selectedWeight === weight ? "active" : ""}`}
+                          onClick={() => setSelectedWeight(weight)}
+                        >
+                          {weight}g
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <motion.div
                 className="product-price"
                 key={product.price}
@@ -421,9 +482,6 @@ export default function ProductClient({ initialProduct }) {
                   isOutOfStock={isOutOfStock}
                   stock={product.stock}
                 />
-                <span className="weight-text">
-                  <strong>Weight:</strong> {product.weight}g
-                </span>
               </div>
 
               <motion.div
@@ -620,6 +678,46 @@ export default function ProductClient({ initialProduct }) {
       </AnimatePresence>
 
       <style jsx global>{`
+        .variant-selectors {
+          margin: 1.5rem 0;
+          display: flex;
+          flex-direction: column;
+          gap: 1.2rem;
+        }
+        .selector-group label {
+          display: block;
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: var(--text-secondary);
+          margin-bottom: 0.5rem;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+        .selector-options {
+          display: flex;
+          gap: 0.8rem;
+          flex-wrap: wrap;
+        }
+        .selector-btn {
+          padding: 0.6rem 1.2rem;
+          border: 2px solid var(--border-color);
+          background: #fff;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 600;
+          color: var(--text-primary);
+          transition: all 0.2s;
+        }
+        .selector-btn:hover {
+          border-color: var(--primary-color);
+        }
+        .selector-btn.active {
+          background: var(--primary-color);
+          color: #fff;
+          border-color: var(--primary-color);
+          box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+        }
+
         .live-update-banner {
           position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
           background: var(--primary-color); color: #fff; text-align: center;

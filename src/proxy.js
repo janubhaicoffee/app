@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-export async function middleware(req) {
+export async function proxy(req) {
   // 1. Secure API Route Protection (Admin routes protected by AdminGuard and secure APIs instead)
   const pathname = req.nextUrl.pathname;
   if (pathname.startsWith('/api/ai/generate-article')) {

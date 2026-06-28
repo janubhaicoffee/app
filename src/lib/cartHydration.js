@@ -8,6 +8,7 @@ export function serializeCart(cartItems) {
     id: item.id,
     q: item.quantity,
     s: item.variantSlug || null,
+    v: item.variant_id || null,
     sub: item.subscription || null,
     g: item.isGift || false
   }));
@@ -43,11 +44,11 @@ export function deserializeCart(payload) {
     const compact = JSON.parse(jsonStr);
     if (!Array.isArray(compact)) return [];
     
-    // Map compact keys back to descriptive cart schema
     return compact.map(item => ({
       id: item.id,
       quantity: item.q,
       variantSlug: item.s,
+      variant_id: item.v,
       subscription: item.sub,
       isGift: item.g
     }));
