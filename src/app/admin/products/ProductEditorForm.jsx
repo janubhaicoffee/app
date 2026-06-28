@@ -78,7 +78,9 @@ function GalleryManager({ images, onChange }) {
   );
 }
 
-function VariantsManager({ variants, onChange }) {
+function VariantsManager({ variants, onChange, productName }) {
+  const [generatingFor, setGeneratingFor] = useState(null);
+
   const addVariant = () => {
     const newVariant = {
       id: `v_${Date.now()}`,
@@ -86,14 +88,50 @@ function VariantsManager({ variants, onChange }) {
       roast: "Thoda Hard",
       weight: 100,
       price: 300,
+      cogs: 100,
       stock: 100,
       arabica_pct: 100,
       chicory_pct: 0,
       robusta_pct: 0,
       image_url: "",
+      scientific_details: "",
       nutrition: { energy: "", protein: "", fat: "", carbs: "", sugar: "" }
     };
     onChange([...variants, newVariant]);
+  };
+
+  const handleGenerateAI = async (index, variant) => {
+    setGeneratingFor(index);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/ai/generate-variant-details", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          productName: productName || "Instant Coffee", 
+          variantName: variant.name, 
+          roast: variant.roast, 
+          blendRatio: `${variant.arabica_pct}% Arabica, ${variant.chicory_pct}% Chicory, ${variant.robusta_pct}% Robusta`
+        })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) {
+          const arr = [...variants];
+          if (json.nutrition) arr[index].nutrition = json.nutrition;
+          if (json.scientific_details) arr[index].scientific_details = json.scientific_details;
+          onChange(arr);
+        } else {
+          alert("AI Error: " + json.error);
+        }
+      } else {
+        alert("Failed to connect to AI");
+      }
+    } catch (e) {
+      alert("Error generating details: " + e.message);
+    } finally {
+      setGeneratingFor(null);
+    }
   };
 
   return (
@@ -101,9 +139,20 @@ function VariantsManager({ variants, onChange }) {
       {variants.map((v, i) => (
         <div key={v.id} className="variant-card">
           <div className="variant-header">
-            <h4>{v.name}</h4>
-            <button type="button" className="admin-btn-icon-danger" onClick={() => onChange(variants.filter((_, j) => j !== i))}><Trash2 size={16} /></button>
+            <h4>{v.name || "Untitled"}</h4>
+            <div style={{display: 'flex', gap: '8px'}}>
+              <button 
+                type="button" 
+                className="admin-btn-outline btn-ai" 
+                onClick={() => handleGenerateAI(i, v)}
+                disabled={generatingFor === i}
+              >
+                <Sparkles size={14} /> {generatingFor === i ? "Generating..." : "Auto-Fill with AI"}
+              </button>
+              <button type="button" className="admin-btn-icon-danger" onClick={() => onChange(variants.filter((_, j) => j !== i))}><Trash2 size={16} /></button>
+            </div>
           </div>
+          
           <div className="variant-grid">
             <div className="form-group">
               <label>Variant Name</label>
@@ -112,7 +161,7 @@ function VariantsManager({ variants, onChange }) {
               }} />
             </div>
             <div className="form-group">
-              <label>Roast / Blend</label>
+              <label>Roast Level</label>
               <input type="text" value={v.roast} onChange={e => {
                 const arr = [...variants]; arr[i].roast = e.target.value; onChange(arr);
               }} />
@@ -130,12 +179,88 @@ function VariantsManager({ variants, onChange }) {
               }} />
             </div>
             <div className="form-group">
+              <label>Cost (COGS)</label>
+              <input type="number" value={v.cogs} onChange={e => {
+                const arr = [...variants]; arr[i].cogs = parseFloat(e.target.value) || 0; onChange(arr);
+              }} />
+            </div>
+            <div className="form-group">
               <label>Stock</label>
               <input type="number" value={v.stock} onChange={e => {
                 const arr = [...variants]; arr[i].stock = parseInt(e.target.value) || 0; onChange(arr);
               }} />
             </div>
           </div>
+
+          <hr style={{margin: '1rem 0', borderColor: '#e8e0d8'}} />
+
+          <h5 style={{fontSize: '0.85rem', marginBottom: '0.5rem', color: 'var(--text-secondary)'}}>Blend Profile (%)</h5>
+          <div className="variant-grid" style={{gridTemplateColumns: 'repeat(3, 1fr)'}}>
+            <div className="form-group">
+              <label>Arabica %</label>
+              <input type="number" value={v.arabica_pct || 0} onChange={e => {
+                const arr = [...variants]; arr[i].arabica_pct = parseInt(e.target.value) || 0; onChange(arr);
+              }} />
+            </div>
+            <div className="form-group">
+              <label>Chicory %</label>
+              <input type="number" value={v.chicory_pct || 0} onChange={e => {
+                const arr = [...variants]; arr[i].chicory_pct = parseInt(e.target.value) || 0; onChange(arr);
+              }} />
+            </div>
+            <div className="form-group">
+              <label>Robusta %</label>
+              <input type="number" value={v.robusta_pct || 0} onChange={e => {
+                const arr = [...variants]; arr[i].robusta_pct = parseInt(e.target.value) || 0; onChange(arr);
+              }} />
+            </div>
+          </div>
+
+          <hr style={{margin: '1rem 0', borderColor: '#e8e0d8'}} />
+
+          <h5 style={{fontSize: '0.85rem', marginBottom: '0.5rem', color: 'var(--text-secondary)'}}>Nutritional Facts (per 100g)</h5>
+          <div className="variant-grid" style={{gridTemplateColumns: 'repeat(5, 1fr)'}}>
+            <div className="form-group">
+              <label>Energy</label>
+              <input type="number" step="0.1" value={v.nutrition?.energy || ""} onChange={e => {
+                const arr = [...variants]; arr[i].nutrition = {...arr[i].nutrition, energy: e.target.value}; onChange(arr);
+              }} />
+            </div>
+            <div className="form-group">
+              <label>Protein</label>
+              <input type="number" step="0.1" value={v.nutrition?.protein || ""} onChange={e => {
+                const arr = [...variants]; arr[i].nutrition = {...arr[i].nutrition, protein: e.target.value}; onChange(arr);
+              }} />
+            </div>
+            <div className="form-group">
+              <label>Fat</label>
+              <input type="number" step="0.1" value={v.nutrition?.fat || ""} onChange={e => {
+                const arr = [...variants]; arr[i].nutrition = {...arr[i].nutrition, fat: e.target.value}; onChange(arr);
+              }} />
+            </div>
+            <div className="form-group">
+              <label>Carbs</label>
+              <input type="number" step="0.1" value={v.nutrition?.carbs || ""} onChange={e => {
+                const arr = [...variants]; arr[i].nutrition = {...arr[i].nutrition, carbs: e.target.value}; onChange(arr);
+              }} />
+            </div>
+            <div className="form-group">
+              <label>Sugar</label>
+              <input type="number" step="0.1" value={v.nutrition?.sugar || ""} onChange={e => {
+                const arr = [...variants]; arr[i].nutrition = {...arr[i].nutrition, sugar: e.target.value}; onChange(arr);
+              }} />
+            </div>
+          </div>
+
+          <hr style={{margin: '1rem 0', borderColor: '#e8e0d8'}} />
+
+          <div className="form-group">
+            <label>Scientific Details (Variant Specific)</label>
+            <textarea rows="3" value={v.scientific_details || ""} placeholder="Describe the roast process, extraction, caffeine profile..." onChange={e => {
+              const arr = [...variants]; arr[i].scientific_details = e.target.value; onChange(arr);
+            }} />
+          </div>
+
         </div>
       ))}
       <button type="button" className="admin-btn-outline" onClick={addVariant} style={{ marginTop: 10 }}>
@@ -170,9 +295,12 @@ export default function ProductEditorForm({ initialData, isNew }) {
         nutrition: initialData.nutrition || { energy: "", protein: "", fat: "", carbs: "", sugar: "" },
         gallery_images: initialData.gallery_images || [],
         variants: initialData.variants || [],
+        subscription_discount_weekly: initialData.subscription_discount_weekly?.toString() || "10",
+        subscription_discount_monthly: initialData.subscription_discount_monthly?.toString() || "15",
+        related_merch: initialData.related_merch || [],
       };
     }
-    return { ...defaultForm, nutrition: { ...defaultForm.nutrition }, gallery_images: [] };
+    return { ...defaultForm, nutrition: { ...defaultForm.nutrition }, gallery_images: [], related_merch: [], subscription_discount_weekly: "10", subscription_discount_monthly: "15" };
   });
 
   const [previewUrl, setPreviewUrl] = useState(initialData?.image_url || "");
@@ -245,6 +373,9 @@ export default function ProductEditorForm({ initialData, isNew }) {
       nutrition: hasNutrition ? nutritionValues : null,
       gallery_images: formData.gallery_images.length > 0 ? formData.gallery_images : null,
       variants: formData.variants.length > 0 ? formData.variants : [],
+      subscription_discount_weekly: parseInt(formData.subscription_discount_weekly) || 0,
+      subscription_discount_monthly: parseInt(formData.subscription_discount_monthly) || 0,
+      related_merch: formData.related_merch,
     };
 
     try {
@@ -340,7 +471,7 @@ export default function ProductEditorForm({ initialData, isNew }) {
           <section className="form-section">
             <h3>Variants (Dynamic Weights & Roasts)</h3>
             <p className="form-hint" style={{ marginBottom: 15 }}>Add variations like "Thoda Hard - 100g", "Bohot Hard - 1000g". This unlocks WooCommerce/Shopify style variations on the storefront.</p>
-            <VariantsManager variants={formData.variants} onChange={v => setFormData({ ...formData, variants: v })} />
+            <VariantsManager variants={formData.variants} onChange={v => setFormData({ ...formData, variants: v })} productName={formData.name} />
           </section>
 
           <section className="form-section">
@@ -377,6 +508,22 @@ export default function ProductEditorForm({ initialData, isNew }) {
                 <label>Sort Order</label>
                 <input type="number" min="0" step="1" value={formData.sort_order}
                   onChange={e => setFormData({ ...formData, sort_order: e.target.value })}
+                />
+              </div>
+            </div>
+            
+            <h5 style={{fontSize: '0.85rem', marginBottom: '0.5rem', marginTop: '1rem', color: 'var(--text-secondary)'}}>Subscription Pricing (Discounts)</h5>
+            <div className="form-row">
+              <div className="form-group flex-1">
+                <label>Weekly Discount (%)</label>
+                <input type="number" min="0" max="100" value={formData.subscription_discount_weekly}
+                  onChange={e => setFormData({ ...formData, subscription_discount_weekly: e.target.value })}
+                />
+              </div>
+              <div className="form-group flex-1">
+                <label>Monthly Discount (%)</label>
+                <input type="number" min="0" max="100" value={formData.subscription_discount_monthly}
+                  onChange={e => setFormData({ ...formData, subscription_discount_monthly: e.target.value })}
                 />
               </div>
             </div>
@@ -442,6 +589,21 @@ export default function ProductEditorForm({ initialData, isNew }) {
             <div className="form-group">
               <textarea rows="6" value={formData.description} placeholder="Product description..."
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
+          </section>
+
+          <section className="form-section">
+            <h3>Cross-Selling (Merch)</h3>
+            <p className="form-hint" style={{ marginBottom: 15 }}>Enter the exact Product Slugs (e.g., 'coffee-mug, tote-bag') of merchandise to display as "Related Items" on this product's page. Comma separated.</p>
+            <div className="form-group">
+              <label>Related Merch Slugs</label>
+              <input type="text" value={Array.isArray(formData.related_merch) ? formData.related_merch.join(", ") : formData.related_merch} placeholder="coffee-mug, tote-bag"
+                onChange={e => {
+                  const val = e.target.value;
+                  const arr = val.split(",").map(s => s.trim()).filter(s => s);
+                  setFormData({ ...formData, related_merch: arr });
+                }}
               />
             </div>
           </section>

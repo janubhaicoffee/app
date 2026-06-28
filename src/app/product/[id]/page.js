@@ -46,6 +46,15 @@ export default async function ProductPage({ params }) {
 
   if (!product) return <ProductClient initialProduct={null} />;
 
+  let relatedMerchData = [];
+  if (product.related_merch && product.related_merch.length > 0) {
+    const { data: merch } = await supabase
+      .from('products')
+      .select('id, name, price, image_url, compare_at_price')
+      .in('id', product.related_merch);
+    relatedMerchData = merch || [];
+  }
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -67,7 +76,7 @@ export default async function ProductPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ProductClient initialProduct={product} />
+      <ProductClient initialProduct={product} relatedMerch={relatedMerchData} />
     </>
   );
 }

@@ -6,6 +6,7 @@ const CartContext = createContext();
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [interceptorItem, setInterceptorItem] = useState(null);
+  const [sessionId, setSessionId] = useState("");
 
   // Load from local storage on mount and check for hydrated session cookie
   useEffect(() => {
@@ -19,6 +20,13 @@ export function CartProvider({ children }) {
         console.error("Failed to parse cart");
       }
     }
+
+    let sid = localStorage.getItem('janu_bhai_cart_session_id');
+    if (!sid) {
+      sid = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('janu_bhai_cart_session_id', sid);
+    }
+    setSessionId(sid);
 
     // Hydration check from session cookie
     const getCookie = (name) => {
@@ -46,7 +54,20 @@ export function CartProvider({ children }) {
   // Save to local storage on change
   useEffect(() => {
     localStorage.setItem('janu_bhai_cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    
+    if (sessionId) {
+      // Secretly track abandoned cart
+      fetch('/api/abandoned-carts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          cart_payload: cartItems,
+          email: localStorage.getItem('janu_bhai_email') // If we capture email early
+        })
+      }).catch(e => console.error("Tracking error", e));
+    }
+  }, [cartItems, sessionId]);
 
   const addToCart = (product) => {
     // Intercept if it's the high-intensity variant (thodi-hard-extreme) and not confirmed

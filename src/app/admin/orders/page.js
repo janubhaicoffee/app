@@ -21,6 +21,8 @@ export default function AdminOrders() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [selectedOrderIds, setSelectedOrderIds] = useState(new Set());
+
   // Quick-update modal
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalStatus, setModalStatus] = useState("");
@@ -65,6 +67,51 @@ export default function AdminOrders() {
     }
     return list;
   }, [orders, statusFilter, searchQuery]);
+
+  const toggleOrderSelection = (id) => {
+    const next = new Set(selectedOrderIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedOrderIds(next);
+  };
+
+  const selectAll = () => {
+    if (selectedOrderIds.size === filteredOrders.length) setSelectedOrderIds(new Set());
+    else setSelectedOrderIds(new Set(filteredOrders.map(o => o.id)));
+  };
+
+  const handleBulkFulfill = async () => {
+    if (selectedOrderIds.size === 0) return;
+    if (!confirm(`Are you sure you want to mark ${selectedOrderIds.size} orders as processed?`)) return;
+    setIsUpdating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const idsArray = Array.from(selectedOrderIds);
+      
+      // Update each order one by one for simplicity (or can build a bulk endpoint)
+      for (const id of idsArray) {
+        await fetch("/api/admin/data", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "update_order",
+            id: id,
+            payload: { status: 'processing' },
+          }),
+        });
+      }
+      alert("Orders updated to processing successfully!");
+      fetchOrders();
+      setSelectedOrderIds(new Set());
+    } catch {
+      alert("An error occurred during bulk update.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const openModal = (order) => {
     setSelectedOrder(order);
@@ -171,7 +218,12 @@ export default function AdminOrders() {
       >
         <h1>Orders &amp; Shipping</h1>
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button className="admin-btn" onClick={exportCSV}>
+          {selectedOrderIds.size > 0 && (
+            <button className="admin-btn" style={{ background: 'var(--primary-color)' }} onClick={handleBulkFulfill} disabled={isUpdating}>
+              {isUpdating ? "Processing..." : `Fulfill ${selectedOrderIds.size} Orders`}
+            </button>
+          )}
+          <button className="admin-btn-outline" onClick={exportCSV}>
             Download CSV
           </button>
         </div>
@@ -236,6 +288,12 @@ export default function AdminOrders() {
         <table className="admin-table">
           <thead>
             <tr>
+              <th style={{ width: 40 }}>
+                <input type="checkbox" 
+                  checked={filteredOrders.length > 0 && selectedOrderIds.size === filteredOrders.length} 
+                  onChange={selectAll} 
+                />
+              </th>
               <th>Order ID</th>
               <th>Customer</th>
               <th>Date</th>
@@ -249,7 +307,7 @@ export default function AdminOrders() {
             {filteredOrders.length === 0 ? (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="8"
                   style={{
                     textAlign: "center",
                     color: "var(--text-secondary)",
@@ -263,7 +321,10 @@ export default function AdminOrders() {
               filteredOrders.map((order) => {
                 const st = STATUS_STYLES[order.status] || STATUS_STYLES.pending;
                 return (
-                  <tr key={order.id}>
+                  <tr key={order.id} style={{ background: selectedOrderIds.has(order.id) ? '#faf8f5' : 'transparent' }}>
+                    <td>
+                      <input type="checkbox" checked={selectedOrderIds.has(order.id)} onChange={() => toggleOrderSelection(order.id)} />
+                    </td>
                     <td>
                       <Link
                         href={`/admin/orders/${order.id}`}
