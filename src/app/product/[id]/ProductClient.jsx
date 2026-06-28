@@ -203,6 +203,7 @@ function getNutritionItems(product) {
       { key: "Fat", value: n.fat ? `${n.fat} g` : "—", pct: Math.min(parseFloat(n.fat) * 1.5 || 0, 100), color: "#E65100", icon: Droplets },
       { key: "Carbs", value: n.carbs ? `${n.carbs} g` : "—", pct: Math.min(parseFloat(n.carbs) * 1.5 || 0, 100), color: "#8D6E63", icon: Wheat },
       { key: "Sugar", value: n.sugar !== undefined ? `${n.sugar} g` : "—", pct: parseFloat(n.sugar) * 4 || 0, color: "#B71C1C", icon: Cookie },
+      { key: "Caffeine", value: n.caffeine ? `${n.caffeine} mg` : "—", pct: Math.min(parseFloat(n.caffeine) / 4 || 0, 100), color: "#1A237E", icon: Zap },
     ];
   }
   return [
@@ -211,6 +212,7 @@ function getNutritionItems(product) {
     { key: "Fat", value: "14.4 g", pct: 22, color: "#E65100", icon: Droplets },
     { key: "Carbs", value: "58.7 g", pct: 22, color: "#8D6E63", icon: Wheat },
     { key: "Sugar", value: "0 g", pct: 0, color: "#B71C1C", icon: Cookie },
+    { key: "Caffeine", value: "85 mg", pct: 21, color: "#1A237E", icon: Zap },
   ];
 }
 
@@ -420,7 +422,7 @@ export default function ProductClient({ initialProduct, relatedMerch = [] }) {
               {(rawProduct?.variants?.length > 0) && (
                 <div className="variant-selectors">
                   <div className="selector-group">
-                    <label>Roast / Blend</label>
+                    <label>Roast</label>
                     <div className="selector-options">
                       {Array.from(new Set(rawProduct.variants.map(v => v.roast))).map(roast => (
                         <button
@@ -458,21 +460,6 @@ export default function ProductClient({ initialProduct, relatedMerch = [] }) {
                 </div>
               )}
 
-              <AnimatePresence mode="wait">
-                {product.scientific_details && (
-                  <motion.div 
-                    className="scientific-details-box"
-                    key={product.scientific_details}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <h4><Sparkles size={14} style={{ color: "var(--accent-gold)" }} /> The Science Behind This Blend</h4>
-                    <p>{product.scientific_details}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               <motion.div
                 className="product-price"
@@ -685,6 +672,23 @@ export default function ProductClient({ initialProduct, relatedMerch = [] }) {
                   </div>
                 </motion.div>
               )}
+
+              <AnimatePresence mode="wait">
+                {product.scientific_details && (
+                  <motion.div 
+                    className="scientific-details-box"
+                    key={product.scientific_details}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ marginTop: '2.5rem' }}
+                  >
+                    <h4><Sparkles size={14} style={{ color: "var(--accent-gold)" }} /> The Science Behind This Blend</h4>
+                    <p>{product.scientific_details}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
             </motion.div>
           </div>

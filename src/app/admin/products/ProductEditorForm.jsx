@@ -23,7 +23,7 @@ export const defaultForm = {
   description: "", image_url: "", category: "", status: "draft", featured: false,
   sort_order: "0", seo_title: "", seo_description: "",
   arabica_pct: "", chicory_pct: "", robusta_pct: "",
-  nutrition: { energy: "", protein: "", fat: "", carbs: "", sugar: "" },
+  nutrition: { energy: "", protein: "", fat: "", carbs: "", sugar: "", caffeine: "" },
   gallery_images: [],
   variants: [],
 };
@@ -35,6 +35,7 @@ function NutritionForm({ data, onChange }) {
     { key: "fat", label: "Fat (g)" },
     { key: "carbs", label: "Carbs (g)" },
     { key: "sugar", label: "Sugar (g)" },
+    { key: "caffeine", label: "Caffeine (mg)" },
   ];
   return (
     <div className="nutrition-grid-form">
@@ -95,7 +96,7 @@ function VariantsManager({ variants, onChange, productName }) {
       robusta_pct: 0,
       image_url: "",
       scientific_details: "",
-      nutrition: { energy: "", protein: "", fat: "", carbs: "", sugar: "" }
+      nutrition: { energy: "", protein: "", fat: "", carbs: "", sugar: "", caffeine: "" }
     };
     onChange([...variants, newVariant]);
   };
@@ -250,6 +251,12 @@ function VariantsManager({ variants, onChange, productName }) {
                 const arr = [...variants]; arr[i].nutrition = {...arr[i].nutrition, sugar: e.target.value}; onChange(arr);
               }} />
             </div>
+            <div className="form-group">
+              <label>Caffeine</label>
+              <input type="number" step="0.1" value={v.nutrition?.caffeine || ""} onChange={e => {
+                const arr = [...variants]; arr[i].nutrition = {...arr[i].nutrition, caffeine: e.target.value}; onChange(arr);
+              }} />
+            </div>
           </div>
 
           <hr style={{margin: '1rem 0', borderColor: '#e8e0d8'}} />
@@ -352,13 +359,33 @@ export default function ProductEditorForm({ initialData, isNew }) {
 
     const slug = formData.id || formData.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
+    let basePrice = parseFloat(formData.price) || 0;
+    let baseCompare = formData.compare_at_price ? parseFloat(formData.compare_at_price) : null;
+    let baseStock = parseInt(formData.stock) || 0;
+    let baseWeight = parseFloat(formData.weight) || 0;
+    let baseArabica = formData.arabica_pct ? parseInt(formData.arabica_pct) : 0;
+    let baseChicory = formData.chicory_pct ? parseInt(formData.chicory_pct) : 0;
+    let baseRobusta = formData.robusta_pct ? parseInt(formData.robusta_pct) : 0;
+    let baseNutrition = hasNutrition ? nutritionValues : null;
+
+    if (formData.variants && formData.variants.length > 0) {
+      const v = formData.variants[0];
+      basePrice = parseFloat(v.price) || 0;
+      baseStock = formData.variants.reduce((acc, curr) => acc + (parseInt(curr.stock) || 0), 0);
+      baseWeight = parseFloat(v.weight) || 0;
+      baseArabica = parseInt(v.arabica_pct) || 0;
+      baseChicory = parseInt(v.chicory_pct) || 0;
+      baseRobusta = parseInt(v.robusta_pct) || 0;
+      baseNutrition = v.nutrition || null;
+    }
+
     const payload = {
       id: slug,
       name: formData.name,
-      price: parseFloat(formData.price) || 0,
-      compare_at_price: formData.compare_at_price ? parseFloat(formData.compare_at_price) : null,
-      stock: parseInt(formData.stock) || 0,
-      weight: parseFloat(formData.weight) || 0,
+      price: basePrice,
+      compare_at_price: baseCompare,
+      stock: baseStock,
+      weight: baseWeight,
       description: formData.description,
       image_url: formData.image_url,
       category: formData.category || null,
@@ -367,10 +394,10 @@ export default function ProductEditorForm({ initialData, isNew }) {
       sort_order: parseInt(formData.sort_order) || 0,
       seo_title: formData.seo_title,
       seo_description: formData.seo_description,
-      arabica_pct: formData.arabica_pct ? parseInt(formData.arabica_pct) : 0,
-      chicory_pct: formData.chicory_pct ? parseInt(formData.chicory_pct) : 0,
-      robusta_pct: formData.robusta_pct ? parseInt(formData.robusta_pct) : 0,
-      nutrition: hasNutrition ? nutritionValues : null,
+      arabica_pct: baseArabica,
+      chicory_pct: baseChicory,
+      robusta_pct: baseRobusta,
+      nutrition: baseNutrition,
       gallery_images: formData.gallery_images.length > 0 ? formData.gallery_images : null,
       variants: formData.variants.length > 0 ? formData.variants : [],
       subscription_discount_weekly: parseInt(formData.subscription_discount_weekly) || 0,
@@ -474,8 +501,9 @@ export default function ProductEditorForm({ initialData, isNew }) {
             <VariantsManager variants={formData.variants} onChange={v => setFormData({ ...formData, variants: v })} productName={formData.name} />
           </section>
 
-          <section className="form-section">
-            <h3>Pricing & Inventory (Base Product)</h3>
+          {formData.variants.length === 0 && (
+            <section className="form-section">
+              <h3>Pricing & Inventory (Base Product)</h3>
             <div className="form-row">
               <div className="form-group">
                 <label>Price (₹) *</label>
@@ -511,8 +539,11 @@ export default function ProductEditorForm({ initialData, isNew }) {
                 />
               </div>
             </div>
-            
-            <h5 style={{fontSize: '0.85rem', marginBottom: '0.5rem', marginTop: '1rem', color: 'var(--text-secondary)'}}>Subscription Pricing (Discounts)</h5>
+          </section>
+          )}
+
+          <section className="form-section">
+            <h3 style={{fontSize: '1rem', marginBottom: '0.5rem', color: 'var(--text-secondary)'}}>Subscription Pricing (Discounts)</h3>
             <div className="form-row">
               <div className="form-group flex-1">
                 <label>Weekly Discount (%)</label>
@@ -554,8 +585,9 @@ export default function ProductEditorForm({ initialData, isNew }) {
             </div>
           </section>
 
-          <section className="form-section">
-            <h3>Blend Composition</h3>
+          {formData.variants.length === 0 && (
+            <section className="form-section">
+              <h3>Blend Composition</h3>
             <div className="form-row">
               <div className="form-group">
                 <label>Arabica %</label>
@@ -583,6 +615,7 @@ export default function ProductEditorForm({ initialData, isNew }) {
               </div>
             )}
           </section>
+          )}
 
           <section className="form-section">
             <h3>Description</h3>
@@ -608,10 +641,12 @@ export default function ProductEditorForm({ initialData, isNew }) {
             </div>
           </section>
 
-          <section className="form-section">
-            <h3>Nutritional Facts (per 100g)</h3>
-            <NutritionForm data={formData.nutrition} onChange={n => setFormData({ ...formData, nutrition: n })} />
-          </section>
+          {formData.variants.length === 0 && (
+            <section className="form-section">
+              <h3>Nutritional Facts (per 100g)</h3>
+              <NutritionForm data={formData.nutrition} onChange={n => setFormData({ ...formData, nutrition: n })} />
+            </section>
+          )}
 
           <section className="form-section">
             <div className="form-section-header-action">

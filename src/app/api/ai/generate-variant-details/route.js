@@ -48,7 +48,8 @@ export async function POST(req) {
         "protein": "number (g)",
         "fat": "number (g)",
         "carbs": "number (g)",
-        "sugar": "number (g)"
+        "sugar": "number (g)",
+        "caffeine": "number (mg)"
       }
     }
     3. The nutritional facts should be highly realistic for 100g of instant coffee powder. (Instant coffee is typically ~350 kcal, high carbs, some protein, low fat, 0 sugar unless specified). Chicory alters these slightly (adds more carbs).
