@@ -13,7 +13,6 @@ export const STATUS_OPTIONS = [
 export const CATEGORY_OPTIONS = [
   { value: "", label: "Uncategorized" },
   { value: "coffee", label: "Coffee" },
-  { value: "merch", label: "Merchandise" },
   { value: "beans", label: "Coffee Beans" },
   { value: "gift", label: "Gift" },
 ];
@@ -304,10 +303,9 @@ export default function ProductEditorForm({ initialData, isNew }) {
         variants: initialData.variants || [],
         subscription_discount_weekly: initialData.subscription_discount_weekly?.toString() || "10",
         subscription_discount_monthly: initialData.subscription_discount_monthly?.toString() || "15",
-        related_merch: initialData.related_merch || [],
       };
     }
-    return { ...defaultForm, nutrition: { ...defaultForm.nutrition }, gallery_images: [], related_merch: [], subscription_discount_weekly: "10", subscription_discount_monthly: "15" };
+    return { ...defaultForm, nutrition: { ...defaultForm.nutrition }, gallery_images: [], subscription_discount_weekly: "10", subscription_discount_monthly: "15" };
   });
 
   const [previewUrl, setPreviewUrl] = useState(initialData?.image_url || "");
@@ -401,8 +399,7 @@ export default function ProductEditorForm({ initialData, isNew }) {
       gallery_images: formData.gallery_images.length > 0 ? formData.gallery_images : null,
       variants: formData.variants.length > 0 ? formData.variants : [],
       subscription_discount_weekly: parseInt(formData.subscription_discount_weekly) || 0,
-      subscription_discount_monthly: parseInt(formData.subscription_discount_monthly) || 0,
-      related_merch: formData.related_merch,
+      subscription_discount_monthly: parseInt(formData.subscription_discount_monthly) || 0
     };
 
     try {
@@ -626,20 +623,6 @@ export default function ProductEditorForm({ initialData, isNew }) {
             </div>
           </section>
 
-          <section className="form-section">
-            <h3>Cross-Selling (Merch)</h3>
-            <p className="form-hint" style={{ marginBottom: 15 }}>Enter the exact Product Slugs (e.g., 'coffee-mug, tote-bag') of merchandise to display as "Related Items" on this product's page. Comma separated.</p>
-            <div className="form-group">
-              <label>Related Merch Slugs</label>
-              <input type="text" value={Array.isArray(formData.related_merch) ? formData.related_merch.join(", ") : formData.related_merch} placeholder="coffee-mug, tote-bag"
-                onChange={e => {
-                  const val = e.target.value;
-                  const arr = val.split(",").map(s => s.trim()).filter(s => s);
-                  setFormData({ ...formData, related_merch: arr });
-                }}
-              />
-            </div>
-          </section>
 
           {formData.variants.length === 0 && (
             <section className="form-section">

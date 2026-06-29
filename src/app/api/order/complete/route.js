@@ -60,8 +60,7 @@ export async function POST(request) {
     const catalog = await getProductCatalog();
     const productMap = catalog.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
     
-    const coffeeItems = cartItems.filter(item => productMap[item.id]?.category !== 'merch');
-    const merchItems = cartItems.filter(item => productMap[item.id]?.category === 'merch');
+    const coffeeItems = cartItems;
 
     let awbNumber = null;
     let shipmentData = null;
@@ -72,7 +71,7 @@ export async function POST(request) {
       const weight = coffeeItems.reduce((acc, item) => acc + ((productMap[item.id]?.weight || 500) * item.quantity), 0);
       
       const orderData = {
-        order_number: orderNumber + (merchItems.length > 0 ? "-C" : ""),
+        order_number: orderNumber,
         shipping_charges: parseFloat(shippingRate.shipping_cost),
         discount: 0,
         cod_charges: 0,
@@ -119,20 +118,7 @@ export async function POST(request) {
       }
     }
 
-    // Process Merch items via Qikink
-    if (merchItems.length > 0) {
-      try {
-        const { createQikinkOrder } = await import('@/lib/qikink');
-        qikinkOrderData = await createQikinkOrder({
-          orderNumber: orderNumber + (coffeeItems.length > 0 ? "-M" : ""),
-          finalTotal: finalTotal,
-          formData: formData,
-          merchItems: merchItems
-        });
-      } catch (qikinkErr) {
-        console.error("Failed to create Qikink order:", qikinkErr);
-      }
-    }
+
 
     // 4. Save Order to Supabase
     // Sanitize gift message against XSS
@@ -145,7 +131,7 @@ export async function POST(request) {
         customer_email: formData.email || null,
         customer_phone: formData.phone || null,
         total_amount: finalTotal,
-        status: (awbNumber || qikinkOrderData) ? "processing" : "payment_successful_shipping_failed",
+        status: awbNumber ? "processing" : "payment_successful_shipping_failed",
         razorpay_order_id: isSubscription ? null : razorpayOrderId,
         razorpay_payment_id: paymentId,
         awb_number: awbNumber,

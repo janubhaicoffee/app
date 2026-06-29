@@ -14,8 +14,6 @@ export default function TopBar() {
   const { getCartCount } = useCart();
   const [user, setUser] = useState(null);
   const [coffeeProducts, setCoffeeProducts] = useState([]);
-  const [merchProducts, setMerchProducts] = useState([]);
-  const [isMerchDropdownOpen, setIsMerchDropdownOpen] = useState(false);
 
   const pathname = usePathname();
 
@@ -28,7 +26,6 @@ export default function TopBar() {
       const { data } = await supabase.from('products').select('id, name, category').order('created_at', { ascending: true });
       if (data) {
         setCoffeeProducts(data.filter(p => p.category !== 'merch'));
-        setMerchProducts(data.filter(p => p.category === 'merch'));
       }
     }
     loadProducts();
@@ -71,26 +68,7 @@ export default function TopBar() {
             Instant Coffee
           </Link>
           
-          <div 
-            className="dropdown"
-            onMouseEnter={() => setIsMerchDropdownOpen(true)}
-            onMouseLeave={() => setIsMerchDropdownOpen(false)}
-          >
-            <button className="nav-link dropdown-toggle" onClick={() => setIsMerchDropdownOpen(!isMerchDropdownOpen)}>
-              Merch {isMobileMenuOpen ? <ChevronRight size={16} className={`chevron ${isMerchDropdownOpen ? 'rotate' : ''}`} /> : <ChevronDown size={16} />}
-            </button>
-            {isMerchDropdownOpen && (
-              <div className="dropdown-menu-wrapper">
-                <div className="dropdown-menu">
-                  {merchProducts.map(p => (
-                    <Link key={p.id} href={`/product/${p.id}`} className="dropdown-item">{p.name}</Link>
-                  ))}
-                  {merchProducts.length === 0 && <span className="dropdown-item">More coming soon!</span>}
-                </div>
-              </div>
-            )}
-          </div>
-          
+
           <Link href="/process" className="nav-link">Our Process</Link>
         </nav>
 

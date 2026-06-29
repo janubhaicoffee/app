@@ -121,7 +121,6 @@ export async function GET(request) {
       const { data: products, error } = await supabase
         .from('products')
         .select('*')
-        .or('category.is.null,category.neq.merch')
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: false });
 
@@ -129,17 +128,6 @@ export async function GET(request) {
       return NextResponse.json({ data: products });
     }
 
-    if (type === "merch") {
-      const { data: merch, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('category', 'merch')
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return NextResponse.json({ data: merch });
-    }
 
     if (type === "orders") {
       const { data: orders, error } = await supabase
@@ -204,7 +192,13 @@ export async function GET(request) {
           store_name: 'Janu Bhai Coffee',
           support_email: 'support@janubhaicoffee.com',
           free_shipping_threshold: 1000,
-          razorpay_mode: 'test'
+          razorpay_mode: 'test',
+          flat_shipping_rate: 50,
+          support_phone: '',
+          store_address: '',
+          gstin: '',
+          admin_notification_emails: '',
+          maintenance_mode: false
         }
       });
     }

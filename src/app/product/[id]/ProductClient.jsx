@@ -216,7 +216,7 @@ function getNutritionItems(product) {
   ];
 }
 
-export default function ProductClient({ initialProduct, relatedMerch = [] }) {
+export default function ProductClient({ initialProduct }) {
   const [rawProduct, setProduct] = useState(initialProduct);
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedRoast, setSelectedRoast] = useState("Thoda Hard");
@@ -647,31 +647,7 @@ export default function ProductClient({ initialProduct, relatedMerch = [] }) {
                   </div>
                 </div>
               </motion.div>
-              {relatedMerch && relatedMerch.length > 0 && (
-                <motion.div
-                  className="related-merch-section"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div className="nutrition-header">
-                    <Sparkles size={20} color="var(--accent-gold)" />
-                    <h2>Pairs Well With</h2>
-                  </div>
-                  <div className="related-merch-grid">
-                    {relatedMerch.map(merch => (
-                      <div key={merch.id} className="merch-card" onClick={() => window.open(`/product/${merch.id}`, '_blank')}>
-                        <img src={merch.image_url || 'https://via.placeholder.com/150'} alt={merch.name} className="merch-img" />
-                        <div className="merch-info">
-                          <p className="merch-name">{merch.name}</p>
-                          <p className="merch-price">₹{merch.price}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
+
 
               <AnimatePresence mode="wait">
                 {product.scientific_details && (
@@ -811,54 +787,6 @@ export default function ProductClient({ initialProduct, relatedMerch = [] }) {
         .nutrition-footer {
           margin-top: 1rem; text-align: center; font-size: 0.75rem; color: #a0978d;
           border-top: 1px solid #f0ebe5; padding-top: 1rem;
-        }
-
-        .related-merch-section {
-          margin-top: 2.5rem;
-          background: #faf8f5;
-          border-radius: 12px;
-          padding: 1.5rem;
-          border: 1px solid #e8e0d8;
-        }
-        .related-merch-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 1rem;
-          margin-top: 1rem;
-        }
-        .merch-card {
-          background: #fff;
-          border: 1px solid #e8e0d8;
-          border-radius: 8px;
-          overflow: hidden;
-          cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .merch-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-          border-color: var(--accent-gold);
-        }
-        .merch-img {
-          width: 100%;
-          height: 120px;
-          object-fit: cover;
-          border-bottom: 1px solid #f0ebe5;
-        }
-        .merch-info {
-          padding: 0.75rem;
-        }
-        .merch-name {
-          margin: 0 0 0.25rem 0;
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: var(--primary-color);
-        }
-        .merch-price {
-          margin: 0;
-          font-size: 0.85rem;
-          font-weight: 700;
-          color: var(--text-secondary);
         }
 
         .mobile-sticky-bar {

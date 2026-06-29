@@ -21,21 +21,7 @@ export async function POST(request) {
     const catalog = await getProductCatalog();
     const productMap = catalog.reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
 
-    const coffeeItems = cartItems.filter(item => {
-      const prod = productMap[item.id];
-      return prod?.category !== 'merch';
-    });
-
-    if (coffeeItems.length === 0) {
-      // Only merch items in cart, Qikink handles shipping
-      return NextResponse.json({
-        success: true,
-        shipping_cost: 0,
-        courier_id: "qikink",
-        courier_name: "Qikink Merch Shipping",
-        estimated_delivery_days: "5-7"
-      });
-    }
+    const coffeeItems = cartItems;
 
     const weight = coffeeItems.reduce((acc, item) => {
       const prod = productMap[item.id];
