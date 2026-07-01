@@ -1,0 +1,371 @@
+"use client";
+import { useState, useEffect } from "react";
+import { Camera, MonitorOff, AlertTriangle, Plus } from "lucide-react";
+
+export default function Surveillance({ outletId, refreshTrigger }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [cameras, setCameras] = useState([]);
+  const [alerts, setAlerts] = useState([]);
+
+  // Dispatch and incident log states
+  const [dispatchActive, setDispatchActive] = useState(false);
+  const [incidentLog, setIncidentLog] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const tz = (typeof window !== "undefined" && localStorage.getItem("outlet-timezone")) || "IST";
+  const formatTzDate = (dateStr) => {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "...";
+    const timeZoneMap = {
+      "IST": "Asia/Kolkata",
+      "GMT": "GMT",
+      "UTC": "UTC"
+    };
+    return date.toLocaleString("en-IN", {
+      timeZone: timeZoneMap[tz] || "Asia/Kolkata",
+      dateStyle: "short",
+      timeStyle: "medium"
+    });
+  };
+
+  // Form states
+  const [cameraName, setCameraName] = useState("");
+  const [cameraUrl, setCameraUrl] = useState("");
+  const [formError, setFormError] = useState("");
+
+  const fetchData = async () => {
+    try {
+      const [camRes, alertRes] = await Promise.all([
+        fetch("/api/outlet/cameras"),
+        fetch("/api/outlet/alerts")
+      ]);
+
+      if (!camRes.ok) throw new Error("Failed to fetch cameras");
+      if (!alertRes.ok) throw new Error("Failed to fetch alerts");
+
+      const camData = await camRes.json();
+      const alertData = await alertRes.json();
+
+      setCameras(Array.isArray(camData.data) ? camData.data : []);
+      // Filter out resolved alerts if not already filtered
+      setAlerts(Array.isArray(alertData.data) ? alertData.data.filter(a => !a.resolved) : []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [refreshTrigger]);
+
+  const handleAddCamera = async (e) => {
+    e.preventDefault();
+    setFormError("");
+
+    if (!cameraName || !cameraUrl) {
+      setFormError("Required fields missing");
+      return;
+    }
+
+    // Validate URL format
+    try {
+      new URL(cameraUrl);
+    } catch (_) {
+      setFormError("Invalid URL");
+      return;
+    }
+
+    // Check client side first to be fast, and server side will also check
+    const isDuplicate = cameras.some(c => c.name.toLowerCase() === cameraName.toLowerCase());
+    if (isDuplicate) {
+      setFormError("Duplicate name");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/outlet/cameras", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: cameraName, url: cameraUrl }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        setFormError(errData.error || "Failed to add camera");
+        return;
+      }
+
+      setCameraName("");
+      setCameraUrl("");
+      setFormError("");
+      await fetchData();
+    } catch (err) {
+      setFormError(err.message);
+    }
+  };
+
+  const handleToggleCamera = async (camera) => {
+    try {
+      const res = await fetch("/api/outlet/cameras", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: camera.id, active: !camera.active }),
+      });
+      if (res.ok) {
+        setCameras((prev) => prev.map((c) => (c.id === camera.id ? { ...c, active: !c.active } : c)));
+      }
+    } catch (err) {
+      console.error("Toggle camera error:", err);
+    }
+  };
+
+  const handleResolveAlert = async (alertId) => {
+    try {
+      const res = await fetch("/api/outlet/alerts", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: alertId }),
+      });
+      if (res.ok) {
+        setAlerts((prev) => prev.filter((a) => a.id !== alertId));
+      }
+    } catch (err) {
+      console.error("Resolve alert error:", err);
+    }
+  };
+
+  const handleSaveIncidentLog = async () => {
+    try {
+      const res = await fetch("/api/outlet/incidents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: incidentLog,
+          severity: "high",
+          dispatched: true
+        })
+      });
+      if (res.ok) {
+        setSaveSuccess(true);
+        setIncidentLog("");
+        setTimeout(() => {
+          setSaveSuccess(false);
+          setDispatchActive(false);
+        }, 1500);
+      }
+    } catch (err) {
+      console.error("Save incident log error:", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="panel" data-testid="surveillance-panel">
+        <h2>Surveillance</h2>
+        <div className="loading-screen">
+          <div className="loading-spinner" />
+          <p>Loading cameras...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="panel" data-testid="surveillance-panel">
+        <h2>Surveillance</h2>
+        <div className="error-text">{error}</div>
+      </div>
+    );
+  }
+
+  // Cap alerts count at 100
+  const displayedAlerts = alerts.slice(0, 100);
+
+  return (
+    <div className="panel" data-testid="surveillance-panel">
+      <h2>Surveillance & Security</h2>
+
+      {/* Stream Grid */}
+      <div className="stream-grid">
+        {cameras.length === 0 ? (
+          <div className="empty-placeholder" style={{ gridColumn: "1 / -1" }}>
+            <Camera size={32} style={{ margin: "0 auto 8px", display: "block", opacity: 0.4 }} />
+            <p>No cameras configured</p>
+          </div>
+        ) : (
+          cameras.map((cam) => (
+            <div
+              key={cam.id}
+              className={`stream-player ${!cam.active ? "offline" : ""}`}
+              data-testid="stream-player"
+            >
+              <span
+                className={`stream-status ${cam.active ? "active" : "offline"}`}
+                data-testid="stream-status"
+              >
+                {cam.active ? "Active" : "Offline"}
+              </span>
+              <div style={{ padding: "20px 0", textAlign: "center" }}>
+                {cam.active ? (
+                  <Camera size={32} style={{ opacity: 0.7, margin: "0 auto 8px", display: "block" }} />
+                ) : (
+                  <MonitorOff size={32} style={{ opacity: 0.4, margin: "0 auto 8px", display: "block" }} />
+                )}
+                <p style={{ margin: 0, fontWeight: 600, fontSize: 13 }}>
+                  {cam.name}
+                </p>
+              </div>
+              <button
+                className="btn-toggle-stream"
+                data-testid="btn-toggle-stream"
+                onClick={() => handleToggleCamera(cam)}
+                style={{ width: "100%", padding: "6px", fontSize: 11 }}
+              >
+                {cam.active ? "Deactivate" : "Activate"}
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Camera Add Form */}
+      <div className="outlet-card" style={{ marginTop: 16 }}>
+        <h3>Add Camera Stream</h3>
+        <form onSubmit={handleAddCamera} data-testid="camera-form" className="outlet-form">
+          {formError && (
+            <div className="error-text" style={{ color: "red", fontSize: 12, marginBottom: 8 }}>
+              {formError}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <input
+              type="text"
+              className="form-control"
+              style={{ flex: 1, minWidth: "150px" }}
+              data-testid="field-camera-name"
+              placeholder="Camera Name"
+              value={cameraName}
+              onChange={(e) => setCameraName(e.target.value)}
+            />
+            <input
+              type="text"
+              className="form-control"
+              style={{ flex: 2, minWidth: "200px" }}
+              data-testid="field-camera-url"
+              placeholder="Stream URL (e.g. https://...)"
+              value={cameraUrl}
+              onChange={(e) => setCameraUrl(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="outlet-btn primary sm"
+              data-testid="btn-add-camera"
+            >
+              Add Camera
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Alert Feed */}
+      <h3 style={{ fontSize: 14, fontWeight: 600, color: "#4a5568", marginBottom: 10, marginTop: 20 }}>
+        <AlertTriangle size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />
+        Active Alerts ({alerts.length})
+      </h3>
+
+      {alerts.length === 0 ? (
+        <div className="empty-placeholder" data-testid="empty-alerts" style={{ padding: "20px 0" }}>
+          <p>No active threats</p>
+        </div>
+      ) : (
+        <div className="alert-feed" data-testid="alert-feed">
+          {displayedAlerts.map((alert) => (
+            <div
+              key={alert.id}
+              className={`alert-item ${alert.severity === "critical" || alert.severity === "high" ? "High" : alert.severity === "medium" ? "Medium" : "Low"}`}
+              data-testid="alert-item"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "8px 12px",
+                marginBottom: 6,
+                borderRadius: 4,
+                borderLeft: "4px solid",
+                background: "#f7fafc",
+                borderColor:
+                  alert.severity === "critical" || alert.severity === "high"
+                    ? "#e53e3e"
+                    : alert.severity === "medium"
+                    ? "#dd6b20"
+                    : "#3182ce",
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{alert.message}</div>
+                <div style={{ fontSize: 11, color: "#718096", marginTop: 2 }}>
+                  {formatTzDate(alert.time || alert.created_at)}
+                </div>
+              </div>
+              <button
+                className="btn-resolve-alert"
+                data-testid="btn-resolve-alert"
+                onClick={() => handleResolveAlert(alert.id)}
+                style={{
+                  background: "#edf2f7",
+                  border: "none",
+                  padding: "4px 8px",
+                  fontSize: 11,
+                  cursor: "pointer",
+                  borderRadius: 3,
+                }}
+              >
+                Resolve
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Dispatch Section */}
+      <div style={{ marginTop: 20 }}>
+        <button
+          data-testid="btn-dispatch-security"
+          onClick={() => setDispatchActive(true)}
+          className="outlet-btn danger sm"
+          style={{ width: "100%", padding: "8px", background: "#e53e3e", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}
+        >
+          Dispatch Security Team
+        </button>
+        
+        {dispatchActive && (
+          <div style={{ marginTop: 10, padding: 10, border: "1px solid #edf2f7", borderRadius: 4, background: "#f7fafc" }}>
+            <textarea
+              data-testid="field-incident-log"
+              className="form-control"
+              placeholder="Enter incident log details..."
+              value={incidentLog}
+              onChange={(e) => setIncidentLog(e.target.value)}
+              style={{ width: "100%", height: "60px", marginBottom: "8px", padding: "6px", boxSizing: "border-box" }}
+            />
+            <button
+              data-testid="btn-save-incident-log"
+              onClick={handleSaveIncidentLog}
+              className="outlet-btn primary sm"
+              style={{ padding: "6px 12px", background: "#3182ce", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+            >
+              Save Incident Log
+            </button>
+            {saveSuccess && (
+              <span style={{ marginLeft: 10, color: "green", fontSize: 12 }}>Saved!</span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

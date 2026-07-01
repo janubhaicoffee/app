@@ -1,0 +1,85 @@
+"use client";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+
+if (typeof window !== 'undefined' && !window.__pos_fetch_monkeypatched) {
+  window.__pos_fetch_monkeypatched = true;
+  const originalFetch = window.fetch;
+  let posCheckPromise = null;
+  window.fetch = function(input, init) {
+    const url = typeof input === 'string' ? input : input?.url;
+    if (url && url.includes('/api/pos/auth/check')) {
+      if (posCheckPromise) {
+        return posCheckPromise.then(res => res.clone());
+      }
+      posCheckPromise = originalFetch.apply(this, arguments).then(res => {
+        setTimeout(() => { posCheckPromise = null; }, 100);
+        return res;
+      }).catch(err => {
+        posCheckPromise = null;
+        throw err;
+      });
+      return posCheckPromise.then(res => res.clone());
+    }
+    return originalFetch.apply(this, arguments);
+  };
+}
+
+export default function PosGuard({ children }) {
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [errorBanner, setErrorBanner] = useState(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push("/pos/login");
+        return;
+      }
+
+      try {
+        const { data: staff } = await supabase
+          .from('outlet_staff')
+          .select('role, outlet_id')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        if (staff && ['cashier', 'barista', 'manager', 'owner', 'admin', 'superadmin'].includes(staff.role)) {
+          setIsAuthorized(true);
+          return;
+        }
+      } catch (err) {
+        console.error("POS auth check failed", err);
+      }
+
+      router.push("/");
+    };
+
+    checkAuth();
+  }, [router]);
+
+  if (errorBanner) {
+    return (
+      <div data-testid="pos-auth-error-banner"
+        style={{
+          padding: '20px', margin: '20px', background: '#ffdddd',
+          color: '#dd0000', border: '1px solid #dd0000',
+          borderRadius: '4px', textAlign: 'center', fontWeight: 'bold'
+        }}
+      >
+        {errorBanner}
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-primary)' }}>
+      <h2>Checking POS Access...</h2>
+    </div>;
+  }
+
+  return children;
+}

@@ -10,7 +10,7 @@ module.exports = defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
-    channel: 'chrome', // use system Chrome to bypass downloading binaries
+    // channel: 'chrome', // use system Chrome to bypass downloading binaries
     headless: true,
   },
   webServer: {

@@ -1,0 +1,23 @@
+"use client";
+import { Package } from "lucide-react";
+
+export default function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+  className = "",
+}) {
+  return (
+    <div className={`flex flex-col items-center justify-center text-center py-12 px-4 ${className}`}>
+      <div className="text-gray-300 mb-4">
+        {Icon ? <Icon size={48} strokeWidth={1.5} /> : <Package size={48} strokeWidth={1.5} />}
+      </div>
+      {title && <h3 className="m-0 text-base font-semibold text-[var(--text-primary)]">{title}</h3>}
+      {description && (
+        <p className="mt-1.5 mb-0 text-sm text-[var(--text-secondary)] max-w-xs">{description}</p>
+      )}
+      {action && <div className="mt-5">{action}</div>}
+    </div>
+  );
+}

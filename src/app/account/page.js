@@ -48,7 +48,7 @@ export default function AccountPage() {
     const fetchUserData = async (session) => {
       try {
         if (!session) {
-          router.push("/auth/login");
+          router.push("/auth/unified");
           return;
         }
         
@@ -127,7 +127,7 @@ export default function AccountPage() {
         if (mounted) {
           setUser(null);
           setSessionToken(null);
-          router.push("/auth/login");
+          router.push("/auth/unified");
         }
       }
     });

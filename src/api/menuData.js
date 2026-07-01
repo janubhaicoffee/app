@@ -1,0 +1,33 @@
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+
+export async function getOutletByCode(code) {
+  const { data, error } = await supabaseAdmin
+    .from('outlets')
+    .select('*')
+    .eq('code', code)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function getMenuCategories(outletId) {
+  const { data, error } = await supabaseAdmin
+    .from('pos_categories')
+    .select('*')
+    .eq('outlet_id', outletId)
+    .eq('is_active', true)
+    .order('sort_order');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getMenuProducts(outletId) {
+  const { data, error } = await supabaseAdmin
+    .from('pos_products')
+    .select('*')
+    .eq('outlet_id', outletId)
+    .eq('is_available', true)
+    .order('sort_order');
+  if (error) throw error;
+  return data || [];
+}

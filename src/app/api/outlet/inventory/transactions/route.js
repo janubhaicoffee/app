@@ -1,0 +1,40 @@
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { NextResponse } from "next/server";
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const { inventory_id, quantity } = body;
+
+    if (!inventory_id || quantity === undefined) {
+      return NextResponse.json({ error: "Missing inventory_id or quantity" }, { status: 400 });
+    }
+
+    // Fetch current stock
+    const { data: item, error: fetchErr } = await supabaseAdmin
+      .from("outlet_inventory")
+      .select("stock")
+      .eq("id", inventory_id)
+      .single();
+
+    if (fetchErr || !item) {
+      return NextResponse.json({ error: "Inventory item not found" }, { status: 404 });
+    }
+
+    const newStock = (item.stock || 0) + parseInt(quantity);
+
+    // Update stock
+    const { data, error } = await supabaseAdmin
+      .from("outlet_inventory")
+      .update({ stock: newStock })
+      .eq("id", inventory_id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    console.error("Inventory Transactions POST error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

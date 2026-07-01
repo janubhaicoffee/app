@@ -1,0 +1,181 @@
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { Search, Phone, User, Mail, TrendingUp, Calendar } from "lucide-react";
+import "../outlet.css";
+
+export default function OutletCustomers() {
+  const router = useRouter();
+  const [customers, setCustomers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerOrders, setCustomerOrders] = useState([]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from('customers')
+        .select('*')
+        .order('total_spent', { ascending: false })
+        .limit(50);
+
+      if (search.trim()) {
+        const term = search.trim();
+        query = query.or(`name.ilike.%${term}%,phone.ilike.%${term}%,email.ilike.%${term}%`);
+      }
+
+      const { data } = await query;
+      setCustomers(data || []);
+    } catch (err) {
+      console.error("Fetch customers error:", err);
+    }
+    setLoading(false);
+  };
+
+  const handleSelectCustomer = async (customer) => {
+    setSelectedCustomer(customer);
+    try {
+      const { data: posOrders } = await supabase
+        .from('pos_orders')
+        .select('*')
+        .or(`customer_id.eq.${customer.id},customer_phone.eq.${customer.phone}`)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      const { data: onlineOrders } = await supabase
+        .from('orders')
+        .select('*')
+        .or(`user_id.eq.${customer.user_id},customer_email.eq.${customer.email},customer_phone.eq.${customer.phone}`)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      setCustomerOrders([
+        ...(posOrders || []).map(o => ({ ...o, source_label: 'Cafe' })),
+        ...(onlineOrders || []).map(o => ({ ...o, source_label: 'Online' })),
+      ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
+    } catch (err) {
+      console.error("Fetch customer orders error:", err);
+    }
+  };
+
+  return (
+    <main className="outlet-page">
+      <header className="outlet-header">
+        <h1>Unified Customer Profiles</h1>
+        <p>View customer activity across all channels</p>
+      </header>
+
+      <div style={{ padding: "20px", maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, phone, or email..."
+            style={{ flex: 1, padding: "12px", border: "2px solid var(--border-color)" }}
+            onKeyDown={(e) => e.key === 'Enter' && fetchCustomers()}
+          />
+          <button className="btn-primary" onClick={fetchCustomers}>
+            <Search size={16} /> Search
+          </button>
+        </div>
+
+        {loading ? (
+          <p>Loading customers...</p>
+        ) : selectedCustomer ? (
+          <div>
+            <button className="btn-secondary" onClick={() => setSelectedCustomer(null)} style={{ marginBottom: 20 }}>
+              ← Back to all customers
+            </button>
+            <div className="customer-profile-header" style={{ background: "white", padding: 24, border: "1px solid var(--border-color)", marginBottom: 20 }}>
+              <h2 style={{ fontSize: 24, marginBottom: 8 }}>{selectedCustomer.name || "Unknown"}</h2>
+              <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+                {selectedCustomer.phone && <span><Phone size={14} /> {selectedCustomer.phone}</span>}
+                {selectedCustomer.email && <span><Mail size={14} /> {selectedCustomer.email}</span>}
+                {selectedCustomer.user_id && <span><User size={14} /> Registered User</span>}
+              </div>
+              <div style={{ display: "flex", gap: 30, marginTop: 16 }}>
+                <div><strong>Total Orders:</strong> {selectedCustomer.total_orders || 0}</div>
+                <div><strong>Total Spent:</strong> ₹{parseFloat(selectedCustomer.total_spent || 0).toFixed(2)}</div>
+                <div><strong>Visits:</strong> {selectedCustomer.visit_count || 0}</div>
+              </div>
+              {selectedCustomer.last_order_at && (
+                <p style={{ marginTop: 8, fontSize: 13, color: "var(--text-secondary)" }}>
+                  <Calendar size={14} /> Last activity: {new Date(selectedCustomer.last_order_at).toLocaleString()}
+                </p>
+              )}
+            </div>
+
+            <h3 style={{ marginBottom: 12 }}>Order History (All Channels)</h3>
+            {customerOrders.length === 0 ? (
+              <p style={{ color: "var(--text-secondary)" }}>No orders found</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {customerOrders.map((order, idx) => (
+                  <div key={idx} style={{ background: "white", padding: 16, border: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>
+                        {order.source_label === 'Cafe' ? '☕ Cafe' : '🛒 Online'} · #{order.order_number || order.id?.slice(0, 8)}
+                      </div>
+                      <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                        {new Date(order.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontWeight: 700, color: "var(--accent-red)" }}>
+                        ₹{parseFloat(order.total_amount || order.total || 0).toFixed(2)}
+                      </div>
+                      <span className={`pos-badge ${order.status || order.payment_status}`}>
+                        {order.status || order.payment_status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : customers.length === 0 ? (
+          <div style={{ textAlign: "center", padding: 40, color: "var(--text-secondary)" }}>
+            <TrendingUp size={40} style={{ opacity: 0.3, marginBottom: 8 }} />
+            <p>No customers found</p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {customers.map((c) => (
+              <div
+                key={c.id}
+                style={{ background: "white", padding: 16, border: "1px solid var(--border-color)", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                onClick={() => handleSelectCustomer(c)}
+              >
+                <div>
+                  <div style={{ fontWeight: 600 }}>{c.name || "Unknown"} {c.phone && <span style={{ fontWeight: 400, color: "var(--text-secondary)", fontSize: 13 }}>· {c.phone}</span>}</div>
+                  <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                    {c.email && <span>{c.email} · </span>}
+                    {c.total_orders || 0} orders · ₹{parseFloat(c.total_spent || 0).toFixed(2)} spent
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                    {c.visit_count || 0} visits
+                  </div>
+                  {c.last_order_at && (
+                    <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>
+                      {new Date(c.last_order_at).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}

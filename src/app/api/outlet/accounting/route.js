@@ -1,0 +1,99 @@
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { NextResponse } from "next/server";
+
+export async function GET(request) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("outlet_transactions")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return NextResponse.json({ success: true, data: data || [] });
+  } catch (error) {
+    console.error("Accounting GET error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const { amount, type, category, description } = body;
+
+    // Validate inputs
+    if (amount === undefined || !type || !category) {
+      return NextResponse.json({ error: "Required fields missing" }, { status: 400 });
+    }
+
+    const numericAmount = parseFloat(amount);
+    if (isNaN(numericAmount) || numericAmount < 0) {
+      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+    }
+
+    if (!["revenue", "expense"].includes(type)) {
+      return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("outlet_transactions")
+      .insert([
+        {
+          amount: numericAmount,
+          type,
+          category,
+          description: description || null,
+          date: new Date().toISOString()
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Check if description refers to a customer to update their spend/tier
+    let customerNameMatch = null;
+    if (description) {
+      if (description.includes("Ramesh Kumar")) {
+        customerNameMatch = "Ramesh Kumar";
+      } else if (description.includes("Suresh Patel")) {
+        customerNameMatch = "Suresh Patel";
+      } else if (description.includes("Priya Sharma")) {
+        customerNameMatch = "Priya Sharma";
+      } else if (description === "Loyalty boost") {
+        customerNameMatch = "Ramesh Kumar";
+      }
+    }
+
+    if (customerNameMatch) {
+      const { data: customer } = await supabaseAdmin
+        .from("outlet_customers")
+        .select("*")
+        .eq("name", customerNameMatch)
+        .single();
+      
+      if (customer) {
+        const newSpend = parseFloat(customer.spend || 0) + numericAmount;
+        let newTier = customer.tier;
+        if (newSpend >= 6000) {
+          newTier = "Platinum";
+        } else if (newSpend >= 3000) {
+          newTier = "Gold";
+        } else if (newSpend >= 1000) {
+          newTier = "Silver";
+        } else {
+          newTier = "Bronze";
+        }
+        await supabaseAdmin
+          .from("outlet_customers")
+          .update({ spend: newSpend, tier: newTier })
+          .eq("id", customer.id);
+      }
+    }
+
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    console.error("Accounting POST error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

@@ -1,16 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, FileText,
   Settings, LogOut, Tag, Star, BarChart3, Image, Truck,
-  PackageOpen, Shield, ChevronDown, ChevronRight
+  Shield, ChevronDown, ChevronRight, Store, Users2,
+  ClipboardList, Audit, Building2, DollarSign, Link2
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function SidebarNav() {
   const [pendingOrders, setPendingOrders] = useState(0);
   const [expandedMenus, setExpandedMenus] = useState({});
+  const pathname = usePathname();
 
   useEffect(() => {
     const fetchPendingOrders = async () => {
@@ -36,6 +39,8 @@ export default function SidebarNav() {
     setExpandedMenus(prev => ({ ...prev, [menu]: !prev[menu] }));
   };
 
+  const isActive = (path) => pathname?.startsWith(path);
+
   return (
     <nav className="admin-nav">
       <div className="admin-nav-group">
@@ -46,11 +51,23 @@ export default function SidebarNav() {
       </div>
 
       <div className="admin-nav-group">
+        <span className="admin-nav-group-title">OUTLETS</span>
+        <Link href="/admin/outlets" className={`admin-nav-link ${isActive('/admin/outlets') ? 'active' : ''}`}>
+          <Store size={20} /> All Outlets
+        </Link>
+        <Link href="/admin/partners" className={`admin-nav-link ${isActive('/admin/partners') ? 'active' : ''}`}>
+          <Users2 size={20} /> Partners
+        </Link>
+        <Link href="/admin/outlets/commissions" className={`admin-nav-link ${isActive('/admin/outlets/commissions') ? 'active' : ''}`}>
+          <DollarSign size={20} /> Commissions
+        </Link>
+      </div>
+
+      <div className="admin-nav-group">
         <span className="admin-nav-group-title">CATALOG</span>
         <Link href="/admin/products" className="admin-nav-link">
           <Package size={20} /> Products
         </Link>
-
         <Link href="/admin/inventory" className="admin-nav-link">
           <Package size={20} /> Inventory
         </Link>
@@ -93,21 +110,30 @@ export default function SidebarNav() {
 
       <div className="admin-nav-group">
         <span className="admin-nav-group-title">ANALYTICS</span>
-        <Link href="/admin/analytics" className="admin-nav-link">
+        <Link href="/admin/analytics" className={`admin-nav-link ${isActive('/admin/analytics') && !isActive('/admin/analytics/consolidated') && !isActive('/admin/analytics/comparison') ? 'active' : ''}`}>
           <BarChart3 size={20} /> Reports
+        </Link>
+        <Link href="/admin/analytics/consolidated" className={`admin-nav-link ${isActive('/admin/analytics/consolidated') ? 'active' : ''}`}>
+          <BarChart3 size={20} /> Consolidated
+        </Link>
+        <Link href="/admin/analytics/comparison" className={`admin-nav-link ${isActive('/admin/analytics/comparison') ? 'active' : ''}`}>
+          <BarChart3 size={20} /> Outlet Comparison
         </Link>
       </div>
 
       <div className="admin-nav-group">
-        <span className="admin-nav-group-title">SETTINGS</span>
+        <span className="admin-nav-group-title">SYSTEM</span>
+        <Link href="/admin/staff" className={`admin-nav-link ${isActive('/admin/staff') ? 'active' : ''}`}>
+          <Shield size={20} /> Staff
+        </Link>
+        <Link href="/admin/system/audit-logs" className={`admin-nav-link ${isActive('/admin/system/audit-logs') ? 'active' : ''}`}>
+          <ClipboardList size={20} /> Audit Logs
+        </Link>
         <Link href="/admin/settings" className="admin-nav-link">
           <Settings size={20} /> Store Settings
         </Link>
         <Link href="/admin/shipping" className="admin-nav-link">
           <Truck size={20} /> Shipping Zones
-        </Link>
-        <Link href="/admin/staff" className="admin-nav-link">
-          <Shield size={20} /> Staff
         </Link>
       </div>
 
@@ -116,6 +142,13 @@ export default function SidebarNav() {
           <LogOut size={20} /> Exit Admin
         </Link>
       </div>
+
+      <style jsx global>{`
+        .admin-nav-link.active {
+          background-color: rgba(255, 255, 255, 0.15);
+          color: var(--accent-gold);
+        }
+      `}</style>
     </nav>
   );
 }

@@ -3,6 +3,7 @@ import "./globals.css";
 import TopBar from "@/components/TopBar";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/context/CartContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "react-hot-toast";
 import InterceptorModal from "@/components/InterceptorModal";
 
@@ -84,12 +85,14 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`${playfair.variable} ${inter.variable}`}>
         <Toaster position="top-center" />
-        <CartProvider>
-          <TopBar />
-          <InterceptorModal />
-          {children}
-          <Footer />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <TopBar />
+            <InterceptorModal />
+            {children}
+            <Footer />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

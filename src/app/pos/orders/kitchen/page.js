@@ -1,0 +1,226 @@
+"use client";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { ArrowLeft, Bell, RefreshCw } from "lucide-react";
+import "../../pos.css";
+
+function elapsed(createdAt) {
+  const diff = Date.now() - new Date(createdAt).getTime();
+  const mins = Math.floor(diff / 60000);
+  const secs = Math.floor((diff % 60000) / 1000);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+export default function PosKitchenDisplay() {
+  const router = useRouter();
+  const [outlet, setOutlet] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [newOrderIds, setNewOrderIds] = useState(new Set());
+  const prevOrderCount = useRef(0);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem("pos_outlet");
+    if (!stored) { router.push("/pos"); return; }
+    setOutlet(JSON.parse(stored));
+  }, [router]);
+
+  useEffect(() => {
+    if (!outlet) return;
+
+    const fetchOrders = async () => {
+      try {
+        const res = await fetch(`/api/pos/orders?outletId=${outlet.id}&status=pending,preparing`);
+        if (res.ok) {
+          const body = await res.json();
+          const fetched = body.data || [];
+          if (prevOrderCount.current > 0 && fetched.length > prevOrderCount.current) {
+            const newIds = new Set(fetched.map((o) => o.id));
+            const oldIds = new Set(orders.map((o) => o.id));
+            const added = [...newIds].filter((id) => !oldIds.has(id));
+            if (added.length > 0) {
+              setNewOrderIds(new Set(added));
+              setTimeout(() => setNewOrderIds(new Set()), 4000);
+            }
+          }
+          prevOrderCount.current = fetched.length;
+          setOrders(fetched);
+        }
+      } catch (err) {
+        console.error("KDS fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+
+    const channel = supabase.channel("pos-kitchen");
+    channel
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "pos_orders",
+        filter: `outlet_id=eq.${outlet.id}`,
+      }, (payload) => {
+        const newStatus = payload.new?.status;
+        if (!newStatus || newStatus === "completed" || newStatus === "cancelled" || newStatus === "served") {
+          setOrders((prev) => prev.filter((o) => o.id !== payload.new?.id && o.id !== payload.old?.id));
+          return;
+        }
+        fetch(`/api/pos/orders?outletId=${outlet.id}&status=pending,preparing`)
+          .then((r) => r.json())
+          .then((body) => {
+            const fetched = body.data || [];
+            if (fetched.length > orders.length) {
+              const newIds = new Set(fetched.map((o) => o.id));
+              const oldIds = new Set(orders.map((o) => o.id));
+              const added = [...newIds].filter((id) => !oldIds.has(id));
+              if (added.length > 0) {
+                setNewOrderIds(new Set(added));
+                setTimeout(() => setNewOrderIds(new Set()), 4000);
+              }
+            }
+            setOrders(fetched);
+          })
+          .catch(() => {});
+      })
+      .subscribe();
+
+    const timer = setInterval(() => {
+      setOrders((prev) => [...prev]);
+    }, 10000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(timer);
+    };
+  }, [outlet]);
+
+  const updateStatus = async (orderId, newStatus) => {
+    try {
+      await fetch(`/api/pos/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      setOrders((prev) =>
+        newStatus === "ready"
+          ? prev.map((o) => (o.id === orderId ? { ...o, status: "ready" } : o))
+          : prev.filter((o) => o.id !== orderId)
+      );
+    } catch (err) {
+      console.error("KDS update error:", err);
+    }
+  };
+
+  const handleRefresh = async () => {
+    if (!outlet) return;
+    const res = await fetch(`/api/pos/orders?outletId=${outlet.id}&status=pending,preparing`);
+    if (res.ok) {
+      const body = await res.json();
+      setOrders(body.data || []);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="pos-fullscreen">
+        <div className="pos-loading" style={{ background: "var(--bg-color-dark)" }}>Loading Kitchen Display...</div>
+      </div>
+    );
+  }
+
+  const pending = orders.filter((o) => o.status === "pending");
+  const preparing = orders.filter((o) => o.status === "preparing");
+
+  return (
+    <div className="pos-fullscreen" style={{ background: "var(--bg-color-dark)" }}>
+      <div className="pos-top-bar" style={{ background: "#1a1a1a" }}>
+        <button onClick={() => router.push("/pos/dashboard")}><ArrowLeft size={16} /> Back</button>
+        <h1>Kitchen Display - {outlet?.name}</h1>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <Bell size={16} />
+          <span style={{ fontSize: 13 }}>{orders.length} active</span>
+          <button onClick={handleRefresh}><RefreshCw size={14} /> Refresh</button>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, padding: "8px 12px", background: "#2d2d2d", color: "#fff", fontSize: 13 }}>
+        <span>🟡 Pending: {pending.length}</span>
+        <span>🔵 Preparing: {preparing.length}</span>
+      </div>
+
+      <div className="pos-kitchen">
+        {orders.length === 0 ? (
+          <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 60, color: "var(--text-secondary)" }}>
+            <Bell size={48} style={{ opacity: 0.3, marginBottom: 8 }} />
+            <p style={{ fontSize: 18 }}>No active orders</p>
+            <p style={{ fontSize: 13 }}>Waiting for new orders...</p>
+          </div>
+        ) : (
+          orders.map((order) => {
+            const isNew = newOrderIds.has(order.id);
+            const items = order.items || [];
+            return (
+              <div key={order.id} className={`pos-kitchen-card ${order.status} ${isNew ? "new-order" : ""}`}>
+                <div className="pos-kitchen-header">
+                  <div className="pos-kitchen-order-no">
+                    #{order.order_number || order.id.toString().slice(-4)}
+                  </div>
+                  <div className="pos-kitchen-time">
+                    {elapsed(order.created_at)}
+                  </div>
+                </div>
+
+                <div style={{ fontSize: 13, marginBottom: 8, fontWeight: 600 }}>
+                  {order.customer_name || "Walk-in"}
+                  {order.table_number && ` · Table ${order.table_number}`}
+                  {order.type && ` · ${order.type}`}
+                </div>
+
+                <div className="pos-kitchen-items">
+                  {items.map((item, idx) => (
+                    <div key={item.id || idx} className="pos-kitchen-item">
+                      <span>{item.quantity}x {item.product_name || item.name}</span>
+                      {item.status && (
+                        <span className={`pos-badge ${item.status}`} style={{ fontSize: 10 }}>
+                          {item.status}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {order.notes && (
+                  <div style={{ fontSize: 12, fontStyle: "italic", marginBottom: 8, color: "var(--text-secondary)", padding: 4, background: "rgba(0,0,0,0.03)", borderRadius: 4 }}>
+                    Note: {order.notes}
+                  </div>
+                )}
+
+                <div className="pos-kitchen-actions">
+                  {order.status === "pending" && (
+                    <button className="pos-kitchen-btn start" onClick={() => updateStatus(order.id, "preparing")}>
+                      Start Preparing
+                    </button>
+                  )}
+                  {order.status === "preparing" && (
+                    <button className="pos-kitchen-btn ready-btn" onClick={() => updateStatus(order.id, "ready")}>
+                      Mark Ready
+                    </button>
+                  )}
+                  {order.status === "ready" && (
+                    <button className="pos-kitchen-btn ready-btn" disabled>
+                      ✓ Ready
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}

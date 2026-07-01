@@ -14,10 +14,20 @@ export default function TopBar() {
   const { getCartCount } = useCart();
   const [user, setUser] = useState(null);
   const [coffeeProducts, setCoffeeProducts] = useState([]);
+  const [outletHref, setOutletHref] = useState('/outlet');
 
   const pathname = usePathname();
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      if (hostname.includes('janubhai.com')) {
+        setOutletHref('https://outlet.janubhai.com');
+      } else {
+        setOutletHref('/outlet');
+      }
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user || null);
     });
@@ -37,7 +47,7 @@ export default function TopBar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (pathname?.startsWith('/admin')) return null;
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/outlet')) return null;
 
   return (
     <header className="topbar">
@@ -68,6 +78,9 @@ export default function TopBar() {
             Instant Coffee
           </Link>
           
+          <Link href={outletHref} className="nav-link">
+            Outlet Management
+          </Link>
 
           <Link href="/process" className="nav-link">Our Process</Link>
         </nav>

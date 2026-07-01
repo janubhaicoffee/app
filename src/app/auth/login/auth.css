@@ -115,6 +115,65 @@
   }
 }
 
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: var(--text-muted, #999);
+  font-size: 0.85rem;
+}
+.auth-divider::before, .auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color, #ddd);
+}
+.auth-divider span {
+  padding: 0 15px;
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border-color, #ddd);
+  background: white;
+  font-family: var(--font-inter);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-google:hover {
+  border-color: var(--text-primary);
+  background: #fafafa;
+}
+.btn-google:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--accent-red);
+  font-family: var(--font-inter);
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.link-btn:hover {
+  color: var(--text-primary);
+}
+.link-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .fade-in {
   animation: fadeIn 0.5s ease-in-out;
 }

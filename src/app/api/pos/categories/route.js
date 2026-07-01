@@ -1,0 +1,50 @@
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { NextResponse } from "next/server";
+
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const outletId = searchParams.get("outletId");
+
+    let query = supabaseAdmin.from("pos_categories").select("*").order("sort_order", { ascending: true }).order("name", { ascending: true });
+
+    if (outletId) query = query.eq("outlet_id", outletId);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    console.error("POS Categories GET error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const { outlet_id, name, description, color, icon, sort_order } = body;
+
+    if (!outlet_id || !name) {
+      return NextResponse.json({ error: "Missing required fields: outlet_id, name" }, { status: 400 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("pos_categories")
+      .insert([{
+        outlet_id,
+        name,
+        description: description || null,
+        color: color || null,
+        icon: icon || null,
+        sort_order: sort_order !== undefined ? parseInt(sort_order) : 0
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json({ success: true, data }, { status: 201 });
+  } catch (error) {
+    console.error("POS Categories POST error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

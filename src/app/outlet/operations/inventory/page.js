@@ -1,0 +1,329 @@
+"use client";
+import React, { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import {
+  Package, Plus, Search, Filter, AlertTriangle, RefreshCw,
+  TrendingUp, TrendingDown, Clock, X
+} from "lucide-react";
+
+export default function InventoryPage() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [items, setItems] = useState([]);
+  const [movements, setMovements] = useState([]);
+  const [outletId, setOutletId] = useState(null);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAdjustForm, setShowAdjustForm] = useState(null);
+  const [success, setSuccess] = useState("");
+
+  const [newItem, setNewItem] = useState({ name: "", category: "", stock: "0", threshold: "10", cost_price: "", selling_price: "", unit: "pcs" });
+  const [adjustment, setAdjustment] = useState({ type: "purchase", quantity: "1", unit_cost: "", notes: "" });
+  const [adding, setAdding] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { data: staff } = await supabase.from("outlet_staff").select("outlet_id").eq("user_id", session.user.id).maybeSingle();
+      const oid = staff?.outlet_id;
+      setOutletId(oid);
+
+      const params = oid ? `?outletId=${oid}` : "";
+      const [invRes, movRes] = await Promise.allSettled([
+        fetch(`/api/outlet/inventory${params}`),
+        fetch(`/api/outlet/inventory/transactions${params}&limit=50`),
+      ]);
+
+      if (invRes.status === "fulfilled" && invRes.value.ok) {
+        const { data } = await invRes.value.json();
+        setItems(Array.isArray(data) ? data : []);
+      }
+      if (movRes.status === "fulfilled" && movRes.value.ok) {
+        const { data } = await movRes.value.json();
+        setMovements(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    const channel = supabase.channel("inventory-realtime");
+    channel
+      .on("postgres_changes", { event: "*", schema: "public", table: "outlet_inventory" }, () => { fetchData(); })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "outlet_inventory_transactions" }, () => { fetchData(); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchData]);
+
+  const handleAddItem = async (e) => {
+    e.preventDefault();
+    if (!newItem.name) return;
+    setAdding(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/outlet/inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ outlet_id: outletId, ...newItem, stock: parseInt(newItem.stock) || 0, threshold: parseInt(newItem.threshold) || 10 }),
+      });
+      if (!res.ok) { const b = await res.json(); throw new Error(b.error); }
+      setSuccess(`Added "${newItem.name}"`);
+      setNewItem({ name: "", category: "", stock: "0", threshold: "10", cost_price: "", selling_price: "", unit: "pcs" });
+      setShowAddForm(false);
+      fetchData();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleAdjust = async (e, itemId) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      const res = await fetch("/api/outlet/inventory/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          outlet_id: outletId, inventory_id: itemId,
+          type: adjustment.type, quantity: parseInt(adjustment.quantity) || 1,
+          unit_cost: adjustment.unit_cost ? parseFloat(adjustment.unit_cost) : null,
+          notes: adjustment.notes,
+        }),
+      });
+      if (!res.ok) { const b = await res.json(); throw new Error(b.error); }
+      setSuccess("Stock adjusted");
+      setShowAdjustForm(null);
+      setAdjustment({ type: "purchase", quantity: "1", unit_cost: "", notes: "" });
+      fetchData();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const categories = [...new Set(items.map(i => i.category).filter(Boolean))];
+  const filtered = items.filter(i => {
+    if (search && !i.name?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (categoryFilter && i.category !== categoryFilter) return false;
+    return true;
+  });
+
+  const lowStockItems = items.filter(i => i.stock !== null && i.threshold !== null && i.stock <= i.threshold);
+  const totalStock = items.reduce((s, i) => s + (parseInt(i.stock) || 0), 0);
+  const totalValue = items.reduce((s, i) => s + (parseInt(i.stock) || 0) * (parseFloat(i.cost_price) || 0), 0);
+
+  if (loading) return <div className="outlet-loading"><div className="outlet-loading-spinner" /><p>Loading inventory...</p></div>;
+
+  return (
+    <div>
+      <div className="outlet-page-header">
+        <div>
+          <h1>Inventory</h1>
+          <p className="outlet-page-subtitle">{items.length} items &middot; {lowStockItems.length} low stock</p>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="outlet-btn primary sm" onClick={() => setShowAddForm(!showAddForm)}>
+            <Plus size={14} /> {showAddForm ? "Cancel" : "Add Item"}
+          </button>
+          <button className="outlet-btn outline sm" onClick={fetchData}><RefreshCw size={14} /></button>
+        </div>
+      </div>
+
+      {success && <div className="outlet-success-banner">{success}</div>}
+      {error && <div className="outlet-error-banner">{error}</div>}
+
+      <div className="outlet-stats-grid">
+        <div className="outlet-stat-card">
+          <div className="outlet-stat-icon blue"><Package size={24} /></div>
+          <div className="outlet-stat-info"><h3>{items.length}</h3><p>Total Items</p></div>
+        </div>
+        <div className="outlet-stat-card">
+          <div className="outlet-stat-icon green"><TrendingUp size={24} /></div>
+          <div className="outlet-stat-info"><h3>{totalStock}</h3><p>Total Units</p></div>
+        </div>
+        <div className="outlet-stat-card">
+          <div className="outlet-stat-icon purple"><TrendingDown size={24} /></div>
+          <div className="outlet-stat-info"><h3>{formatCurrency(totalValue)}</h3><p>Total Value</p></div>
+        </div>
+        <div className="outlet-stat-card">
+          <div className="outlet-stat-icon red"><AlertTriangle size={24} /></div>
+          <div className="outlet-stat-info"><h3>{lowStockItems.length}</h3><p>Low Stock</p></div>
+        </div>
+      </div>
+
+      {showAddForm && (
+        <form className="outlet-form" onSubmit={handleAddItem}>
+          <h3>Add New Item</h3>
+          <div className="outlet-form-row">
+            <div className="form-group">
+              <label>Item Name *</label>
+              <input className="form-control" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} required />
+            </div>
+            <div className="form-group">
+              <label>Category</label>
+              <input className="form-control" value={newItem.category} onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))} placeholder="e.g. Beans, Milk" />
+            </div>
+          </div>
+          <div className="outlet-form-row">
+            <div className="form-group">
+              <label>Initial Stock</label>
+              <input type="number" className="form-control" value={newItem.stock} onChange={e => setNewItem(p => ({ ...p, stock: e.target.value }))} />
+            </div>
+            <div className="form-group">
+              <label>Low Stock Threshold</label>
+              <input type="number" className="form-control" value={newItem.threshold} onChange={e => setNewItem(p => ({ ...p, threshold: e.target.value }))} />
+            </div>
+          </div>
+          <div className="outlet-form-row">
+            <div className="form-group">
+              <label>Cost Price</label>
+              <input type="number" step="0.01" className="form-control" value={newItem.cost_price} onChange={e => setNewItem(p => ({ ...p, cost_price: e.target.value }))} />
+            </div>
+            <div className="form-group">
+              <label>Selling Price</label>
+              <input type="number" step="0.01" className="form-control" value={newItem.selling_price} onChange={e => setNewItem(p => ({ ...p, selling_price: e.target.value }))} />
+            </div>
+          </div>
+          <button type="submit" className="outlet-btn primary" disabled={adding || !newItem.name}>
+            {adding ? "Adding..." : "Add Item"}
+          </button>
+        </form>
+      )}
+
+      <div className="outlet-filter-bar">
+        <div style={{ position: "relative", flex: 1, maxWidth: 300 }}>
+          <Search size={16} style={{ position: "absolute", left: 10, top: 10, color: "#a0aec0" }} />
+          <input className="form-control" style={{ paddingLeft: 32 }} placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
+          <option value="">All Categories</option>
+          {categories.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+
+      <div className="outlet-card">
+        <h2>Stock Levels</h2>
+        <div className="table-responsive" style={{ maxHeight: "none" }}>
+          <table className="outlet-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Stock</th>
+                <th>Threshold</th>
+                <th>Cost Price</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={7}><div className="outlet-empty"><p>No items found</p></div></td></tr>
+              ) : filtered.map(item => {
+                const isLow = item.stock !== null && item.threshold !== null && item.stock <= item.threshold;
+                return (
+                  <tr key={item.id}>
+                    <td style={{ fontWeight: 600 }}>{item.name}</td>
+                    <td>{item.category || "-"}</td>
+                    <td>{item.stock ?? "N/A"}</td>
+                    <td>{item.threshold}</td>
+                    <td>{item.cost_price ? formatCurrency(item.cost_price) : "-"}</td>
+                    <td>{isLow ? <span className="outlet-badge red">Low Stock</span> : <span className="outlet-badge green">OK</span>}</td>
+                    <td>
+                      <button className="outlet-btn outline sm" onClick={() => { setShowAdjustForm(item.id); setAdjustment({ type: "purchase", quantity: "1", unit_cost: "", notes: "" }); }}>
+                        Adjust
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showAdjustForm && (
+        <div className="outlet-modal-overlay" onClick={() => setShowAdjustForm(null)}>
+          <div className="outlet-modal" onClick={e => e.stopPropagation()}>
+            <div className="outlet-modal-header">
+              <span>Adjust Stock</span>
+              <button onClick={() => setShowAdjustForm(null)} style={{ background: "none", border: "none", cursor: "pointer" }}><X size={18} /></button>
+            </div>
+            <div className="outlet-modal-body">
+              <form onSubmit={(e) => handleAdjust(e, showAdjustForm)}>
+                <div className="form-group">
+                  <label>Type</label>
+                  <select className="form-control" value={adjustment.type} onChange={e => setAdjustment(p => ({ ...p, type: e.target.value }))}>
+                    <option value="purchase">Purchase (add stock)</option>
+                    <option value="sale">Sale (remove stock)</option>
+                    <option value="waste">Waste (remove stock)</option>
+                    <option value="adjustment">Adjustment</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Quantity</label>
+                  <input type="number" className="form-control" min="1" value={adjustment.quantity} onChange={e => setAdjustment(p => ({ ...p, quantity: e.target.value }))} required />
+                </div>
+                <div className="form-group">
+                  <label>Unit Cost (optional)</label>
+                  <input type="number" step="0.01" className="form-control" value={adjustment.unit_cost} onChange={e => setAdjustment(p => ({ ...p, unit_cost: e.target.value }))} />
+                </div>
+                <div className="form-group">
+                  <label>Notes</label>
+                  <input className="form-control" value={adjustment.notes} onChange={e => setAdjustment(p => ({ ...p, notes: e.target.value }))} />
+                </div>
+                <button type="submit" className="outlet-btn primary">Save Adjustment</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="outlet-card">
+        <h2>Stock Movement History</h2>
+        <div className="table-responsive" style={{ maxHeight: 300 }}>
+          <table className="outlet-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Item</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movements.length === 0 ? (
+                <tr><td colSpan={5}><div className="outlet-empty"><p>No movements recorded</p></div></td></tr>
+              ) : movements.slice(0, 30).map(m => (
+                <tr key={m.id}>
+                  <td>{new Date(m.created_at).toLocaleDateString()}</td>
+                  <td>{m.outlet_inventory?.name || "Unknown"}</td>
+                  <td><span className={`outlet-badge ${m.type === "purchase" ? "green" : m.type === "adjustment" ? "blue" : "red"}`}>{m.type}</span></td>
+                  <td>{m.quantity}</td>
+                  <td>{m.notes || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+
+  function formatCurrency(n) {
+    return "₹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
+  }
+}

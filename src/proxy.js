@@ -1,44 +1,52 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from 'next/server'
 
-export async function proxy(req) {
-  // 1. Secure API Route Protection (Admin routes protected by AdminGuard and secure APIs instead)
-  const pathname = req.nextUrl.pathname;
-  if (pathname.startsWith('/api/ai/generate-article')) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
+const oldAuthPaths = ['/auth/login', '/auth/signup']
 
-    const cookieHeader = req.headers.get("cookie");
-    if (!cookieHeader) {
-      return NextResponse.redirect(new URL("/auth/login", req.url));
+export default async function proxy(request) {
+  const { pathname } = request.nextUrl
+  const hostname = request.headers.get('host') || ''
+  const host = hostname.split(':')[0]
+
+  if (host.startsWith('pos.')) {
+    if (pathname.startsWith('/pos')) {
+      return NextResponse.next()
     }
+    return NextResponse.rewrite(
+      new URL(`/pos${pathname}${request.nextUrl.search}`, request.url)
+    )
+  }
 
-    // Try to get user data which validates JWT on the server
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error || !user) {
-      return NextResponse.redirect(new URL("/auth/login", req.url));
+  if (host.startsWith('outlet.')) {
+    if (pathname.startsWith('/outlet')) {
+      return NextResponse.next()
     }
+    return NextResponse.rewrite(
+      new URL(`/outlet${pathname}${request.nextUrl.search}`, request.url)
+    )
+  }
 
-    // Optional: Check if user email is in superadmin list
-    const adminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
-    if (!adminEmails.includes(user.email?.toLowerCase())) {
-      return NextResponse.redirect(new URL("/", req.url)); // unauthorized
+  if (host.startsWith('admin.')) {
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.next()
+    }
+    return NextResponse.rewrite(
+      new URL(`/admin${pathname}${request.nextUrl.search}`, request.url)
+    )
+  }
+
+  // Redirect old auth pages to unified, EXCEPT for administrative redirects
+  if (oldAuthPaths.some(p => pathname.startsWith(p))) {
+    const redirect = request.nextUrl.searchParams.get('redirect') || '';
+    if (!host.startsWith('outlet.') && !redirect.startsWith('/outlet') && !redirect.startsWith('/pos') && !redirect.startsWith('/admin')) {
+      const url = new URL('/auth/unified', request.url)
+      if (redirect) url.searchParams.set('redirect', redirect)
+      return NextResponse.redirect(url)
     }
   }
 
-  // 2. Security Headers
-  const response = NextResponse.next();
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
-  return response;
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
-};
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)']
+}
