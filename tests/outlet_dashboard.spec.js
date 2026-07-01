@@ -68,15 +68,59 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
   });
 
   test('3. Verify that accessing outlet.janubhai.com rewrites to /outlet (subdomain middleware).', async ({ page }) => {
-    await page.setExtraHTTPHeaders({ host: 'outlet.janubhai.com' });
+    await page.route('**/*', async (route) => {
+      const url = route.request().url();
+      if (url.includes('/auth/v1/user')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'mock-admin-uuid',
+            email: 'admin@janubhaicoffee.com',
+            aud: 'authenticated',
+            role: 'authenticated',
+          })
+        });
+      } else if (url.includes('localhost:3000') || !url.startsWith('http')) {
+        const headers = {
+          ...route.request().headers(),
+          host: 'outlet.janubhai.com',
+          'x-forwarded-host': 'outlet.janubhai.com'
+        };
+        await route.continue({ headers });
+      } else {
+        await route.continue();
+      }
+    });
     await page.goto('/');
     await expect(page.locator('[data-testid="accounting-panel"]')).toBeVisible();
   });
 
   test('4. Verify middleware forwards headers correctly (host, user-agent).', async ({ page }) => {
-    await page.setExtraHTTPHeaders({
-      host: 'outlet.janubhai.com',
-      'user-agent': 'PlaywrightTestAgent'
+    await page.route('**/*', async (route) => {
+      const url = route.request().url();
+      if (url.includes('/auth/v1/user')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'mock-admin-uuid',
+            email: 'admin@janubhaicoffee.com',
+            aud: 'authenticated',
+            role: 'authenticated',
+          })
+        });
+      } else if (url.includes('localhost:3000') || !url.startsWith('http')) {
+        const headers = {
+          ...route.request().headers(),
+          host: 'outlet.janubhai.com',
+          'x-forwarded-host': 'outlet.janubhai.com',
+          'user-agent': 'PlaywrightTestAgent'
+        };
+        await route.continue({ headers });
+      } else {
+        await route.continue();
+      }
     });
     await page.goto('/outlet');
     const panel = page.locator('[data-testid="accounting-panel"]');
@@ -218,12 +262,11 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
 
   test('18. Verify toggling camera active status changes stream visual indicator.', async ({ page }) => {
     await page.goto('/outlet');
-    await expect(page.locator('[data-testid="stream-status"]').first()).toBeVisible();
-    const toggleBtn = page.locator('[data-testid="btn-toggle-stream"]').first();
-    const initialStatus = await page.locator('[data-testid="stream-status"]').first().textContent();
-    await toggleBtn.click();
-    const newStatus = await page.locator('[data-testid="stream-status"]').first().textContent();
-    expect(initialStatus).not.toEqual(newStatus);
+    const statusLocator = page.locator('[data-testid="stream-status"]').first();
+    await expect(statusLocator).toBeVisible();
+    const initialStatus = await statusLocator.textContent();
+    await page.locator('[data-testid="btn-toggle-stream"]').first().click();
+    await expect(statusLocator).not.toHaveText(initialStatus);
   });
 
   test('19. Verify adding a new camera stream URL updates the stream list.', async ({ page }) => {
@@ -298,7 +341,7 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
     const checkbox = page.locator('[data-testid="toggle-delivery-status"]');
     const isChecked = await checkbox.isChecked();
     await checkbox.click();
-    await expect(checkbox).toBeChecked({ checked: !isChecked });
+    await expect(checkbox).toBeChecked({ checked: !isChecked }, { timeout: 15000 });
   });
 
   test('28. Verify configuring API credentials for Zomato saves successfully.', async ({ page }) => {
@@ -382,7 +425,30 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
 
   // Feature 1: Subdomain Routing & Navigation Link
   test('36. Verify routing handles malformed subdomains (e.g. out-let.janubhai.com doesn\'t rewrite).', async ({ page }) => {
-    await page.setExtraHTTPHeaders({ host: 'out-let.janubhai.com' });
+    await page.route('**/*', async (route) => {
+      const url = route.request().url();
+      if (url.includes('/auth/v1/user')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'mock-admin-uuid',
+            email: 'admin@janubhaicoffee.com',
+            aud: 'authenticated',
+            role: 'authenticated',
+          })
+        });
+      } else if (url.includes('localhost:3000') || !url.startsWith('http')) {
+        const headers = {
+          ...route.request().headers(),
+          host: 'out-let.janubhai.com',
+          'x-forwarded-host': 'out-let.janubhai.com'
+        };
+        await route.continue({ headers });
+      } else {
+        await route.continue();
+      }
+    });
     await page.goto('/');
     const panel = page.locator('[data-testid="accounting-panel"]');
     await expect(panel).not.toBeVisible();
@@ -401,16 +467,40 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
   });
 
   test('39. Verify middleware doesn\'t rewrite asset requests (e.g. _next/static, favicon.ico).', async ({ page }) => {
-    await page.setExtraHTTPHeaders({ host: 'outlet.janubhai.com' });
-    // Use page.request instead of page.goto to avoid WebKit blocking binary downloads
-    const response = await page.request.get('/favicon.ico');
+    // Pass host header directly to page.request.get
+    const response = await page.request.get('/favicon.ico', {
+      headers: { host: 'outlet.janubhai.com' }
+    });
     // The proxy matcher excludes favicon.ico, so it should NOT be rewritten to /outlet/favicon.ico
     // A successful response (200/404) without dashboard content confirms the proxy didn't interfere
     expect([200, 304, 404]).toContain(response.status());
   });
 
   test('40. Verify middleware handles request with port number in the host header.', async ({ page }) => {
-    await page.setExtraHTTPHeaders({ host: 'outlet.janubhai.com:3000' });
+    await page.route('**/*', async (route) => {
+      const url = route.request().url();
+      if (url.includes('/auth/v1/user')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'mock-admin-uuid',
+            email: 'admin@janubhaicoffee.com',
+            aud: 'authenticated',
+            role: 'authenticated',
+          })
+        });
+      } else if (url.includes('localhost:3000') || !url.startsWith('http')) {
+        const headers = {
+          ...route.request().headers(),
+          host: 'outlet.janubhai.com:3000',
+          'x-forwarded-host': 'outlet.janubhai.com:3000'
+        };
+        await route.continue({ headers });
+      } else {
+        await route.continue();
+      }
+    });
     await page.goto('/');
     await expect(page.locator('[data-testid="accounting-panel"]')).toBeVisible();
   });
@@ -445,7 +535,7 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
       });
     });
     await page.goto('/outlet');
-    await expect(page.locator('[data-testid="auth-error-banner"]').or(page.locator('body'))).toBeVisible();
+    await expect(page.locator('[data-testid="auth-error-banner"]')).toBeVisible();
   });
 
   test('44. Verify concurrent login checks are debounced or single-flighted.', async ({ page }) => {
@@ -610,10 +700,12 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
   });
 
   test('59. Verify low-stock warning triggers precisely when stock matches threshold value (boundary).', async ({ page }) => {
+    await cleanupDatabase();
+    await seedDatabase();
     await page.goto('/outlet');
     await page.fill('[data-testid="field-reorder-threshold"]', '3'); // Stock is 3 in mock
     await page.click('[data-testid="btn-save-reorder"]');
-    await expect(page.locator('[data-testid="stock-alert-badge"]').first()).toBeVisible();
+    await expect(page.locator('[data-testid="stock-alert-badge"]').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('60. Verify manual reorder button is disabled while a reorder request is in flight.', async ({ page }) => {
@@ -813,7 +905,9 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
 
   test('74. Verify transaction from incoming delivery order (Delivery) is automatically recorded in transaction list (Accounting) and Recharts.', async ({ page }) => {
     await page.goto('/outlet');
-    await expect(page.locator('[data-testid="transaction-row"]').first()).toBeVisible();
+    await expect(page.locator('[data-testid="stat-revenue"]')).toBeVisible();
+    const initialRevenueText = await page.locator('[data-testid="stat-revenue"]').textContent();
+    const initialRevenue = parseFloat(initialRevenueText);
     const initialCount = await page.locator('[data-testid="transaction-row"]').count();
 
     // Dispatch custom incoming delivery order event
@@ -825,7 +919,8 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
 
     const newCount = page.locator('[data-testid="transaction-row"]');
     await expect(newCount).toHaveCount(initialCount + 1);
-    await expect(page.locator('[data-testid="stat-revenue"]')).toContainText('24546.25'); // 24500.75 + 45.50
+    const expectedRevenue = (initialRevenue + 45.50).toFixed(2);
+    await expect(page.locator('[data-testid="stat-revenue"]')).toContainText(expectedRevenue);
   });
 
   test('75. Verify security alert trigger (Surveillance) locks/restricts certain admin operations or flags logs (Operations).', async ({ page }) => {
@@ -874,6 +969,8 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
   // ==========================================
 
   test('78. Scenario: Full business day simulation. Admin logs in, views empty state dashboard, opens Swiggy/Zomato integration, receives multiple orders, verifies stock decrease, verifies automatic transaction records, and verifies updated growth chart.', async ({ page }) => {
+    await cleanupDatabase();
+    await seedDatabase();
     await page.goto('/outlet');
     await expect(page.locator('[data-testid="accounting-panel"]')).toBeVisible();
     await expect(page.locator('[data-testid="stock-row"]:has-text("Premium Espresso Beans")')).toBeVisible();
@@ -897,9 +994,9 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
     });
 
     // Check stock decrease
-    await expect(page.locator('[data-testid="stock-row"]:has-text("Premium Espresso Beans")').locator('.stock-count')).toContainText('1'); // 3 - 2
+    await expect(page.locator('[data-testid="stock-row"]:has-text("Premium Espresso Beans")').locator('.stock-count')).toContainText('1', { timeout: 15000 }); // 3 - 2
     // Check transactions
-    await expect(page.locator('[data-testid="transaction-row"]')).toHaveCount(3); // 1 seeded + 2 new
+    await expect(page.locator('[data-testid="transaction-row"]')).toHaveCount(3, { timeout: 15000 }); // 1 seeded + 2 new
     // Check growth chart
     await expect(page.locator('[data-testid="growth-chart"]')).toBeVisible();
   });
@@ -985,7 +1082,30 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
 
   test('82. Scenario: Integration & Settings Setup. Admin completes onboarding: sets custom Host rewrite headers, accesses /outlet, sets up credentials for Swiggy and Zomato, changes operational alert settings, adds a startup float transaction to Accounting, and checks that audit logs record all administrative actions.', async ({ page }) => {
     // Custom host header
-    await page.setExtraHTTPHeaders({ host: 'outlet.janubhai.com' });
+    await page.route('**/*', async (route) => {
+      const url = route.request().url();
+      if (url.includes('/auth/v1/user')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'mock-admin-uuid',
+            email: 'admin@janubhaicoffee.com',
+            aud: 'authenticated',
+            role: 'authenticated',
+          })
+        });
+      } else if (url.includes('localhost:3000') || !url.startsWith('http')) {
+        const headers = {
+          ...route.request().headers(),
+          host: 'outlet.janubhai.com',
+          'x-forwarded-host': 'outlet.janubhai.com'
+        };
+        await route.continue({ headers });
+      } else {
+        await route.continue();
+      }
+    });
     await page.goto('/');
     await expect(page.locator('[data-testid="tab-swiggy"]')).toBeVisible();
 

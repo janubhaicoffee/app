@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function Operations({ outletId, refreshTrigger, onTimezoneChanged }) {
   const [loading, setLoading] = useState(true);
+  const [firstFetch, setFirstFetch] = useState(true);
   const [error, setError] = useState(null);
   const [lowStockItems, setLowStockItems] = useState([]);
   const [timezone, setTimezone] = useState("IST");
@@ -44,7 +45,10 @@ export default function Operations({ outletId, refreshTrigger, onTimezoneChanged
   };
 
   const fetchData = async () => {
-    setLoading(true);
+    if (firstFetch) {
+      setLoading(true);
+      setFirstFetch(false);
+    }
     setError(null);
     try {
       // Load auto-reorder configuration from localStorage if present
@@ -71,13 +75,16 @@ export default function Operations({ outletId, refreshTrigger, onTimezoneChanged
       if (autoReorderItem) {
         setManualReorderStatus("Ordered");
         try {
-          const { data: existingReorders } = await supabase
-            .from("outlet_reorder_requests")
-            .select("*")
-            .eq("item_name", autoReorderItem.name)
-            .eq("status", "pending");
+          const reordersRes = await fetch("/api/outlet/reorders");
+          let existingReorders = [];
+          if (reordersRes.ok) {
+            const reordersData = await reordersRes.json();
+            existingReorders = (reordersData.data || []).filter(
+              r => r.item_name === autoReorderItem.name && r.status === "pending"
+            );
+          }
             
-          if (!existingReorders || existingReorders.length === 0) {
+          if (existingReorders.length === 0) {
             // Trigger the auto-reorder POST
             await fetch("/api/outlet/reorders", {
               method: "POST",
@@ -95,19 +102,34 @@ export default function Operations({ outletId, refreshTrigger, onTimezoneChanged
       }
 
       // Fetch active high/critical alerts
-      const { data: activeAlerts } = await supabase
-        .from("outlet_alerts")
-        .select("*")
-        .eq("resolved", false)
-        .in("severity", ["high", "critical"]);
-      setHasCriticalAlert(activeAlerts && activeAlerts.length > 0);
+      try {
+        const alertsRes = await fetch("/api/outlet/alerts");
+        if (alertsRes.ok) {
+          const { data: alertsList } = await alertsRes.json();
+          const activeAlerts = (alertsList || []).filter(
+            (a) => !a.resolved && ["high", "critical"].includes(a.severity?.toLowerCase())
+          );
+          setHasCriticalAlert(activeAlerts.length > 0);
+        }
+      } catch (alertsErr) {
+        console.error("Failed to fetch active alerts:", alertsErr);
+      }
 
       // Fetch audit logs
-      const { data: logs } = await supabase
-        .from("audit_log")
-        .select("*")
-        .order("created_at", { ascending: false });
-      setAuditLogs(logs || []);
+      try {
+        const token = getAuthToken();
+        const headers = {};
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        const logsRes = await fetch("/api/admin/data?type=audit_log", { headers });
+        if (logsRes.ok) {
+          const { data: logs } = await logsRes.json();
+          setAuditLogs(logs || []);
+        }
+      } catch (logsErr) {
+        console.error("Failed to fetch audit logs:", logsErr);
+      }
     } catch (err) {
       setError(err.message);
     } finally {

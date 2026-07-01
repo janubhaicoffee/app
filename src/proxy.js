@@ -2,36 +2,47 @@ import { NextResponse } from 'next/server'
 
 const oldAuthPaths = ['/auth/login', '/auth/signup']
 
+const mainSitePaths = [
+  '/product', '/process', '/auth', '/cart', '/checkout', '/account',
+  '/privacy', '/terms', '/shipping', '/refunds', '/contact',
+  '/articles', '/menu', '/claim', '/track'
+];
+
 export default async function proxy(request) {
   const { pathname } = request.nextUrl
-  const hostname = request.headers.get('host') || ''
+  const hostname = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
   const host = hostname.split(':')[0]
 
-  if (host.startsWith('pos.')) {
-    if (pathname.startsWith('/pos')) {
-      return NextResponse.next()
-    }
-    return NextResponse.rewrite(
-      new URL(`/pos${pathname}${request.nextUrl.search}`, request.url)
-    )
-  }
+  // Check if target is a known main site path
+  const isMainSitePage = mainSitePaths.some(p => pathname === p || pathname.startsWith(p + '/'));
 
-  if (host.startsWith('outlet.')) {
-    if (pathname.startsWith('/outlet')) {
-      return NextResponse.next()
+  if (!isMainSitePage) {
+    if (host.startsWith('pos.')) {
+      if (pathname.startsWith('/pos')) {
+        return NextResponse.next()
+      }
+      return NextResponse.rewrite(
+        new URL(`/pos${pathname}${request.nextUrl.search}`, request.url)
+      )
     }
-    return NextResponse.rewrite(
-      new URL(`/outlet${pathname}${request.nextUrl.search}`, request.url)
-    )
-  }
 
-  if (host.startsWith('admin.')) {
-    if (pathname.startsWith('/admin')) {
-      return NextResponse.next()
+    if (host.startsWith('outlet.')) {
+      if (pathname.startsWith('/outlet')) {
+        return NextResponse.next()
+      }
+      return NextResponse.rewrite(
+        new URL(`/outlet${pathname}${request.nextUrl.search}`, request.url)
+      )
     }
-    return NextResponse.rewrite(
-      new URL(`/admin${pathname}${request.nextUrl.search}`, request.url)
-    )
+
+    if (host.startsWith('admin.')) {
+      if (pathname.startsWith('/admin')) {
+        return NextResponse.next()
+      }
+      return NextResponse.rewrite(
+        new URL(`/admin${pathname}${request.nextUrl.search}`, request.url)
+      )
+    }
   }
 
   // Redirect old auth pages to unified, EXCEPT for administrative redirects

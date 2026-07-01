@@ -156,63 +156,11 @@ export default function OutletDashboard() {
     // Listen to custom events from E2E tests
     const handleIncomingOrder = async (e) => {
       try {
-        const { partner, items, price, total, couponUsed } = e.detail;
-        const orderTotal = price || total || 0;
-        
-        // 1. Update stock levels in database
-        for (const item of items || []) {
-          const { data: invItems } = await supabase
-            .from("outlet_inventory")
-            .select("*")
-            .eq("name", item.name);
-            
-          if (invItems && invItems.length > 0) {
-            const invItem = invItems[0];
-            const newStock = Math.max(0, (invItem.stock || 0) - item.quantity);
-            await supabase
-              .from("outlet_inventory")
-              .update({ stock: newStock })
-              .eq("id", invItem.id);
-          }
-        }
-
-        // 2. Insert a transaction
-        const { data: txData } = await supabase
-          .from("outlet_transactions")
-          .insert({
-            amount: orderTotal,
-            type: "revenue",
-            category: "Delivery Order",
-            description: `Order via ${partner}${couponUsed ? ` (Coupon: ${couponUsed})` : ""}`,
-            date: new Date().toISOString()
-          })
-          .select()
-          .single();
-
-        // 3. Insert audit log for the new transaction
-        if (txData) {
-          await supabase.from("audit_log").insert({
-            admin_email: "admin@janubhaicoffee.com",
-            action: "add_transaction",
-            entity_type: "transactions",
-            entity_id: txData.id,
-            details: { automatic: true, partner }
-          });
-        }
-
-        // 4. Insert delivery order
-        await supabase
-          .from("outlet_delivery_orders")
-          .insert({
-            partner: partner.toLowerCase(),
-            items: items,
-            total: orderTotal,
-            status: "preparing",
-            customer_name: "Delivery Customer",
-            coupon_used: couponUsed || null,
-            created_at: new Date().toISOString()
-          });
-
+        await fetch("/api/integrations/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(e.detail)
+        });
         fetchDashboard();
         triggerGlobalRefresh();
       } catch (err) {
@@ -223,14 +171,14 @@ export default function OutletDashboard() {
     const handleSecurityAlert = async (e) => {
       try {
         const { severity, description, message } = e.detail;
-        await supabase
-          .from("outlet_alerts")
-          .insert({
-            time: new Date().toISOString(),
+        await fetch("/api/outlet/alerts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
             message: description || message || "Security breach detected",
-            severity: (severity || "medium").toLowerCase(),
-            resolved: false
-          });
+            severity: (severity || "medium").toLowerCase()
+          })
+        });
         fetchDashboard();
         triggerGlobalRefresh();
       } catch (err) {
@@ -241,10 +189,18 @@ export default function OutletDashboard() {
     const handleInventoryReplenished = async (e) => {
       try {
         const { name, stock } = e.detail;
-        await supabase
-          .from("outlet_inventory")
-          .update({ stock: parseInt(stock) })
-          .eq("name", name);
+        const res = await fetch("/api/outlet/inventory");
+        if (res.ok) {
+          const { data } = await res.json();
+          const item = (data || []).find(i => i.name === name);
+          if (item) {
+            await fetch("/api/outlet/inventory", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: item.id, stock: parseInt(stock) })
+            });
+          }
+        }
         fetchDashboard();
         triggerGlobalRefresh();
       } catch (err) {

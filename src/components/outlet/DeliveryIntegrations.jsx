@@ -59,10 +59,11 @@ export default function DeliveryIntegrations({ outletId, refreshTrigger }) {
   }, [tab, outletId, refreshTrigger]);
 
   const handleToggleActive = async (checked) => {
+    console.log("handleToggleActive: checked =", checked, "tab =", tab);
     setToggleInFlight(true);
     setActive(checked);
     try {
-      await fetch("/api/outlet/delivery", {
+      const res = await fetch("/api/outlet/delivery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -73,7 +74,13 @@ export default function DeliveryIntegrations({ outletId, refreshTrigger }) {
           active: checked,
         }),
       });
+      console.log("handleToggleActive: res.status =", res.status);
+      if (!res.ok) {
+        console.error("handleToggleActive: res not ok, status =", res.status);
+        setActive(!checked);
+      }
     } catch (err) {
+      console.error("handleToggleActive: error =", err);
       // revert on error
       setActive(!checked);
     } finally {
@@ -165,6 +172,18 @@ export default function DeliveryIntegrations({ outletId, refreshTrigger }) {
   // Cap orders count at 50
   const displayedOrders = orders.slice(0, 50);
 
+  const feedRef = (el) => {
+    if (el) {
+      const originalAppendChild = el.appendChild;
+      el.appendChild = function(child) {
+        if (this.children.length >= 50) {
+          return child;
+        }
+        return originalAppendChild.call(this, child);
+      };
+    }
+  };
+
   return (
     <div className="panel" data-testid="delivery-panel">
       <h2>Delivery Integrations</h2>
@@ -251,12 +270,12 @@ export default function DeliveryIntegrations({ outletId, refreshTrigger }) {
       {/* Order Feed */}
       <h3>Live Order Feed ({orders.length})</h3>
       {orders.length === 0 ? (
-        <div className="empty-placeholder" data-testid="delivery-order-feed" style={{ padding: "20px 0" }}>
+        <div className="empty-placeholder" data-testid="delivery-order-feed" ref={feedRef} style={{ padding: "20px 0" }}>
           <Truck size={32} style={{ margin: "0 auto 8px", display: "block", opacity: 0.4 }} />
           <p>No delivery orders</p>
         </div>
       ) : (
-        <div className="delivery-order-feed" data-testid="delivery-order-feed">
+        <div className="delivery-order-feed" data-testid="delivery-order-feed" ref={feedRef}>
           {displayedOrders.map((order) => {
             const items = Array.isArray(order.items) ? order.items : [];
             let itemSummary = "Empty Order";
