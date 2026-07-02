@@ -6,6 +6,7 @@ import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "react-hot-toast";
 import InterceptorModal from "@/components/InterceptorModal";
+import { headers } from "next/headers";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -61,7 +62,11 @@ export const metadata = {
   }
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+  const isSubdomain = host.startsWith("admin.") || host.startsWith("outlet.") || host.startsWith("pos.");
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -87,10 +92,10 @@ export default function RootLayout({ children }) {
         <Toaster position="top-center" />
         <AuthProvider>
           <CartProvider>
-            <TopBar />
+            {!isSubdomain && <TopBar />}
             <InterceptorModal />
             {children}
-            <Footer />
+            {!isSubdomain && <Footer />}
           </CartProvider>
         </AuthProvider>
       </body>
