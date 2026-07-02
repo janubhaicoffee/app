@@ -19,7 +19,7 @@ export async function GET(request) {
       try {
         const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
         if (userData?.user) {
-          const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com")
+          const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com,hello@janubhai.com,help@janubhai.com")
             .split(",")
             .map(e => e.trim().toLowerCase());
           if (adminEmails.includes(userData.user.email?.toLowerCase())) {

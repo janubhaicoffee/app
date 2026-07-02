@@ -27,7 +27,7 @@ async function verifyAdmin(request) {
     user = supabaseUser;
   }
 
-  const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com").split(",").map(e => e.trim().toLowerCase());
+  const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com,hello@janubhai.com,help@janubhai.com").split(",").map(e => e.trim().toLowerCase());
   if (!adminEmails.includes(user.email?.toLowerCase())) return { error: "Forbidden", status: 403 };
 
   const supabase = supabaseAdmin;

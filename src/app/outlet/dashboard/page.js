@@ -72,7 +72,7 @@ export default function OutletDashboard() {
 
       let oid = sessionStorage.getItem("selected_outlet_id");
       if (!oid) {
-        if (session.user?.email !== "admin@janubhaicoffee.com" && session.user?.email !== "dummy-token-jwt-superadmin") {
+        if (!["admin@janubhaicoffee.com", "hello@janubhai.com", "help@janubhai.com", "dummy-token-jwt-superadmin"].includes(session.user?.email)) {
           try {
             const { data: staff } = await supabase
               .from("outlet_staff")
