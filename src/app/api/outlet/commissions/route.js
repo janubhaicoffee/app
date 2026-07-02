@@ -25,16 +25,24 @@ export async function GET(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: staff, error: staffError } = await supabaseAdmin
-      .from("outlet_staff")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("outlet_id", outletId)
-      .maybeSingle();
+    // Allow superadmins to view/modify commissions for all outlets
+    const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com")
+      .split(",")
+      .map(e => e.trim().toLowerCase());
+    const isSuperAdmin = adminEmails.includes(user.email?.toLowerCase());
 
-    if (staffError) throw staffError;
-    if (!staff) {
-      return NextResponse.json({ error: "Forbidden: not a staff member of this outlet" }, { status: 403 });
+    if (!isSuperAdmin) {
+      const { data: staff, error: staffError } = await supabaseAdmin
+        .from("outlet_staff")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("outlet_id", outletId)
+        .maybeSingle();
+
+      if (staffError) throw staffError;
+      if (!staff) {
+        return NextResponse.json({ error: "Forbidden: not a staff member of this outlet" }, { status: 403 });
+      }
     }
 
     if (isSummary) {

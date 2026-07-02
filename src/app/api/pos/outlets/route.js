@@ -12,23 +12,18 @@ export async function GET(request) {
 
     // Check if the user is a superadmin
     let isSuperAdmin = false;
-    if (userId === "mock-admin-uuid" || userId === "mock-non-admin-uuid") {
-      // In testing/mock environments, mock-admin-uuid is superadmin
-      isSuperAdmin = (userId === "mock-admin-uuid");
-    } else {
-      try {
-        const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
-        if (userData?.user) {
-          const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com,hello@janubhai.com,help@janubhai.com")
-            .split(",")
-            .map(e => e.trim().toLowerCase());
-          if (adminEmails.includes(userData.user.email?.toLowerCase())) {
-            isSuperAdmin = true;
-          }
+    try {
+      const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
+      if (userData?.user) {
+        const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com")
+          .split(",")
+          .map(e => e.trim().toLowerCase());
+        if (adminEmails.includes(userData.user.email?.toLowerCase())) {
+          isSuperAdmin = true;
         }
-      } catch (err) {
-        console.error("Error checking superadmin status in POS outlets:", err);
       }
+    } catch (err) {
+      console.error("Error checking superadmin status in POS outlets:", err);
     }
 
     if (isSuperAdmin) {
@@ -39,7 +34,7 @@ export async function GET(request) {
         .order("name", { ascending: true });
 
       if (outletsError) throw outletsError;
-      return NextResponse.json({ success: true, data: outlets || [] });
+      return NextResponse.json({ success: true, data: outlets || [], isSuperAdmin: true });
     }
 
     const { data: staffRecords, error: staffError } = await supabaseAdmin
@@ -65,7 +60,7 @@ export async function GET(request) {
 
     if (outletsError) throw outletsError;
 
-    return NextResponse.json({ success: true, data: outlets || [] });
+    return NextResponse.json({ success: true, data: outlets || [], isSuperAdmin: false });
   } catch (error) {
     console.error("POS Outlets GET error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -60,6 +60,27 @@ const navItems = [
   },
 ];
 
+const getSiteUrls = () => {
+  if (typeof window === "undefined") return { admin: "/admin", outlet: "/outlet", pos: "/pos" };
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+  const protocol = window.location.protocol;
+  
+  if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
+    const base = `${protocol}//${hostname}${port ? ":" + port : ""}`;
+    return {
+      admin: `${base}/admin`,
+      outlet: `${base}/outlet`,
+      pos: `${base}/pos`
+    };
+  } else {
+    return {
+      admin: "https://admin.janubhai.com",
+      outlet: "https://outlet.janubhai.com",
+      pos: "https://pos.janubhai.com"
+    };
+  }
+};
 export default function OutletSidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -71,6 +92,10 @@ export default function OutletSidebar() {
   const [expandedSections, setExpandedSections] = useState({});
   const [outletsList, setOutletsList] = useState([]);
   const [selectedOutletId, setSelectedOutletId] = useState("");
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [staffList, setStaffList] = useState([]);
+  const [impersonatedStaffId, setImpersonatedStaffId] = useState("self");
+  const [activeRole, setActiveRole] = useState("superuser");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,19 +109,35 @@ export default function OutletSidebar() {
             const body = await res.json();
             const list = body.data || [];
             setOutletsList(list);
+            setIsSuperAdmin(!!body.isSuperAdmin);
 
             let storedId = sessionStorage.getItem("selected_outlet_id");
+            let activeId = "";
             if (storedId && list.some(o => o.id === storedId)) {
               setSelectedOutletId(storedId);
+              activeId = storedId;
               const activeOutlet = list.find(o => o.id === storedId);
               setOutletName(activeOutlet.name);
             } else if (list.length > 0) {
               const defaultId = list[0].id;
               sessionStorage.setItem("selected_outlet_id", defaultId);
               setSelectedOutletId(defaultId);
+              activeId = defaultId;
               setOutletName(list[0].name);
               // Trigger a reload so all other pages on first load can read the newly set selected_outlet_id
               window.location.reload();
+            }
+
+            if (body.isSuperAdmin && activeId) {
+              try {
+                const staffRes = await fetch(`/api/outlet/staff?outletId=${activeId}`);
+                if (staffRes.ok) {
+                  const staffBody = await staffRes.json();
+                  setStaffList(staffBody.data || []);
+                }
+              } catch (err) {
+                console.error("Failed to query staff list:", err);
+              }
             }
           }
         } catch (err) {
@@ -105,6 +146,13 @@ export default function OutletSidebar() {
       }
     };
     fetchData();
+
+    if (typeof window !== "undefined") {
+      const impId = sessionStorage.getItem("impersonated_staff_id") || "self";
+      const impRole = sessionStorage.getItem("impersonated_role") || "superuser";
+      setImpersonatedStaffId(impId);
+      setActiveRole(impRole);
+    }
   }, []);
 
   useEffect(() => {
@@ -127,6 +175,11 @@ export default function OutletSidebar() {
 
   const handleOutletChange = (e) => {
     const newId = e.target.value;
+    if (newId === "create-new") {
+      const urls = getSiteUrls();
+      window.location.href = `${urls.admin}/outlets`;
+      return;
+    }
     sessionStorage.setItem("selected_outlet_id", newId);
     setSelectedOutletId(newId);
     const activeOutlet = outletsList.find(o => o.id === newId);
@@ -134,46 +187,162 @@ export default function OutletSidebar() {
     window.location.reload();
   };
 
+  const handleStaffChange = (e) => {
+    const value = e.target.value;
+    if (value === "self") {
+      sessionStorage.removeItem("impersonated_staff_id");
+      sessionStorage.removeItem("impersonated_role");
+      setImpersonatedStaffId("self");
+      setActiveRole("superuser");
+    } else {
+      const staffMember = staffList.find(s => s.id === value);
+      if (staffMember) {
+        sessionStorage.setItem("impersonated_staff_id", staffMember.id);
+        sessionStorage.setItem("impersonated_role", staffMember.role);
+        setImpersonatedStaffId(staffMember.id);
+        setActiveRole(staffMember.role);
+      }
+    }
+    window.location.reload();
+  };
+
+  const getFilteredNavItems = (role) => {
+    if (!role || role === "superuser" || role === "manager" || role === "superadmin") {
+      return navItems;
+    }
+    const restrictedSections = ["Analytics", "Operations", "Financials", "Settings"];
+    return navItems.filter(group => !restrictedSections.includes(group.section));
+  };
+
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
-
   const sidebarContent = (
     <>
-      <div className="outlet-sidebar-header">
-        <div className="outlet-sidebar-brand">
-          <Coffee size={24} />
-          <div className="outlet-sidebar-brand-text">
-            <span className="outlet-sidebar-title">Janu Bhai</span>
-            <span className="outlet-sidebar-subtitle">Coffee</span>
+      <div className="outlet-sidebar-header" style={{ padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src="/logo.png" alt="Janu Bhai Logo" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+            {!isSuperAdmin && (
+              <div className="outlet-sidebar-brand-text">
+                <span className="outlet-sidebar-title" style={{ fontFamily: 'var(--font-playfair), serif', fontWeight: '800', fontSize: '16px' }}>Janu Bhai</span>
+              </div>
+            )}
           </div>
-        </div>
-        {outletsList.length > 1 ? (
-          <div className="outlet-sidebar-selector">
-            <Store size={14} />
+
+          {isSuperAdmin && (
+            /* Site Switcher */
             <select
-              value={selectedOutletId}
-              onChange={handleOutletChange}
-              className="outlet-select-dropdown"
+              value={getSiteUrls().outlet}
+              onChange={(e) => { window.location.href = e.target.value; }}
+              style={{
+                padding: '5px 8px',
+                fontSize: '11px',
+                fontWeight: '700',
+                borderRadius: '4px',
+                border: '1.5px solid var(--border-color, #E6D5B8)',
+                background: 'var(--primary-color, #4A3B32)',
+                color: '#F8F1E4',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
             >
-              {outletsList.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
+              <option value={getSiteUrls().outlet}>OUTLET</option>
+              <option value={getSiteUrls().admin}>ADMIN</option>
+              <option value={getSiteUrls().pos}>POS</option>
             </select>
+          )}
+        </div>
+
+        {isSuperAdmin && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+            <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
+              {/* Outlet Switcher */}
+              <select
+                value={selectedOutletId}
+                onChange={handleOutletChange}
+                style={{
+                  flex: 1,
+                  padding: '5px 8px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  borderRadius: '4px',
+                  border: '1.5px solid var(--border-color, #E6D5B8)',
+                  background: 'var(--primary-color, #4A3B32)',
+                  color: '#F8F1E4',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  maxWidth: '50%'
+                }}
+              >
+                <option value="create-new">➕ CREATE NEW</option>
+                {outletsList.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+
+              {/* Staff Switcher */}
+              <select
+                value={impersonatedStaffId}
+                onChange={handleStaffChange}
+                style={{
+                  flex: 1,
+                  padding: '5px 8px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  borderRadius: '4px',
+                  border: '1.5px solid var(--border-color, #E6D5B8)',
+                  background: 'var(--primary-color, #4A3B32)',
+                  color: '#F8F1E4',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  maxWidth: '50%'
+                }}
+              >
+                <option value="self">👑 SELF</option>
+                {staffList.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    👤 {s.display_name.toUpperCase()} ({s.role.toUpperCase()})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-        ) : outletName ? (
-          <div className="outlet-sidebar-outlet-name">
-            <Store size={14} />
-            <span>{outletName}</span>
+        )}
+
+        {!isSuperAdmin && (
+          <div style={{ width: '100%' }}>
+            {outletsList.length > 1 ? (
+              <div className="outlet-sidebar-selector">
+                <Store size={14} />
+                <select
+                  value={selectedOutletId}
+                  onChange={handleOutletChange}
+                  className="outlet-select-dropdown"
+                >
+                  {outletsList.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : outletName ? (
+              <div className="outlet-sidebar-outlet-name">
+                <Store size={14} />
+                <span>{outletName}</span>
+              </div>
+            ) : null}
           </div>
-        ) : null}
+        )}
+
         <div className="outlet-sidebar-time">{currentTime || "..."}</div>
       </div>
 
       <nav className="outlet-sidebar-nav">
-        {navItems.map((group) => (
+        {getFilteredNavItems(activeRole).map((group) => (
           <div key={group.section} className="outlet-sidebar-group">
             <button
               className="outlet-sidebar-section-toggle"

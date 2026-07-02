@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -29,49 +29,47 @@ if (typeof window !== 'undefined' && !window.__outlet_fetch_monkeypatched) {
 export default function OutletGuard({ children }) {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [errorBanner, setErrorBanner] = useState(null);
+  const verifiedTokenRef = useRef("");
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      let session = null;
-      try {
-        const { data: { session: s } } = await supabase.auth.getSession();
-        session = s;
-      } catch (_) {}
+    let active = true;
+    let subscription = null;
 
+    const handleSession = async (session) => {
+      if (!active) return;
       if (!session) {
-        try {
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
-              const raw = localStorage.getItem(key);
-              if (raw) {
-                session = JSON.parse(raw);
-                break;
-              }
-            }
-          }
-        } catch (_) {}
+        setIsAuthorized(false);
+        verifiedTokenRef.current = "";
+        router.push("/outlet");
+        return;
       }
 
-      if (!session) {
-        router.push("/auth/login?redirect=/outlet");
+      const token = session.access_token;
+      if (token === verifiedTokenRef.current) {
+        setIsAuthorized(true);
         return;
       }
 
       try {
         const response = await fetch('/api/admin/data?type=check', {
           headers: {
-            'Authorization': `Bearer ${session.access_token}`
+            'Authorization': `Bearer ${token}`
           }
         });
 
+        if (!active) return;
+
         if (response.status === 401) {
-          router.push("/auth/login?redirect=/outlet");
+          setIsAuthorized(false);
+          verifiedTokenRef.current = "";
+          router.push("/outlet");
           return;
         }
 
         if (response.status === 403) {
+          setIsAuthorized(false);
+          verifiedTokenRef.current = "";
           router.push("/");
           return;
         }
@@ -82,18 +80,45 @@ export default function OutletGuard({ children }) {
         }
 
         const data = await response.json();
+        if (!active) return;
+
         if (data.isAdmin) {
+          verifiedTokenRef.current = token;
           setIsAuthorized(true);
         } else {
+          setIsAuthorized(false);
+          verifiedTokenRef.current = "";
           router.push("/");
         }
       } catch (err) {
         console.error("Outlet auth check failed", err);
-        setErrorBanner("Internal Server Error during verification.");
+        if (active) {
+          setErrorBanner("Internal Server Error during verification.");
+        }
       }
     };
 
-    checkAuth();
+    // 1. Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (active) {
+        handleSession(session);
+      }
+    });
+
+    // 2. Listen for auth state changes
+    const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) {
+        handleSession(session);
+      }
+    });
+    subscription = sub;
+
+    return () => {
+      active = false;
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
   }, [router]);
 
   if (errorBanner) {
@@ -111,8 +136,8 @@ export default function OutletGuard({ children }) {
   }
 
   if (!isAuthorized) {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-primary)' }}>
-      <h2>Checking Admin Credentials...</h2>
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-primary, #F8F1E4)' }}>
+      <h2 style={{ fontFamily: 'var(--font-playfair), serif', color: 'var(--primary-color, #3E2723)' }}>Checking Admin Credentials...</h2>
     </div>;
   }
 

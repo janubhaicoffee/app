@@ -32,12 +32,17 @@ export default function OutletDashboard() {
   const [lowStockItems, setLowStockItems] = useState([]);
   const [timeLabel, setTimeLabel] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activeRole, setActiveRole] = useState("superuser");
   const triggerGlobalRefresh = () => setRefreshKey(prev => prev + 1);
 
   useEffect(() => {
     setTimeLabel(new Date().toLocaleDateString("en-IN", {
       weekday: "long", year: "numeric", month: "long", day: "numeric"
     }));
+    if (typeof window !== "undefined") {
+      const impRole = sessionStorage.getItem("impersonated_role") || "superuser";
+      setActiveRole(impRole);
+    }
   }, []);
 
   const fetchDashboard = useCallback(async () => {
@@ -72,8 +77,18 @@ export default function OutletDashboard() {
 
       let oid = sessionStorage.getItem("selected_outlet_id");
       if (!oid) {
-        if (!["admin@janubhaicoffee.com", "hello@janubhai.com", "help@janubhai.com", "dummy-token-jwt-superadmin"].includes(session.user?.email)) {
-          try {
+        try {
+          const res = await fetch(`/api/pos/outlets?userId=${session.user.id}`);
+          if (res.ok) {
+            const body = await res.json();
+            const list = body.data || [];
+            if (list.length > 0) {
+              oid = list[0].id;
+              sessionStorage.setItem("selected_outlet_id", oid);
+            }
+          }
+          
+          if (!oid) {
             const { data: staff } = await supabase
               .from("outlet_staff")
               .select("outlet_id")
@@ -83,9 +98,9 @@ export default function OutletDashboard() {
               oid = staff.outlet_id;
               sessionStorage.setItem("selected_outlet_id", oid);
             }
-          } catch (err) {
-            console.error("Failed to query outlet_staff from Supabase:", err);
           }
+        } catch (err) {
+          console.error("Failed to query outlet ID fallback:", err);
         }
       }
       setOutletId(oid);
@@ -253,13 +268,15 @@ export default function OutletDashboard() {
       </div>
 
       <div className="outlet-stats-grid">
-        <div className="outlet-stat-card">
-          <div className="outlet-stat-icon green"><DollarSign size={24} /></div>
-          <div className="outlet-stat-info">
-            <h3>{formatCurrency(stats.todayRevenue)}</h3>
-            <p>Today&apos;s Revenue</p>
+        {["superuser", "manager", "superadmin"].includes(activeRole) && (
+          <div className="outlet-stat-card">
+            <div className="outlet-stat-icon green"><DollarSign size={24} /></div>
+            <div className="outlet-stat-info">
+              <h3>{formatCurrency(stats.todayRevenue)}</h3>
+              <p>Today&apos;s Revenue</p>
+            </div>
           </div>
-        </div>
+        )}
         <div className="outlet-stat-card">
           <div className="outlet-stat-icon blue"><ShoppingCart size={24} /></div>
           <div className="outlet-stat-info">
@@ -290,46 +307,60 @@ export default function OutletDashboard() {
         <button className="outlet-quick-action-btn" onClick={() => router.push("/outlet/operations/inventory")}>
           <Package size={24} /> Inventory
         </button>
-        <button className="outlet-quick-action-btn" onClick={() => router.push("/outlet/operations/expenses")}>
-          <DollarSign size={24} /> Add Expense
-        </button>
-        <button className="outlet-quick-action-btn" onClick={() => router.push("/outlet/financials/pnl")}>
-          <BarChart3 size={24} /> P&L Report
-        </button>
-        <button className="outlet-quick-action-btn" onClick={() => router.push("/outlet/operations/staff")}>
-          <Users size={24} /> Staff
-        </button>
-        <button className="outlet-quick-action-btn" onClick={() => router.push("/outlet/analytics/sales")}>
-          <TrendingUp size={24} /> Analytics
-        </button>
+        {["superuser", "manager", "superadmin"].includes(activeRole) && (
+          <>
+            <button className="outlet-quick-action-btn" onClick={() => router.push("/outlet/operations/expenses")}>
+              <DollarSign size={24} /> Add Expense
+            </button>
+            <button className="outlet-quick-action-btn" onClick={() => router.push("/outlet/financials/pnl")}>
+              <BarChart3 size={24} /> P&L Report
+            </button>
+            <button className="outlet-quick-action-btn" onClick={() => router.push("/outlet/operations/staff")}>
+              <Users size={24} /> Staff
+            </button>
+            <button className="outlet-quick-action-btn" onClick={() => router.push("/outlet/analytics/sales")}>
+              <TrendingUp size={24} /> Analytics
+            </button>
+          </>
+        )}
       </div>
 
-      <Accounting outletId={outletId} onTransactionAdded={triggerGlobalRefresh} refreshTrigger={refreshKey} />
+      {["superuser", "manager", "superadmin"].includes(activeRole) && (
+        <Accounting outletId={outletId} onTransactionAdded={triggerGlobalRefresh} refreshTrigger={refreshKey} />
+      )}
 
-      <div className="outlet-grid-2">
-        <Operations outletId={outletId} refreshTrigger={refreshKey} onTimezoneChanged={triggerGlobalRefresh} />
-        <CustomerProfiling outletId={outletId} refreshTrigger={refreshKey} />
-      </div>
+      {["superuser", "manager", "superadmin"].includes(activeRole) ? (
+        <div className="outlet-grid-2">
+          <Operations outletId={outletId} refreshTrigger={refreshKey} onTimezoneChanged={triggerGlobalRefresh} />
+          <CustomerProfiling outletId={outletId} refreshTrigger={refreshKey} />
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px", marginBottom: "2rem" }}>
+          <CustomerProfiling outletId={outletId} refreshTrigger={refreshKey} />
+        </div>
+      )}
 
       <div className="outlet-grid-2">
         <DeliveryIntegrations outletId={outletId} refreshTrigger={refreshKey} />
         <Surveillance outletId={outletId} refreshTrigger={refreshKey} />
       </div>
 
-      <div className="outlet-chart-container">
-        <h2>Revenue (Last 7 Days)</h2>
-        <div className="outlet-chart-body">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={revenueChart.length > 0 ? revenueChart : [{ date: "No data", revenue: 0 }]}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => "₹" + v} />
-              <Tooltip formatter={(v) => formatCurrency(v)} />
-              <Area type="monotone" dataKey="revenue" stroke="#38a169" fill="#f0fff4" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
+      {["superuser", "manager", "superadmin"].includes(activeRole) && (
+        <div className="outlet-chart-container">
+          <h2>Revenue (Last 7 Days)</h2>
+          <div className="outlet-chart-body">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={revenueChart.length > 0 ? revenueChart : [{ date: "No data", revenue: 0 }]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => "₹" + v} />
+                <Tooltip formatter={(v) => formatCurrency(v)} />
+                <Area type="monotone" dataKey="revenue" stroke="#38a169" fill="#f0fff4" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="outlet-grid-2">
         <div className="outlet-card">

@@ -10,24 +10,11 @@ async function verifyAdmin(request) {
   const token = authHeader.split(" ")[1];
   const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  let user;
-  if (token === "dummy-token-jwt-superadmin") {
-    user = {
-      id: "mock-admin-uuid",
-      email: "admin@janubhaicoffee.com",
-    };
-  } else if (token.startsWith("dummy-token")) {
-    user = {
-      id: "mock-non-admin-uuid",
-      email: "test@user.com",
-    };
-  } else {
-    const { data: { user: supabaseUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    if (authError || !supabaseUser) return { error: "Invalid token", status: 401 };
-    user = supabaseUser;
-  }
+  const { data: { user: supabaseUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
+  if (authError || !supabaseUser) return { error: "Invalid token", status: 401 };
+  const user = supabaseUser;
 
-  const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com,hello@janubhai.com,help@janubhai.com").split(",").map(e => e.trim().toLowerCase());
+  const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com").split(",").map(e => e.trim().toLowerCase());
   if (!adminEmails.includes(user.email?.toLowerCase())) return { error: "Forbidden", status: 403 };
 
   const supabase = supabaseAdmin;
