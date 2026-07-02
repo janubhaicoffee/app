@@ -45,8 +45,15 @@ export function AuthProvider({ children }) {
   }, [fetchCustomerProfile]);
 
   const signInWithOtp = async (phone) => {
+    let formattedPhone = phone.replace(/[\s()-]/g, '');
+    if (/^\d{10}$/.test(formattedPhone)) {
+      formattedPhone = `+91${formattedPhone}`;
+    } else if (/^\d+$/.test(formattedPhone) && !formattedPhone.startsWith('+')) {
+      formattedPhone = `+${formattedPhone}`;
+    }
+
     const { error } = await supabase.auth.signInWithOtp({
-      phone,
+      phone: formattedPhone,
       options: {
         shouldCreateUser: true,
       }
@@ -55,8 +62,15 @@ export function AuthProvider({ children }) {
   };
 
   const verifyOtp = async (phone, token) => {
+    let formattedPhone = phone.replace(/[\s()-]/g, '');
+    if (/^\d{10}$/.test(formattedPhone)) {
+      formattedPhone = `+91${formattedPhone}`;
+    } else if (/^\d+$/.test(formattedPhone) && !formattedPhone.startsWith('+')) {
+      formattedPhone = `+${formattedPhone}`;
+    }
+
     const { data, error } = await supabase.auth.verifyOtp({
-      phone,
+      phone: formattedPhone,
       token,
       type: 'sms',
     });

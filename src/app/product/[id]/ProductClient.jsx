@@ -789,11 +789,7 @@ export default function ProductClient({ initialProduct }) {
           border-top: 1px solid #f0ebe5; padding-top: 1rem;
         }
 
-        .mobile-sticky-bar {
-          position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-          background: var(--primary-color); color: #fff; text-align: center;
-          padding: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
+
         .price-compare {
           text-decoration: line-through; color: #999; font-size: 1.1rem;
           margin-left: 8px; font-weight: 400;

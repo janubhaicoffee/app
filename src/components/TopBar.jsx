@@ -47,7 +47,7 @@ export default function TopBar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/outlet')) return null;
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return null;
 
   return (
     <header className="topbar">
@@ -69,16 +69,13 @@ export default function TopBar() {
         <nav className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
           <div className="mobile-menu-header">
             <Image src="/logo.png" alt="Janu Bhai Logo" width={50} height={50} />
-            <button className="mobile-close-btn" onClick={() => setIsMobileMenuOpen(false)}>
-              <X size={24} />
-            </button>
           </div>
 
           <Link href="/product/instantcoffee" className="nav-link">
             Instant Coffee
           </Link>
           
-          <Link href={outletHref} className="nav-link">
+          <Link href={outletHref} className="nav-link mobile-only-link">
             Outlet Management
           </Link>
 
@@ -88,6 +85,9 @@ export default function TopBar() {
         <div className="topbar-actions">
           <Link href={user ? "/account" : "/auth/login"} className="action-icon">
             <User size={24} color="var(--text-primary)" />
+          </Link>
+          <Link href={outletHref} className="outlet-btn">
+            Outlet Management
           </Link>
           <Link href="/cart" className="action-icon cart-icon">
             <ShoppingBag size={24} color="var(--text-primary)" />

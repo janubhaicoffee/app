@@ -51,7 +51,7 @@ export async function POST(request) {
     let subtotal = 0;
     const orderItems = items.map(item => {
       const qty = parseInt(item.quantity) || 1;
-      const price = parseFloat(item.price) || 0;
+      const price = parseFloat(item.price) || parseFloat(item.unit_price) || 0;
       const total = qty * price;
       subtotal += total;
       return {

@@ -69,20 +69,39 @@ export default function OutletSidebar() {
   const [userName, setUserName] = useState("");
   const [currentTime, setCurrentTime] = useState("");
   const [expandedSections, setExpandedSections] = useState({});
+  const [outletsList, setOutletsList] = useState([]);
+  const [selectedOutletId, setSelectedOutletId] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setUserName(session.user.email?.split("@")[0] || "User");
+        
         try {
-          const { data: staff } = await supabase
-            .from("outlet_staff")
-            .select("outlet:outlets(name)")
-            .eq("user_id", session.user.id)
-            .maybeSingle();
-          if (staff?.outlet?.name) setOutletName(staff.outlet.name);
-        } catch {}
+          const res = await fetch(`/api/pos/outlets?userId=${session.user.id}`);
+          if (res.ok) {
+            const body = await res.json();
+            const list = body.data || [];
+            setOutletsList(list);
+
+            let storedId = sessionStorage.getItem("selected_outlet_id");
+            if (storedId && list.some(o => o.id === storedId)) {
+              setSelectedOutletId(storedId);
+              const activeOutlet = list.find(o => o.id === storedId);
+              setOutletName(activeOutlet.name);
+            } else if (list.length > 0) {
+              const defaultId = list[0].id;
+              sessionStorage.setItem("selected_outlet_id", defaultId);
+              setSelectedOutletId(defaultId);
+              setOutletName(list[0].name);
+              // Trigger a reload so all other pages on first load can read the newly set selected_outlet_id
+              window.location.reload();
+            }
+          }
+        } catch (err) {
+          console.error("Failed to query outlets in sidebar:", err);
+        }
       }
     };
     fetchData();
@@ -106,6 +125,15 @@ export default function OutletSidebar() {
     router.push("/auth/login?redirect=/outlet");
   };
 
+  const handleOutletChange = (e) => {
+    const newId = e.target.value;
+    sessionStorage.setItem("selected_outlet_id", newId);
+    setSelectedOutletId(newId);
+    const activeOutlet = outletsList.find(o => o.id === newId);
+    if (activeOutlet) setOutletName(activeOutlet.name);
+    window.location.reload();
+  };
+
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
@@ -120,12 +148,27 @@ export default function OutletSidebar() {
             <span className="outlet-sidebar-subtitle">Coffee</span>
           </div>
         </div>
-        {outletName && (
+        {outletsList.length > 1 ? (
+          <div className="outlet-sidebar-selector">
+            <Store size={14} />
+            <select
+              value={selectedOutletId}
+              onChange={handleOutletChange}
+              className="outlet-select-dropdown"
+            >
+              {outletsList.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : outletName ? (
           <div className="outlet-sidebar-outlet-name">
             <Store size={14} />
             <span>{outletName}</span>
           </div>
-        )}
+        ) : null}
         <div className="outlet-sidebar-time">{currentTime || "..."}</div>
       </div>
 
@@ -207,16 +250,17 @@ export default function OutletSidebar() {
           left: 0;
           bottom: 0;
           width: 260px;
-          background: #1a1a2e;
+          background: var(--primary-color, #3E2723);
           color: #e0e0e0;
           display: flex;
           flex-direction: column;
           z-index: 100;
           overflow: hidden;
+          border-right: 1px solid var(--border-color, #D7CCC8);
         }
         .outlet-sidebar-header {
           padding: 20px 16px 12px;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
+          border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .outlet-sidebar-brand {
           display: flex;
@@ -225,21 +269,22 @@ export default function OutletSidebar() {
           margin-bottom: 12px;
         }
         .outlet-sidebar-brand svg {
-          color: #f59e0b;
+          color: var(--accent-gold, #FFB300);
         }
         .outlet-sidebar-brand-text {
           display: flex;
           flex-direction: column;
         }
         .outlet-sidebar-title {
+          font-family: var(--font-playfair), serif;
           font-size: 18px;
           font-weight: 700;
-          color: #fff;
+          color: var(--accent-gold, #FFB300);
           line-height: 1.2;
         }
         .outlet-sidebar-subtitle {
           font-size: 11px;
-          color: #f59e0b;
+          color: #ccc;
           text-transform: uppercase;
           letter-spacing: 1px;
         }
@@ -248,19 +293,49 @@ export default function OutletSidebar() {
           align-items: center;
           gap: 6px;
           font-size: 12px;
-          color: #94a3b8;
+          color: #fff;
           padding: 6px 10px;
-          background: rgba(255,255,255,0.05);
+          background: rgba(255,255,255,0.08);
           border-radius: 6px;
           margin-bottom: 8px;
         }
         .outlet-sidebar-outlet-name svg {
-          color: #f59e0b;
+          color: var(--accent-gold, #FFB300);
           flex-shrink: 0;
+        }
+        .outlet-sidebar-selector {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          color: #fff;
+          padding: 6px 10px;
+          background: rgba(255,255,255,0.08);
+          border-radius: 6px;
+          margin-bottom: 8px;
+          border: 1px solid rgba(255,255,255,0.15);
+        }
+        .outlet-sidebar-selector svg {
+          color: var(--accent-gold, #FFB300);
+          flex-shrink: 0;
+        }
+        .outlet-select-dropdown {
+          background: transparent;
+          border: none;
+          color: #fff;
+          font-size: 12px;
+          font-weight: 600;
+          width: 100%;
+          outline: none;
+          cursor: pointer;
+        }
+        .outlet-select-dropdown option {
+          background: var(--primary-color, #3E2723);
+          color: #fff;
         }
         .outlet-sidebar-time {
           font-size: 11px;
-          color: #64748b;
+          color: rgba(255,255,255,0.5);
           font-variant-numeric: tabular-nums;
         }
         .outlet-sidebar-nav {
@@ -286,15 +361,15 @@ export default function OutletSidebar() {
           padding: 8px 16px;
           border: none;
           background: transparent;
-          color: #64748b;
+          color: rgba(255,255,255,0.4);
           font-size: 10px;
           text-transform: uppercase;
           letter-spacing: 1px;
           cursor: pointer;
-          font-weight: 600;
+          font-weight: 700;
         }
         .outlet-sidebar-section-toggle:hover {
-          color: #94a3b8;
+          color: #fff;
         }
         .outlet-sidebar-chevron {
           transition: transform 0.2s;
@@ -315,7 +390,7 @@ export default function OutletSidebar() {
           align-items: center;
           gap: 12px;
           padding: 10px 16px 10px 24px;
-          color: #94a3b8;
+          color: rgba(255,255,255,0.8);
           text-decoration: none;
           font-size: 14px;
           transition: all 0.15s;
@@ -323,14 +398,14 @@ export default function OutletSidebar() {
           position: relative;
         }
         .outlet-sidebar-link:hover {
-          color: #e0e0e0;
-          background: rgba(255,255,255,0.04);
+          color: var(--accent-gold, #FFB300);
+          background: rgba(255,255,255,0.06);
         }
         .outlet-sidebar-link.active {
-          color: #fff;
-          background: rgba(59,130,246,0.12);
-          border-left-color: #3b82f6;
-          font-weight: 500;
+          color: var(--accent-gold, #FFB300);
+          background: rgba(255,255,255,0.15);
+          border-left-color: var(--accent-gold, #FFB300);
+          font-weight: 600;
         }
         .outlet-sidebar-link.active::before {
           content: "";
@@ -340,12 +415,12 @@ export default function OutletSidebar() {
           transform: translateY(-50%);
           width: 3px;
           height: 20px;
-          background: #3b82f6;
+          background: var(--accent-gold, #FFB300);
           border-radius: 0 4px 4px 0;
         }
         .outlet-sidebar-footer {
           padding: 12px 16px;
-          border-top: 1px solid rgba(255,255,255,0.06);
+          border-top: 1px solid rgba(255,255,255,0.1);
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -359,13 +434,13 @@ export default function OutletSidebar() {
           width: 32px;
           height: 32px;
           border-radius: 50%;
-          background: #3b82f6;
-          color: #fff;
+          background: var(--accent-gold, #FFB300);
+          color: var(--primary-color, #3E2723);
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 13px;
-          font-weight: 600;
+          font-weight: 700;
         }
         .outlet-sidebar-user-info {
           display: flex;
@@ -374,16 +449,16 @@ export default function OutletSidebar() {
         .outlet-sidebar-user-name {
           font-size: 13px;
           color: #e0e0e0;
-          font-weight: 500;
+          font-weight: 600;
         }
         .outlet-sidebar-user-role {
           font-size: 11px;
-          color: #64748b;
+          color: rgba(255,255,255,0.5);
         }
         .outlet-sidebar-logout {
           background: rgba(255,255,255,0.08);
           border: none;
-          color: #94a3b8;
+          color: rgba(255,255,255,0.6);
           width: 34px;
           height: 34px;
           border-radius: 8px;
@@ -394,8 +469,8 @@ export default function OutletSidebar() {
           transition: all 0.15s;
         }
         .outlet-sidebar-logout:hover {
-          background: rgba(239,68,68,0.2);
-          color: #ef4444;
+          background: rgba(255, 107, 107, 0.1);
+          color: #ff6b6b;
         }
         .outlet-mobile-menu-btn {
           display: none;
@@ -403,9 +478,9 @@ export default function OutletSidebar() {
           top: 12px;
           left: 12px;
           z-index: 200;
-          background: #1a1a2e;
+          background: var(--primary-color, #3E2723);
           color: #fff;
-          border: none;
+          border: 1px solid var(--border-color, #D7CCC8);
           width: 40px;
           height: 40px;
           border-radius: 8px;
@@ -423,8 +498,9 @@ export default function OutletSidebar() {
         .outlet-mobile-sidebar {
           width: 280px;
           height: 100vh;
-          background: #1a1a2e;
+          background: var(--primary-color, #3E2723);
           position: relative;
+          border-right: 1px solid var(--border-color, #D7CCC8);
         }
         .outlet-mobile-close {
           position: absolute;

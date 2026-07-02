@@ -29,9 +29,13 @@ export default function SalesAnalytics() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const { data: staff } = await supabase
-        .from("outlet_staff").select("outlet_id").eq("user_id", session.user.id).maybeSingle();
-      const outletId = staff?.outlet_id;
+      let outletId = sessionStorage.getItem("selected_outlet_id");
+      if (!outletId) {
+        const { data: staff } = await supabase
+          .from("outlet_staff").select("outlet_id").eq("user_id", session.user.id).maybeSingle();
+        outletId = staff?.outlet_id;
+        if (outletId) sessionStorage.setItem("selected_outlet_id", outletId);
+      }
 
       const endDate = new Date().toISOString().split("T")[0];
       let startDate;

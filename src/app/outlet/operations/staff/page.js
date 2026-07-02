@@ -37,8 +37,12 @@ export default function StaffPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const { data: staffRec } = await supabase.from("outlet_staff").select("outlet_id").eq("user_id", session.user.id).maybeSingle();
-      const oid = staffRec?.outlet_id;
+      let oid = sessionStorage.getItem("selected_outlet_id");
+      if (!oid) {
+        const { data: staffRec } = await supabase.from("outlet_staff").select("outlet_id").eq("user_id", session.user.id).maybeSingle();
+        oid = staffRec?.outlet_id;
+        if (oid) sessionStorage.setItem("selected_outlet_id", oid);
+      }
       setOutletId(oid);
 
       const params = oid ? `?outletId=${oid}` : "";

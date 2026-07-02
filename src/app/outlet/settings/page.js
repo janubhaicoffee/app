@@ -26,6 +26,9 @@ export default function SettingsPage() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
 
+        let oid = sessionStorage.getItem("selected_outlet_id");
+        let outletData = null;
+
         const { data: staff } = await supabase
           .from("outlet_staff")
           .select("outlet_id, outlet:outlets(*)")
@@ -33,8 +36,22 @@ export default function SettingsPage() {
           .maybeSingle();
 
         if (staff) {
-          setOutletId(staff.outlet_id);
-          const o = staff.outlet || {};
+          if (!oid) oid = staff.outlet_id;
+          outletData = staff.outlet;
+        }
+
+        if (oid) {
+          setOutletId(oid);
+          if (!outletData) {
+            try {
+              const { data: o } = await supabase.from("outlets").select("*").eq("id", oid).maybeSingle();
+              outletData = o;
+            } catch (_) {}
+          }
+        }
+
+        if (outletData) {
+          const o = outletData;
           setForm(prev => ({
             ...prev,
             name: o.name || "",

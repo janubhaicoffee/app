@@ -192,6 +192,35 @@
   transform: rotate(90deg);
 }
 
+/* Response/Utility layout classes */
+.mobile-only-link {
+  display: none !important;
+}
+
+.outlet-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 2px solid var(--text-primary);
+  border-radius: 4px;
+  font-family: var(--font-playfair), serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.outlet-btn:hover {
+  background-color: var(--text-primary);
+  color: var(--bg-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(62, 39, 35, 0.15);
+}
+
 @media (max-width: 768px) {
   .mobile-menu-btn {
     display: flex;
@@ -279,5 +308,13 @@
   
   .topbar-container {
     padding: 0 15px;
+  }
+  
+  .mobile-only-link {
+    display: flex !important;
+  }
+  
+  .outlet-btn {
+    display: none !important;
   }
 }

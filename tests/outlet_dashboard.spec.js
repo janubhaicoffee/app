@@ -461,7 +461,7 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
 
   test('38. Verify TopBar link points to correct URL dynamically based on environment.', async ({ page }) => {
     await page.goto('/');
-    const link = page.locator('a:has-text("Outlet Management")');
+    const link = page.locator('a:has-text("Outlet Management")').first();
     const href = await link.getAttribute('href');
     expect(href).toContain('/outlet');
   });

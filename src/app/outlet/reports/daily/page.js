@@ -24,16 +24,32 @@ export default function DailyReport() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      let oid = sessionStorage.getItem("selected_outlet_id");
+      let oName = "";
+
       const { data: staffRec } = await supabase
         .from("outlet_staff")
         .select("outlet_id, outlet:outlets(name)")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
-      if (!staffRec) return;
-      const oid = staffRec.outlet_id;
-      setOutletId(oid);
-      setOutletName(staffRec.outlet?.name || "");
+      if (staffRec) {
+        if (!oid) oid = staffRec.outlet_id;
+        oName = staffRec.outlet?.name || "";
+      }
+
+      if (oid) {
+        if (!oName) {
+          try {
+            const { data: outlet } = await supabase.from("outlets").select("name").eq("id", oid).maybeSingle();
+            if (outlet) oName = outlet.name;
+          } catch (_) {}
+        }
+        setOutletId(oid);
+        setOutletName(oName);
+      } else {
+        return;
+      }
 
       const [ordersRes, expensesRes, dailyRes, staffRes, attRes] = await Promise.allSettled([
         fetch(`/api/pos/orders?outletId=${oid}&date=${date}&limit=500`),

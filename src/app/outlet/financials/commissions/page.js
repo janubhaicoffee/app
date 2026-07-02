@@ -36,20 +36,25 @@ export default function CommissionsPage() {
         return;
       }
 
-      const { data: staff, error: staffErr } = await supabase
-        .from("outlet_staff")
-        .select("outlet_id")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
+      let oid = sessionStorage.getItem("selected_outlet_id");
+      if (!oid) {
+        const { data: staff, error: staffErr } = await supabase
+          .from("outlet_staff")
+          .select("outlet_id")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
 
-      if (staffErr) throw staffErr;
-      if (!staff?.outlet_id) {
+        if (staffErr) throw staffErr;
+        oid = staff?.outlet_id;
+        if (oid) sessionStorage.setItem("selected_outlet_id", oid);
+      }
+
+      if (!oid) {
         setError("No outlet assigned to your account");
         setLoading(false);
         return;
       }
 
-      const oid = staff.outlet_id;
       setOutletId(oid);
 
       const authHeaders = {

@@ -70,17 +70,22 @@ export default function OutletDashboard() {
         return;
       }
 
-      let oid = null;
-      if (session.user?.email !== "admin@janubhaicoffee.com" && session.user?.email !== "dummy-token-jwt-superadmin") {
-        try {
-          const { data: staff } = await supabase
-            .from("outlet_staff")
-            .select("outlet_id")
-            .eq("user_id", session.user.id)
-            .maybeSingle();
-          if (staff) oid = staff.outlet_id;
-        } catch (err) {
-          console.error("Failed to query outlet_staff from Supabase:", err);
+      let oid = sessionStorage.getItem("selected_outlet_id");
+      if (!oid) {
+        if (session.user?.email !== "admin@janubhaicoffee.com" && session.user?.email !== "dummy-token-jwt-superadmin") {
+          try {
+            const { data: staff } = await supabase
+              .from("outlet_staff")
+              .select("outlet_id")
+              .eq("user_id", session.user.id)
+              .maybeSingle();
+            if (staff) {
+              oid = staff.outlet_id;
+              sessionStorage.setItem("selected_outlet_id", oid);
+            }
+          } catch (err) {
+            console.error("Failed to query outlet_staff from Supabase:", err);
+          }
         }
       }
       setOutletId(oid);
