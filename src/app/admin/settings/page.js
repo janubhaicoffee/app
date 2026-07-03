@@ -18,6 +18,11 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const [admins, setAdmins] = useState([]);
+  const [adminForm, setAdminForm] = useState({ name: '', email: '', phone: '' });
+  const [adminSaving, setAdminSaving] = useState(false);
+  const [adminError, setAdminError] = useState('');
+
   async function fetchSettings() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -36,8 +41,25 @@ export default function AdminSettings() {
     }
   }
 
+  async function fetchAdmins() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch("/api/admin/profiles", {
+        headers: { "Authorization": `Bearer ${session.access_token}` }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setAdmins(json.data || []);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   useEffect(() => {
     fetchSettings();
+    fetchAdmins();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -78,6 +100,51 @@ export default function AdminSettings() {
       alert("Error saving settings.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAddAdmin = async (e) => {
+    e.preventDefault();
+    setAdminError('');
+    if (!adminForm.name) {
+      setAdminError("Name is required");
+      return;
+    }
+    setAdminSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/profiles", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(adminForm)
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to save");
+      }
+      setAdminForm({ name: '', email: '', phone: '' });
+      fetchAdmins();
+    } catch (e) {
+      setAdminError(e.message);
+    } finally {
+      setAdminSaving(false);
+    }
+  };
+
+  const handleDeleteAdmin = async (id) => {
+    if (!confirm("Remove this superadmin?")) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await fetch(`/api/admin/profiles?id=${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${session.access_token}` }
+      });
+      fetchAdmins();
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -172,6 +239,63 @@ export default function AdminSettings() {
             </button>
           </div>
         </form>
+      </div>
+
+      <div className="admin-card" style={{ marginTop: '2rem' }}>
+        <h2 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>Superadmins</h2>
+        <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>
+          Add phone numbers for OTP login. Superadmins can also use email from SUPERADMIN_EMAILS env.
+        </p>
+
+        {adminError && (
+          <div style={{ color: 'red', fontSize: '0.85rem', marginBottom: '0.5rem' }}>{adminError}</div>
+        )}
+
+        <form onSubmit={handleAddAdmin} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          <input required type="text" placeholder="Full Name" value={adminForm.name}
+            onChange={e => setAdminForm({...adminForm, name: e.target.value})}
+            style={{ flex: 1, minWidth: '150px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+          <input type="email" placeholder="Email (optional)" value={adminForm.email}
+            onChange={e => setAdminForm({...adminForm, email: e.target.value})}
+            style={{ flex: 1, minWidth: '150px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+          <input type="text" placeholder="Phone (e.g. +919999999999)" value={adminForm.phone}
+            onChange={e => setAdminForm({...adminForm, phone: e.target.value})}
+            style={{ flex: 1, minWidth: '150px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+          <button type="submit" className="admin-btn" disabled={adminSaving}
+            style={{ padding: '8px 16px', whiteSpace: 'nowrap' }}>
+            {adminSaving ? 'Adding...' : 'Add Superadmin'}
+          </button>
+        </form>
+
+        {admins.length === 0 ? (
+          <p style={{ fontSize: '0.85rem', color: '#999' }}>No superadmin profiles yet.</p>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
+                <th style={{ padding: '8px' }}>Name</th>
+                <th style={{ padding: '8px' }}>Email</th>
+                <th style={{ padding: '8px' }}>Phone</th>
+                <th style={{ padding: '8px' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {admins.map(a => (
+                <tr key={a.id} style={{ borderBottom: '1px solid #eee' }}>
+                  <td style={{ padding: '8px' }}>{a.name}</td>
+                  <td style={{ padding: '8px', color: a.email ? 'inherit' : '#999' }}>{a.email || '—'}</td>
+                  <td style={{ padding: '8px', color: a.phone ? 'inherit' : '#999' }}>{a.phone || '—'}</td>
+                  <td style={{ padding: '8px' }}>
+                    <button onClick={() => handleDeleteAdmin(a.id)}
+                      style={{ background: 'none', border: 'none', color: 'red', cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline' }}>
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

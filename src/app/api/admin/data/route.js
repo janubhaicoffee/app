@@ -15,7 +15,15 @@ async function verifyAdmin(request) {
   const user = supabaseUser;
 
   const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com").split(",").map(e => e.trim().toLowerCase());
-  if (!adminEmails.includes(user.email?.toLowerCase())) return { error: "Forbidden", status: 403 };
+  const isEmailAdmin = adminEmails.includes(user.email?.toLowerCase());
+  if (!isEmailAdmin) {
+    const { data: profile } = await supabaseAdmin
+      .from("admin_profiles")
+      .select("*")
+      .eq("phone", user.phone)
+      .maybeSingle();
+    if (!profile) return { error: "Forbidden", status: 403 };
+  }
 
   const supabase = supabaseAdmin;
   return { supabase, user, adminEmail: user.email };

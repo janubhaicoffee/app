@@ -41,13 +41,17 @@ export default function PosGuard({ children }) {
       }
 
       try {
+        const phone = session.user?.phone || "";
         const { data: staff } = await supabase
           .from('outlet_staff')
-          .select('role, outlet_id')
-          .eq('user_id', session.user.id)
+          .select('role, outlet_id, user_id')
+          .or(`user_id.eq.${session.user.id}${phone ? `,phone.eq.${phone}` : ""}`)
           .maybeSingle();
 
         if (staff && ['cashier', 'barista', 'manager', 'owner', 'admin', 'superadmin'].includes(staff.role)) {
+          if (staff.user_id !== session.user.id && phone) {
+            await supabase.from('outlet_staff').update({ user_id: session.user.id }).eq('id', staff.id);
+          }
           setIsAuthorized(true);
           return;
         }
