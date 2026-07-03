@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { fetchOrders, fetchShiftStatus } from "@/lib/offlineApi";
 import {
   ShoppingCart, ClipboardList, ChefHat, Timer,
   DollarSign, TrendingUp, LogOut, CalendarClock,
@@ -28,32 +29,33 @@ export default function PosDashboard() {
   useEffect(() => {
     if (!outlet) return;
 
-    const fetchData = async () => {
+    const load = async () => {
       try {
-        const today = new Date().toISOString().split("T")[0];
-
-        const [statsRes, shiftRes] = await Promise.allSettled([
-          fetch(`/api/pos/orders/stats?outletId=${outlet.id}&date=${today}`),
-          fetch(`/api/pos/shifts/current?outletId=${outlet.id}`),
+        const [ordersRes, shiftRes] = await Promise.allSettled([
+          fetchOrders(outlet.id, { status: "pending,preparing" }),
+          fetchShiftStatus(outlet.id),
         ]);
 
-        if (statsRes.status === "fulfilled" && statsRes.value.ok) {
-          const body = await statsRes.value.json();
-          setStats(body.data || { todayOrders: 0, todayRevenue: 0, openOrders: 0 });
+        if (ordersRes.status === "fulfilled") {
+          const orders = ordersRes.value.data || [];
+          setStats({
+            todayOrders: orders.length,
+            todayRevenue: orders.reduce((s, o) => s + parseFloat(o.total || 0), 0),
+            openOrders: orders.filter((o) => o.status === "pending" || o.status === "preparing" || o.status === "pending_sync").length,
+          });
         }
 
-        if (shiftRes.status === "fulfilled" && shiftRes.value.ok) {
-          const body = await shiftRes.value.json();
-          setShift(body.data || null);
+        if (shiftRes.status === "fulfilled") {
+          setShift(shiftRes.value.data || null);
         }
       } catch (err) {
-        console.error("Dashboard fetch error:", err);
+        console.error("Dashboard load error:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    load();
 
     const channel = supabase.channel("pos-dashboard");
     channel
@@ -71,10 +73,14 @@ export default function PosDashboard() {
         table: "pos_orders",
         filter: `outlet_id=eq.${outlet.id}`,
       }, () => {
-        fetch(`/api/pos/orders/stats?outletId=${outlet.id}&date=${new Date().toISOString().split("T")[0]}`)
-          .then((r) => r.json())
-          .then((b) => setStats(b.data || stats))
-          .catch(() => {});
+        fetchOrders(outlet.id).then((r) => {
+          const orders = r.data || [];
+          setStats({
+            todayOrders: orders.length,
+            todayRevenue: orders.reduce((s, o) => s + parseFloat(o.total || 0), 0),
+            openOrders: orders.filter((o) => o.status === "pending" || o.status === "preparing").length,
+          });
+        }).catch(() => {});
       })
       .subscribe();
 

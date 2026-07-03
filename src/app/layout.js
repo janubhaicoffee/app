@@ -6,6 +6,7 @@ import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "react-hot-toast";
 import InterceptorModal from "@/components/InterceptorModal";
+import RegisterSW from "@/components/RegisterSW";
 import { headers } from "next/headers";
 
 const playfair = Playfair_Display({
@@ -17,6 +18,14 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#1a1a1a",
+};
 
 export const metadata = {
   title: {
@@ -83,12 +92,17 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="JBC POS" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body className={`${playfair.variable} ${inter.variable}`}>
+        <RegisterSW />
         <Toaster position="top-center" />
         <AuthProvider>
           <CartProvider>

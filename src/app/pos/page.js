@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { fetchOutlets, prefetchOutletData } from "@/lib/offlineApi";
 import { Store, MapPin, Clock, ArrowRight } from "lucide-react";
 import "./pos.css";
 
@@ -12,28 +13,28 @@ export default function PosOutletSelect() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchOutlets = async () => {
+    const load = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           router.push("/auth/login");
           return;
         }
-        const res = await fetch(`/api/pos/outlets?userId=${user.id}`);
-        if (!res.ok) throw new Error("Failed to fetch outlets");
-        const body = await res.json();
-        setOutlets(body.data || []);
+        const result = await fetchOutlets(user.id);
+        if (result.error) throw new Error(result.error);
+        setOutlets(result.data || []);
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    fetchOutlets();
+    load();
   }, [router]);
 
   const handleSelect = (outlet) => {
     sessionStorage.setItem("pos_outlet", JSON.stringify(outlet));
+    prefetchOutletData(outlet.id);
     router.push("/pos/dashboard");
   };
 

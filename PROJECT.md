@@ -116,12 +116,12 @@ CREATE TABLE outlet_customers (
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| 1 | Database Migrations | Execute SQL migrations to create all outlet tables in Supabase. | None | PLANNED |
-| 2 | E2E Testing Track (Real Integration) | Update E2E tests (`tests/outlet_dashboard.spec.js`) to check real database integration (removing API/endpoint mocks) and publish `TEST_READY.md`. | M1 | PLANNED |
-| 3 | Subdomain Routing & Navigation | Implement Next.js middleware and update `TopBar` navigation. | None | PLANNED |
-| 4 | Authentication Guard & API Routes | Secure `/outlet` and implement backend route handlers in Next.js connecting to Supabase. | M3 | PLANNED |
-| 5 | Modular Dashboard Components | Implement frontend dashboard components `/outlet` connecting to real API endpoints. | M4 | PLANNED |
-| 6 | E2E verification & adversarial hardening | Run test suite against real server/db, run forensic auditor checks, and perform adversarial coverage hardening. | M2, M5 | PLANNED |
+| 1 | Database Migrations | Execute SQL migrations to create all outlet tables in Supabase. | None | COMPLETED |
+| 2 | E2E Testing Track (Real Integration) | Update E2E tests (`tests/outlet_dashboard.spec.js`) to check real database integration with real Supabase client for seeding/cleanup. | M1 | COMPLETED |
+| 3 | Subdomain Routing & Navigation | Implement Next.js proxy (middleware) at `src/proxy.js` and update `TopBar` navigation link. | None | COMPLETED |
+| 4 | Authentication Guard & API Routes | Secure `/outlet` via OutletGuard with Supabase admin check; implement backend route handlers in Next.js connecting to Supabase. | M3 | COMPLETED |
+| 5 | Modular Dashboard Components | Implement frontend dashboard components `/outlet` connecting to real API endpoints and database tables. | M4 | COMPLETED |
+| 6 | E2E verification & adversarial hardening | Run test suite against real server/db, run forensic auditor checks, and perform adversarial coverage hardening. | M2, M5 | PENDING |
 
 ## Interface Contracts
 - **Middleware**: Matches host `outlet.*` and rewrites to `/outlet`.

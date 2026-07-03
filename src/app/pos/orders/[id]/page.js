@@ -2,13 +2,17 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Printer, Download } from "lucide-react";
+import { ArrowLeft, Printer, Download, WifiOff } from "lucide-react";
 import PaymentModal from "@/components/pos/PaymentModal";
+import { fetchOrderById, updateOrderStatus, processPayment } from "@/lib/offlineApi";
+import useOnlineStatus from "@/hooks/useOnlineStatus";
+import toast from "react-hot-toast";
 import "../../pos.css";
 
 export default function PosOrderDetail() {
   const router = useRouter();
   const params = useParams();
+  const online = useOnlineStatus();
   const [outlet, setOutlet] = useState(null);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,12 +29,11 @@ export default function PosOrderDetail() {
   useEffect(() => {
     if (!params.id) return;
 
-    const fetchOrder = async () => {
+    const loadOrder = async () => {
       try {
-        const res = await fetch(`/api/pos/orders/${params.id}`);
-        if (!res.ok) throw new Error("Order not found");
-        const body = await res.json();
-        setOrder(body.data || body);
+        const result = await fetchOrderById(params.id);
+        if (result.error) throw new Error(result.error);
+        setOrder(result.data);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -38,7 +41,7 @@ export default function PosOrderDetail() {
       }
     };
 
-    fetchOrder();
+    loadOrder();
 
     const channel = supabase.channel(`pos-order-${params.id}`);
     channel
@@ -56,9 +59,8 @@ export default function PosOrderDetail() {
         table: "pos_order_items",
         filter: `order_id=eq.${params.id}`,
       }, () => {
-        fetch(`/api/pos/orders/${params.id}`)
-          .then((r) => r.json())
-          .then((body) => setOrder(body.data || body))
+        fetchOrderById(params.id)
+          .then((r) => setOrder(r.data))
           .catch(() => {});
       })
       .subscribe();
@@ -69,11 +71,10 @@ export default function PosOrderDetail() {
   const updateItemStatus = async (itemId, newStatus) => {
     setUpdating(true);
     try {
-      await fetch(`/api/pos/orders/${params.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ item_id: itemId, item_status: newStatus }),
-      });
+      const result = await updateOrderStatus(params.id, { item_id: itemId, item_status: newStatus });
+      if (result.offline) {
+        toast("Status will sync when online", { icon: "📦", duration: 2000 });
+      }
     } catch (err) {
       console.error("Update item error:", err);
     } finally {
@@ -81,18 +82,14 @@ export default function PosOrderDetail() {
     }
   };
 
-  const updateOrderStatus = async (newStatus) => {
+  const handleOrderStatusUpdate = async (newStatus) => {
     setUpdating(true);
     try {
-      const res = await fetch(`/api/pos/orders/${params.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (res.ok) {
-        const body = await res.json();
-        setOrder((prev) => ({ ...prev, ...(body.data || body) }));
+      const result = await updateOrderStatus(params.id, { status: newStatus });
+      if (result.offline) {
+        toast("Update will sync when online", { icon: "📦", duration: 2000 });
       }
+      setOrder((prev) => prev ? { ...prev, status: newStatus } : prev);
     } catch (err) {
       console.error("Update order error:", err);
     } finally {
@@ -102,20 +99,20 @@ export default function PosOrderDetail() {
 
   const handlePaymentComplete = async (paymentData) => {
     try {
-      const res = await fetch("/api/pos/payments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          order_id: params.id,
-          outlet_id: outlet?.id,
-          amount: order.total,
-          ...paymentData,
-        }),
+      const result = await processPayment({
+        order_id: params.id,
+        outlet_id: outlet?.id,
+        amount: order.total,
+        ...paymentData,
       });
-      if (res.ok) {
-        await updateOrderStatus("completed");
-        setShowPayment(false);
+
+      if (result.offline) {
+        toast.success("Payment recorded offline — will sync when connected");
+        setOrder((prev) => prev ? { ...prev, payment_status: "paid", status: "completed" } : prev);
+      } else {
+        await handleOrderStatusUpdate("completed");
       }
+      setShowPayment(false);
     } catch (err) {
       console.error("Payment error:", err);
     }
@@ -125,18 +122,15 @@ export default function PosOrderDetail() {
     if (!confirm("Refund this order?")) return;
     setUpdating(true);
     try {
-      await fetch(`/api/pos/orders/${params.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "cancelled", refunded: true }),
-      });
+      await updateOrderStatus(params.id, { status: "cancelled", refunded: true });
+      setOrder((prev) => prev ? { ...prev, status: "cancelled", refunded: true } : prev);
     } finally {
       setUpdating(false);
     }
   };
 
   const statusLabel = (s) => {
-    const map = { pending: "Pending", preparing: "Preparing", ready: "Ready", served: "Served", completed: "Completed", cancelled: "Cancelled" };
+    const map = { pending: "Pending", preparing: "Preparing", ready: "Ready", served: "Served", completed: "Completed", cancelled: "Cancelled", pending_sync: "Pending Sync" };
     return map[s] || s;
   };
 
@@ -162,12 +156,22 @@ export default function PosOrderDetail() {
 
   const isPaid = order.payment_status === "paid" || order.status === "completed";
   const items = order.items || [];
+  const isOffline = order.status === "pending_sync" || order._offline;
 
   return (
     <div className="pos-fullscreen">
+      {isOffline && (
+        <div style={{
+          padding: "4px 8px", background: "#fff3cd", color: "#856404",
+          fontSize: 11, textAlign: "center",
+        }}>
+          <WifiOff size={12} style={{ verticalAlign: "middle", marginRight: 4 }} />
+          This order is saved locally and will sync when online
+        </div>
+      )}
       <div className="pos-top-bar">
         <button onClick={() => router.push("/pos/orders")}><ArrowLeft size={16} /> Back</button>
-        <h1>Order #{order.order_number || order.id.toString().slice(-4)}</h1>
+        <h1>Order #{order.order_number || order.id.toString().slice(-8)}</h1>
         <div style={{ display: "flex", gap: 8 }}>
           <button><Printer size={16} /> Print</button>
           <button onClick={() => router.push("/pos/orders/new")}>New Order</button>
@@ -182,7 +186,7 @@ export default function PosOrderDetail() {
             </h2>
             <p style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 4 }}>
               {order.type === "dine-in" && order.table_number ? `Table ${order.table_number} · ` : ""}
-              {order.type} · {new Date(order.created_at).toLocaleString()}
+              {order.type} · {order.created_at ? new Date(order.created_at).toLocaleString() : "Just now"}
             </p>
             {order.notes && (
               <p style={{ fontStyle: "italic", fontSize: 13, marginTop: 4, color: "var(--text-secondary)" }}>
@@ -224,7 +228,7 @@ export default function PosOrderDetail() {
                     className="pos-item-status-select"
                     value={iStatus}
                     onChange={(e) => updateItemStatus(item.id, e.target.value)}
-                    disabled={updating || order.status === "cancelled" || order.status === "completed"}
+                    disabled={updating || order.status === "cancelled" || order.status === "completed" || isOffline}
                   >
                     <option value="pending">Pending</option>
                     <option value="preparing">Preparing</option>
@@ -247,9 +251,14 @@ export default function PosOrderDetail() {
         </div>
 
         <div className="pos-detail-actions">
-          {!isPaid && order.status !== "cancelled" && (
+          {!isPaid && order.status !== "cancelled" && !isOffline && (
             <button className="pos-btn primary" onClick={() => setShowPayment(true)}>
               Collect Payment
+            </button>
+          )}
+          {!isPaid && isOffline && online && (
+            <button className="pos-btn primary" onClick={() => handleOrderStatusUpdate("pending")}>
+              Sync & Continue
             </button>
           )}
           {isPaid && (
@@ -257,23 +266,23 @@ export default function PosOrderDetail() {
               Refund Order
             </button>
           )}
-          {order.status === "pending" && (
-            <button className="pos-btn secondary" onClick={() => updateOrderStatus("preparing")} disabled={updating}>
+          {order.status === "pending" && !isOffline && (
+            <button className="pos-btn secondary" onClick={() => handleOrderStatusUpdate("preparing")} disabled={updating}>
               Start Preparing
             </button>
           )}
           {order.status === "preparing" && (
-            <button className="pos-btn secondary" onClick={() => updateOrderStatus("ready")} disabled={updating}>
+            <button className="pos-btn secondary" onClick={() => handleOrderStatusUpdate("ready")} disabled={updating}>
               Mark Ready
             </button>
           )}
           {order.status === "ready" && (
-            <button className="pos-btn secondary" onClick={() => updateOrderStatus("served")} disabled={updating}>
+            <button className="pos-btn secondary" onClick={() => handleOrderStatusUpdate("served")} disabled={updating}>
               Mark Served
             </button>
           )}
-          {(order.status === "pending" || order.status === "preparing") && (
-            <button className="pos-btn danger" onClick={() => updateOrderStatus("cancelled")} disabled={updating}>
+          {(order.status === "pending" || order.status === "preparing") && !isOffline && (
+            <button className="pos-btn danger" onClick={() => handleOrderStatusUpdate("cancelled")} disabled={updating}>
               Cancel Order
             </button>
           )}

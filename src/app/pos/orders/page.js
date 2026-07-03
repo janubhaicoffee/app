@@ -3,6 +3,7 @@ import { Suspense, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { PlusCircle, Clock, ArrowLeft } from "lucide-react";
+import { fetchOrders } from "@/lib/offlineApi";
 import "../pos.css";
 
 function PosOrdersContent() {
@@ -25,22 +26,17 @@ function PosOrdersContent() {
     if (s) setSourceFilter(s);
   }, [searchParams]);
 
-  const fetchOrders = useCallback(async () => {
+  const loadOrders = useCallback(async () => {
     if (!outlet) return;
     try {
-      let url = `/api/pos/orders?outletId=${outlet.id}`;
+      const params = {};
       if (sourceFilter !== "all") {
-        url += `&source=${sourceFilter}`;
+        params.source = sourceFilter;
       } else {
-        const activeStatuses = "pending,preparing,ready";
-        const historyStatuses = "completed,cancelled,served";
-        url += `&status=${activeTab === "active" ? activeStatuses : historyStatuses}`;
+        params.status = activeTab === "active" ? "pending,preparing,ready" : "completed,cancelled,served";
       }
-      const res = await fetch(url);
-      if (res.ok) {
-        const body = await res.json();
-        setOrders(body.data || []);
-      }
+      const result = await fetchOrders(outlet.id, params);
+      setOrders(result.data || []);
     } catch (err) {
       console.error("Fetch orders error:", err);
     } finally {
@@ -49,8 +45,8 @@ function PosOrdersContent() {
   }, [outlet, sourceFilter, activeTab]);
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    loadOrders();
+  }, [loadOrders]);
 
   useEffect(() => {
     if (!outlet) return;
@@ -61,13 +57,13 @@ function PosOrdersContent() {
         schema: "public",
         table: "pos_orders",
         filter: `outlet_id=eq.${outlet.id}`,
-      }, () => fetchOrders())
+      }, () => loadOrders())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [outlet, fetchOrders]);
+  }, [outlet, loadOrders]);
 
   const statusLabel = (s) => {
-    const map = { pending: "Pending", preparing: "Preparing", ready: "Ready", served: "Served", completed: "Completed", cancelled: "Cancelled" };
+    const map = { pending: "Pending", preparing: "Preparing", ready: "Ready", served: "Served", completed: "Completed", cancelled: "Cancelled", pending_sync: "Pending Sync" };
     return map[s] || s;
   };
 
@@ -122,13 +118,13 @@ function PosOrdersContent() {
               className="pos-order-card"
               onClick={() => router.push(`/pos/orders/${order.id}`)}
             >
-              <div className="pos-order-number">#{order.order_number || order.id.toString().slice(-4)}</div>
+              <div className="pos-order-number">#{order.order_number || order.id.toString().slice(-8)}</div>
               <div className="pos-order-info">
                 <div className="pos-order-customer">{order.customer_name || "Walk-in"}</div>
                 <div className="pos-order-meta">
                   {order.source && <span className={`pos-source-badge ${sourceLabel(order.source).cls}`}>{sourceLabel(order.source).label}</span>}
                   {order.table_number && `Table ${order.table_number} · `}
-                  {order.type || "dine-in"} · {new Date(order.created_at).toLocaleTimeString()}
+                  {order.type || "dine-in"} · {order.created_at ? new Date(order.created_at).toLocaleTimeString() : ""}
                 </div>
               </div>
               <div>

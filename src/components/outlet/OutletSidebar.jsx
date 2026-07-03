@@ -397,16 +397,14 @@ export default function OutletSidebar() {
         <Menu size={24} />
       </button>
 
-      {mobileOpen && (
-        <div className="outlet-mobile-overlay" onClick={() => setMobileOpen(false)}>
-          <div className="outlet-mobile-sidebar" onClick={(e) => e.stopPropagation()}>
-            <button className="outlet-mobile-close" onClick={() => setMobileOpen(false)}>
-              <X size={20} />
-            </button>
-            {sidebarContent}
-          </div>
+      <div className={`outlet-mobile-overlay ${mobileOpen ? "open" : ""}`} onClick={() => setMobileOpen(false)}>
+        <div className={`outlet-mobile-sidebar ${mobileOpen ? "open" : ""}`} onClick={(e) => e.stopPropagation()}>
+          <button className="outlet-mobile-close" onClick={() => setMobileOpen(false)}>
+            <X size={20} />
+          </button>
+          {sidebarContent}
         </div>
-      )}
+      </div>
 
       <aside className="outlet-sidebar">
         {sidebarContent}
@@ -658,18 +656,32 @@ export default function OutletSidebar() {
           cursor: pointer;
         }
         .outlet-mobile-overlay {
-          display: none;
           position: fixed;
           inset: 0;
           background: rgba(0,0,0,0.5);
           z-index: 300;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.2s ease;
+        }
+        .outlet-mobile-overlay.open {
+          opacity: 1;
+          pointer-events: auto;
         }
         .outlet-mobile-sidebar {
           width: 280px;
           height: 100vh;
+          height: 100dvh;
           background: var(--primary-color, #3E2723);
           position: relative;
           border-right: 1px solid var(--border-color, #D7CCC8);
+          transform: translateX(-100%);
+          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          overscroll-behavior: contain;
+          overflow-y: auto;
+        }
+        .outlet-mobile-sidebar.open {
+          transform: translateX(0);
         }
         .outlet-mobile-close {
           position: absolute;
@@ -694,8 +706,10 @@ export default function OutletSidebar() {
           .outlet-mobile-menu-btn {
             display: flex;
           }
+        }
+        @media (min-width: 769px) {
           .outlet-mobile-overlay {
-            display: block;
+            display: none !important;
           }
         }
       `}</style>

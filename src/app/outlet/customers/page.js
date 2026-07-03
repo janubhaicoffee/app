@@ -13,10 +13,6 @@ export default function OutletCustomers() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerOrders, setCustomerOrders] = useState([]);
 
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
-
   const fetchCustomers = async () => {
     setLoading(true);
     try {
@@ -38,6 +34,10 @@ export default function OutletCustomers() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
 
   const handleSelectCustomer = async (customer) => {
     setSelectedCustomer(customer);

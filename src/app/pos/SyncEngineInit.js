@@ -1,0 +1,11 @@
+"use client";
+import { useEffect } from "react";
+import { startSyncEngine } from "@/lib/syncEngine";
+
+export default function SyncEngineInit() {
+  useEffect(() => {
+    const cleanup = startSyncEngine();
+    return () => { cleanup.then((fn) => fn?.()); };
+  }, []);
+  return null;
+}

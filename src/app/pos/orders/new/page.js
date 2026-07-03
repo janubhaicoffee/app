@@ -2,14 +2,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search, WifiOff } from "lucide-react";
 import ProductGrid from "@/components/pos/ProductGrid";
 import CartSidebar from "@/components/pos/CartSidebar";
 import TableSelector from "@/components/pos/TableSelector";
+import { fetchProducts, fetchCategories, fetchTables, createOrder } from "@/lib/offlineApi";
+import useOnlineStatus from "@/hooks/useOnlineStatus";
+import toast from "react-hot-toast";
 import "../../pos.css";
 
 export default function PosNewOrder() {
   const router = useRouter();
+  const online = useOnlineStatus();
   const [outlet, setOutlet] = useState(null);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -36,27 +40,27 @@ export default function PosNewOrder() {
   useEffect(() => {
     if (!outlet) return;
 
-    const fetchCatalog = async () => {
+    const loadCatalog = async () => {
       try {
         const [prodRes, catRes, tableRes] = await Promise.allSettled([
-          fetch(`/api/pos/products?outletId=${outlet.id}`),
-          fetch(`/api/pos/categories?outletId=${outlet.id}`),
-          fetch(`/api/pos/tables?outletId=${outlet.id}`),
+          fetchProducts(outlet.id),
+          fetchCategories(outlet.id),
+          fetchTables(outlet.id),
         ]);
 
-        if (prodRes.status === "fulfilled" && prodRes.value.ok) {
-          const body = await prodRes.value.json();
-          setProducts(body.data || []);
+        if (prodRes.status === "fulfilled") {
+          setProducts(prodRes.value.data || []);
+          if (prodRes.value.offline) {
+            toast("Showing cached menu", { icon: "📦", duration: 2000 });
+          }
         }
-        if (catRes.status === "fulfilled" && catRes.value.ok) {
-          const body = await catRes.value.json();
-          const cats = body.data || [];
+        if (catRes.status === "fulfilled") {
+          const cats = catRes.value.data || [];
           setCategories(cats);
-          if (cats.length > 0) setSelectedCategory(cats[0].id);
+          if (cats.length > 0 && selectedCategory === "all") setSelectedCategory(cats[0].id);
         }
-        if (tableRes.status === "fulfilled" && tableRes.value.ok) {
-          const body = await tableRes.value.json();
-          setTables(body.data || []);
+        if (tableRes.status === "fulfilled") {
+          setTables(tableRes.value.data || []);
         }
       } catch (err) {
         setError(err.message);
@@ -65,13 +69,13 @@ export default function PosNewOrder() {
       }
     };
 
-    fetchCatalog();
+    loadCatalog();
 
     const channel = supabase.channel("pos-menu-realtime");
     channel
-      .on("postgres_changes", { event: "*", schema: "public", table: "pos_products", filter: `outlet_id=eq.${outlet.id}` }, () => { fetchCatalog(); })
-      .on("postgres_changes", { event: "*", schema: "public", table: "pos_categories", filter: `outlet_id=eq.${outlet.id}` }, () => { fetchCatalog(); })
-      .on("postgres_changes", { event: "*", schema: "public", table: "pos_tables", filter: `outlet_id=eq.${outlet.id}` }, () => { fetchCatalog(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "pos_products", filter: `outlet_id=eq.${outlet.id}` }, () => { loadCatalog(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "pos_categories", filter: `outlet_id=eq.${outlet.id}` }, () => { loadCatalog(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "pos_tables", filter: `outlet_id=eq.${outlet.id}` }, () => { loadCatalog(); })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [outlet]);
@@ -133,19 +137,13 @@ export default function PosNewOrder() {
         status: "pending",
       };
 
-      const res = await fetch("/api/pos/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const result = await createOrder(payload);
 
-      if (!res.ok) {
-        const errBody = await res.json();
-        throw new Error(errBody.error || "Failed to create order");
+      if (result.offline) {
+        toast.success("Order saved offline — will sync when connected");
       }
 
-      const order = await res.json();
-      router.push(`/pos/orders/${order.data?.id || order.id}`);
+      router.push(`/pos/orders/${result.data?.id}`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -171,6 +169,15 @@ export default function PosNewOrder() {
           <button onClick={() => router.push("/pos/orders")}>Orders</button>
         </div>
       </div>
+
+      {!online && (
+        <div style={{
+          padding: "4px 8px", background: "#ffebee", color: "#c62828",
+          fontSize: 11, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+        }}>
+          <WifiOff size={12} /> Offline — orders will be queued and synced automatically
+        </div>
+      )}
 
       <div className="pos-order-type-bar">
         <span style={{ fontSize: 13, fontWeight: 600 }}>Order Type:</span>

@@ -1,0 +1,78 @@
+import crypto from "crypto";
+import { NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { processDeliveryOrder } from "@/lib/deliveryUtils";
+
+async function verifyHmacSha256(payload, signature, secret) {
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(typeof payload === "string" ? payload : JSON.stringify(payload))
+    .digest("hex");
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  } catch {
+    return false;
+  }
+}
+
+async function getSwiggyCredentials() {
+  const { data } = await supabaseAdmin
+    .from("outlet_delivery_keys")
+    .select("*")
+    .eq("id", "swiggy")
+    .eq("active", true)
+    .single();
+  return data;
+}
+
+export async function POST(request) {
+  try {
+    const credentials = await getSwiggyCredentials();
+    if (!credentials) {
+      return NextResponse.json(
+        { success: false, error: { message: "Swiggy integration not configured" } },
+        { status: 200 }
+      );
+    }
+
+    const rawBody = await request.text();
+    const signature = request.headers.get("x-swiggy-signature");
+
+    if (signature && credentials.client_secret) {
+      const valid = await verifyHmacSha256(rawBody, signature, credentials.client_secret);
+      if (!valid) {
+        return NextResponse.json(
+          { success: false, error: { message: "Invalid signature" } },
+          { status: 200 }
+        );
+      }
+    }
+
+    const body = JSON.parse(rawBody);
+
+    const order = body.order || body;
+    const items = (order.items || order.order_details?.items || []).map((i) => ({
+      name: i.name || i.item_name || "Item",
+      quantity: i.quantity || i.qty || 1,
+      price: i.price || 0
+    }));
+    const total = parseFloat(order.total || order.order_details?.total || body.total || 0);
+    const customerName = order.customer_name || order.customer?.name || "Swiggy Customer";
+
+    await processDeliveryOrder({
+      partner: "swiggy",
+      items,
+      total,
+      couponUsed: order.coupon_code || order.coupon_used || body.coupon_code || null,
+      customerName
+    });
+
+    return NextResponse.json({ success: true, data: { order_id: order.order_id || null } });
+  } catch (error) {
+    console.error("Swiggy webhook error:", error);
+    return NextResponse.json(
+      { success: false, error: { message: error.message } },
+      { status: 200 }
+    );
+  }
+}

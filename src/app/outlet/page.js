@@ -512,4 +512,51 @@ const styles = `
     margin-top: 24px;
     width: 100%;
   }
+
+  @media (max-width: 768px) {
+    .portal-page {
+      padding: 16px;
+    }
+    .portal-card {
+      padding: 28px 20px;
+      max-width: 100%;
+    }
+    .portal-header h1 {
+      font-size: 20px;
+    }
+    .portal-input-wrapper input {
+      padding: 10px 36px;
+      font-size: 16px;
+    }
+    .btn-portal-primary {
+      padding: 12px;
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .portal-page {
+      padding: 12px;
+    }
+    .portal-card {
+      padding: 24px 16px;
+      border-radius: 10px;
+    }
+    .portal-header h1 {
+      font-size: 18px;
+    }
+    .portal-header p {
+      font-size: 12px;
+    }
+    .portal-input-wrapper input {
+      padding: 10px 32px;
+      font-size: 16px;
+    }
+    .input-icon {
+      left: 10px;
+    }
+    .password-toggle {
+      right: 10px;
+    }
+  }
 `;

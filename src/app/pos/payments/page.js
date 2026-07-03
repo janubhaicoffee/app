@@ -2,11 +2,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Search, Banknote, CreditCard, Smartphone, CheckCircle } from "lucide-react";
+import { ArrowLeft, Search, Banknote, CreditCard, Smartphone, CheckCircle, WifiOff } from "lucide-react";
+import { fetchOrders, processPayment } from "@/lib/offlineApi";
+import useOnlineStatus from "@/hooks/useOnlineStatus";
+import toast from "react-hot-toast";
 import "../pos.css";
 
 export default function PosPayments() {
   const router = useRouter();
+  const online = useOnlineStatus();
   const [outlet, setOutlet] = useState(null);
   const [searchNumber, setSearchNumber] = useState("");
   const [order, setOrder] = useState(null);
@@ -19,11 +23,14 @@ export default function PosPayments() {
   const [tip, setTip] = useState("0");
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [outletUpiId, setOutletUpiId] = useState("");
 
   useEffect(() => {
     const stored = sessionStorage.getItem("pos_outlet");
     if (!stored) { router.push("/pos"); return; }
-    setOutlet(JSON.parse(stored));
+    const parsed = JSON.parse(stored);
+    setOutlet(parsed);
+    setOutletUpiId(parsed.upi_id || parsed.upi || "pay@janubhaicoffee");
   }, [router]);
 
   const handleSearch = async () => {
@@ -32,10 +39,8 @@ export default function PosPayments() {
     setSearchError(null);
     setOrder(null);
     try {
-      const res = await fetch(`/api/pos/orders?outletId=${outlet.id}&search=${encodeURIComponent(searchNumber.trim())}`);
-      if (!res.ok) throw new Error("Failed to search");
-      const body = await res.json();
-      const data = body.data || [];
+      const result = await fetchOrders(outlet.id, { search: searchNumber.trim() });
+      const data = result.data || [];
       if (data.length === 0) {
         setSearchError("Order not found");
       } else {
@@ -62,21 +67,22 @@ export default function PosPayments() {
         method,
         tendered: method === "cash" ? parseFloat(amountTendered || 0) : undefined,
         reference: method === "card" ? cardRef : method === "upi" ? upiRef : undefined,
+        status: method === "cash" || method === "upi" ? "completed" : "completed",
       };
 
-      const payRes = await fetch("/api/pos/payments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const result = await processPayment(payload);
 
-      if (!payRes.ok) throw new Error("Payment failed");
+      if (result.offline) {
+        toast.success("Payment recorded offline — will sync when connected");
+      }
 
-      await fetch(`/api/pos/orders/${order.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "completed", payment_status: "paid" }),
-      });
+      if (online && method !== "cash" && method !== "upi") {
+        await fetch(`/api/pos/orders/${order.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "completed", payment_status: "paid" }),
+        }).catch(() => {});
+      }
 
       setSuccess(true);
       setTimeout(() => {
@@ -113,6 +119,16 @@ export default function PosPayments() {
         <div />
       </div>
 
+      {!online && (
+        <div style={{
+          padding: "4px 8px", background: "#ffebee", color: "#c62828",
+          fontSize: 11, textAlign: "center",
+        }}>
+          <WifiOff size={12} style={{ verticalAlign: "middle", marginRight: 4 }} />
+          Offline — cash and UPI payments accepted. Card payments may be delayed.
+        </div>
+      )}
+
       <div className="pos-orders-container" style={{ overflow: "auto", flex: 1 }}>
         {success ? (
           <div style={{ textAlign: "center", padding: 60 }}>
@@ -148,7 +164,7 @@ export default function PosPayments() {
                     {order.table_number && ` · Table ${order.table_number}`}
                   </div>
                   <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 8 }}>
-                    {new Date(order.created_at).toLocaleString()}
+                    {order.created_at ? new Date(order.created_at).toLocaleString() : ""}
                   </div>
                   {(order.items || []).length > 0 && (
                     <div style={{ marginBottom: 8 }}>
@@ -208,7 +224,7 @@ export default function PosPayments() {
 
                   {method === "card" && (
                     <div className="pos-pay-input-group">
-                      <label>Card Reference</label>
+                      <label>Card Reference / Last 4 digits</label>
                       <input
                         type="text"
                         placeholder="e.g., AUTH12345"
@@ -221,10 +237,35 @@ export default function PosPayments() {
                   {method === "upi" && (
                     <>
                       <div style={{ textAlign: "center", marginBottom: 16 }}>
-                        <div style={{ fontWeight: 700 }}>UPI: pay@janubhaicoffee</div>
+                        <div style={{
+                          background: "#fff", border: "2px dashed var(--accent-red)",
+                          borderRadius: 12, padding: 16, marginBottom: 8,
+                          display: "inline-block",
+                        }}>
+                          {outlet?.upi_qr_url ? (
+                            <img
+                              src={outlet.upi_qr_url}
+                              alt="UPI QR"
+                              style={{ width: 200, height: 200, objectFit: "contain" }}
+                            />
+                          ) : (
+                            <div style={{
+                              width: 200, height: 200,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              background: "#f5f5f5", borderRadius: 8,
+                              fontSize: 14, color: "var(--text-secondary)",
+                            }}>
+                              No QR configured
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: 16 }}>{outletUpiId}</div>
+                        <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 4 }}>
+                          Customer scans QR and pays via any UPI app
+                        </p>
                       </div>
                       <div className="pos-pay-input-group">
-                        <label>UPI Ref</label>
+                        <label>UPI Transaction Ref (optional)</label>
                         <input
                           type="text"
                           placeholder="e.g., UPI12345678"
@@ -247,7 +288,7 @@ export default function PosPayments() {
                   </div>
 
                   <button className="pos-confirm-pay" onClick={handlePayment} disabled={processing}>
-                    {processing ? "Processing..." : `Pay ₹${(orderTotal + parseFloat(tip || 0)).toFixed(2)}`}
+                    {processing ? "Processing..." : `Confirm Payment • ₹${(orderTotal + parseFloat(tip || 0)).toFixed(2)}`}
                   </button>
                 </div>
               </>

@@ -33,7 +33,7 @@ export default function OutletLayout({ children }) {
 
   if (mounted && isEmployee && isRestrictedPath) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#F8F1E4', padding: '24px', fontFamily: 'sans-serif' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100dvh', background: '#F8F1E4', padding: '24px', fontFamily: 'sans-serif' }}>
         <h1 style={{ color: '#B71C1C', fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>Access Denied</h1>
         <p style={{ color: '#5D4037', fontSize: '14px', textAlign: 'center', maxWidth: '400px' }}>Your current staff profile role ({activeRole.toUpperCase()}) does not have permission to access this page.</p>
         <button 

@@ -1,0 +1,17 @@
+{
+  "name": "Janu Bhai Coffee POS",
+  "short_name": "JBC POS",
+  "description": "POS system for Janu Bhai Coffee outlets",
+  "start_url": "/pos/dashboard",
+  "scope": "/pos",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f5f0",
+  "theme_color": "#1a1a1a",
+  "categories": ["business", "food"],
+  "icons": [
+    { "src": "/icon.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

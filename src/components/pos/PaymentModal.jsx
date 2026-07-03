@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
-import { X, Banknote, CreditCard, Smartphone, Users, Printer, Tag } from "lucide-react";
+import { X, Banknote, CreditCard, Smartphone, Users, Printer, Tag, Bluetooth } from "lucide-react";
 import { printReceipt, printLabel } from "@/lib/printing";
+import { printReceiptBluetooth, connectBluetoothPrinter, isWebBluetoothSupported } from "@/lib/receiptPrinter";
 
 export default function PaymentModal({ isOpen, onClose, total, onPaymentComplete, order }) {
   const [method, setMethod] = useState("cash");
@@ -12,11 +13,31 @@ export default function PaymentModal({ isOpen, onClose, total, onPaymentComplete
   const [splitPayments, setSplitPayments] = useState([{ method: "cash", amount: total.toFixed(2) }]);
   const [processing, setProcessing] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [printerConnected, setPrinterConnected] = useState(false);
+  const [printerName, setPrinterName] = useState("");
+  const [connectingPrinter, setConnectingPrinter] = useState(false);
 
   if (!isOpen) return null;
 
   const tendered = parseFloat(amountTendered) || 0;
   const change = tendered - total - parseFloat(tipAmount || 0);
+
+  const handleConnectPrinter = async () => {
+    if (!isWebBluetoothSupported()) {
+      alert("Bluetooth printing is not supported on this browser. Use the print button instead.");
+      return;
+    }
+    setConnectingPrinter(true);
+    try {
+      const result = await connectBluetoothPrinter();
+      setPrinterConnected(true);
+      setPrinterName(result.deviceName);
+    } catch (err) {
+      alert("Failed to connect printer: " + err.message);
+    } finally {
+      setConnectingPrinter(false);
+    }
+  };
 
   const handleConfirm = async () => {
     setProcessing(true);
@@ -47,7 +68,13 @@ export default function PaymentModal({ isOpen, onClose, total, onPaymentComplete
     }
   };
 
-  const handlePrintReceipt = () => {
+  const handlePrintReceipt = async () => {
+    if (printerConnected && order) {
+      try {
+        await printReceiptBluetooth(order);
+        return;
+      } catch {}
+    }
     if (order) printReceipt(order);
   };
 
@@ -127,6 +154,27 @@ export default function PaymentModal({ isOpen, onClose, total, onPaymentComplete
             </div>
           ) : (
             <>
+              {isWebBluetoothSupported() && (
+                <div style={{ marginBottom: 12 }}>
+                  <button
+                    onClick={handleConnectPrinter}
+                    disabled={connectingPrinter || printerConnected}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 6, width: "100%",
+                      padding: "8px 12px", borderRadius: 8, fontSize: 12,
+                      border: `1px solid ${printerConnected ? "#38a169" : "var(--border-color)"}`,
+                      background: printerConnected ? "#f0fff4" : "transparent",
+                      color: printerConnected ? "#38a169" : "var(--text-secondary)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Bluetooth size={14} />
+                    {connectingPrinter ? "Connecting..." :
+                     printerConnected ? `Printer: ${printerName}` : "Connect Bluetooth Printer"}
+                  </button>
+                </div>
+              )}
+
               <div className="pos-pay-amount">₹{total.toFixed(2)}</div>
 
               <div className="pos-pay-methods">
