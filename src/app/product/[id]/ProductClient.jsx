@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import ImageGallery from "@/components/ImageGallery";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
@@ -384,6 +385,11 @@ export default function ProductClient({ initialProduct }) {
       )}
 
       <main className="product-page">
+        <nav className="breadcrumb">
+          <Link href="/">Home</Link>
+          <span className="breadcrumb-sep">/</span>
+          <span className="breadcrumb-current">{product?.name || "Product"}</span>
+        </nav>
         <div className="container">
           <div className="product-hero">
             <motion.div
@@ -534,7 +540,7 @@ export default function ProductClient({ initialProduct }) {
                                 </button>
                                 {showAddMoreHint && (
                                   <span className="add-more-hint">
-                                    Tap again to add more!
+                                    Added! <Link href="/cart" className="add-more-link">View Cart →</Link>
                                   </span>
                                 )}
                               </div>
@@ -803,6 +809,22 @@ export default function ProductClient({ initialProduct }) {
           padding: 2rem; text-align: center; color: var(--text-secondary);
         }
         .unavailable-notice p { margin: 0; font-size: 1rem; }
+
+        .breadcrumb {
+          max-width: 1200px; margin: 0 auto; padding: 1rem 1.5rem 0;
+          font-size: 0.82rem; display: flex; align-items: center; gap: 6px;
+        }
+        .breadcrumb a {
+          color: var(--text-secondary); text-decoration: none; font-weight: 500;
+        }
+        .breadcrumb a:hover { color: var(--primary-color); }
+        .breadcrumb-sep { color: #ccc; }
+        .breadcrumb-current { color: var(--text-primary); font-weight: 600; }
+
+        .add-more-link {
+          color: var(--primary-color); font-weight: 700; text-decoration: underline;
+          margin-left: 4px;
+        }
       `}</style>
     </>
   );

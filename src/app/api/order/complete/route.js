@@ -87,7 +87,7 @@ export async function POST(request) {
           address: formData.address,
           address_2: "",
           city: formData.city,
-          state: formData.city,
+          state: formData.state,
           pincode: formData.pincode,
           phone: formData.phone
         },

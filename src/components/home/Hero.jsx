@@ -27,7 +27,7 @@ export default function Hero() {
             finest coffee growing regions. No middlemen, no compromise.
           </p>
           <div className="hero-actions">
-            <Link href="/product/instantcoffee-100g" className="btn-cta">
+            <Link href="/product/instantcoffee" className="btn-cta">
               Shop Coffee
               <ArrowRight size={18} className="btn-arrow" />
             </Link>

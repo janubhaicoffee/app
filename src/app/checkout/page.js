@@ -257,7 +257,8 @@ export default function CheckoutPage() {
           if (data.success) {
             toast.success(`Order Placed Successfully!`, { id: toastId });
             clearCart();
-            router.push('/account');
+            const orderId = data.order_number || data.orderId || '';
+            router.push(`/order-confirmation?order=${encodeURIComponent(orderId)}`);
           } else {
             toast.error("Order completion failed: " + data.error, { id: toastId });
             setPaymentLoading(false);
