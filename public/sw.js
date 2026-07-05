@@ -7,30 +7,28 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
+  const url = new URL(event.request.url);
 
-  // Only handle GET requests
-  if (request.method !== 'GET') return;
+  // Only intercept POS and outlet paths
+  if (!url.pathname.startsWith('/pos') && !url.pathname.startsWith('/outlet') && !url.pathname.startsWith('/admin')) {
+    return;
+  }
 
-  // Skip non-HTTP(S) requests and API calls
-  const url = new URL(request.url);
+  if (event.request.method !== 'GET') return;
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
   if (url.pathname.startsWith('/api/')) return;
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      // Return cached if available, otherwise fetch
-      return cached || fetch(request).then((response) => {
-        // Cache successful responses for static assets
+    caches.match(event.request).then((cached) => {
+      return cached || fetch(event.request).then((response) => {
         if (response.ok && url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|woff2?)$/)) {
           const clone = response.clone();
-          caches.open('static-v1').then((cache) => cache.put(request, clone));
+          caches.open('pos-static-v1').then((cache) => cache.put(event.request, clone));
         }
         return response;
       });
     }).catch(() => {
-      // Offline fallback for page navigations
-      if (request.mode === 'navigate') {
+      if (event.request.mode === 'navigate') {
         return caches.match('/offline');
       }
       return new Response('Offline', { status: 503 });
