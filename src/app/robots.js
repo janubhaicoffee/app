@@ -5,6 +5,6 @@ export default function robots() {
       allow: '/',
       disallow: ['/private/', '/checkout/', '/admin/', '/api/', '/account/'],
     },
-    sitemap: 'https://janubhaicoffee.com/sitemap.xml',
+    sitemap: 'https://janubhai.com/sitemap.xml',
   };
 }

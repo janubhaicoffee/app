@@ -32,14 +32,18 @@ export async function generateMetadata({ params }) {
       type: 'article',
       publishedTime: article.created_at,
       authors: ['Janu Bhai Coffee'],
-      images: [imageUrl]
+      images: [imageUrl],
+      url: `https://janubhai.com/articles/${slug}`,
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
       images: [imageUrl]
-    }
+    },
+    alternates: {
+      canonical: `https://janubhai.com/articles/${slug}`,
+    },
   };
 }
 
@@ -56,7 +60,7 @@ export default async function ArticlePage({ params }) {
     notFound();
   }
 
-  const imageUrl = extractFirstImage(article.content) || 'https://janubhaicoffee.com/arsalanazad.png';
+  const imageUrl = extractFirstImage(article.content) || 'https://janubhai.com/arsalanazad.png';
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -64,12 +68,24 @@ export default async function ArticlePage({ params }) {
     "headline": article.title,
     "image": [imageUrl],
     "datePublished": article.created_at,
-    "dateModified": article.created_at,
-    "author": [{
-        "@type": "Organization",
-        "name": "Janu Bhai Coffee",
-        "url": "https://janubhaicoffee.com"
-      }]
+    "dateModified": article.updated_at || article.created_at,
+    "author": {
+      "@type": "Organization",
+      "name": "Janu Bhai Coffee",
+      "url": "https://janubhai.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Janu Bhai Coffee",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://janubhai.com/icon.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://janubhai.com/articles/${slug}`
+    }
   };
 
   return (

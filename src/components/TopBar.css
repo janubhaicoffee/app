@@ -124,6 +124,9 @@
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
 }
 
 .action-icon:hover {
@@ -270,6 +273,7 @@
     font-size: 1.4rem;
     width: 100%;
     justify-content: space-between;
+    padding: 12px 0;
   }
   
   .dropdown.mobile-dropdown {
@@ -298,7 +302,7 @@
   
   .dropdown-item {
     font-size: 1.1rem;
-    padding: 10px 0;
+    padding: 14px 0;
     border-bottom: none;
   }
   

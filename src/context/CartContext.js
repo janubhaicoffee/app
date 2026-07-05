@@ -1,5 +1,7 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from 'react';
+import { migrateCartFromCookies } from '@/lib/cartHydration';
+import { safeGetItem, safeSetItem, safeParseJSON } from '@/lib/safeStorage';
 
 const CartContext = createContext();
 
@@ -8,64 +10,41 @@ export function CartProvider({ children }) {
   const [interceptorItem, setInterceptorItem] = useState(null);
   const [sessionId, setSessionId] = useState("");
 
-  // Load from local storage on mount and check for hydrated session cookie
+  // Load from local storage on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('janu_bhai_cart');
-    let initialCart = [];
-    if (savedCart) {
-      try {
-        initialCart = JSON.parse(savedCart);
-        setCartItems(initialCart);
-      } catch (e) {
-        console.error("Failed to parse cart");
-      }
+    const savedCart = safeGetItem('janu_bhai_cart');
+    let initialCart = safeParseJSON(savedCart, []);
+    if (initialCart.length > 0) {
+      setCartItems(initialCart);
     }
 
-    let sid = localStorage.getItem('janu_bhai_cart_session_id');
+    const oldCartItems = migrateCartFromCookies();
+    if (oldCartItems.length > 0) {
+      setCartItems(oldCartItems);
+    }
+
+    let sid = safeGetItem('janu_bhai_cart_session_id');
     if (!sid) {
       sid = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem('janu_bhai_cart_session_id', sid);
+      safeSetItem('janu_bhai_cart_session_id', sid);
     }
     setSessionId(sid);
-
-    // Hydration check from session cookie
-    const getCookie = (name) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
-      return null;
-    };
-
-    const cartCookie = getCookie('janu_bhai_cart_session');
-    if (cartCookie) {
-      try {
-        const hydratedItems = JSON.parse(decodeURIComponent(cartCookie));
-        if (Array.isArray(hydratedItems) && hydratedItems.length > 0) {
-          setCartItems(hydratedItems);
-          // Delete cookie by setting expiry
-          document.cookie = "janu_bhai_cart_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-        }
-      } catch (e) {
-        console.error("Failed to parse hydrated cart session cookie:", e);
-      }
-    }
   }, []);
 
   // Save to local storage on change
   useEffect(() => {
-    localStorage.setItem('janu_bhai_cart', JSON.stringify(cartItems));
+    safeSetItem('janu_bhai_cart', JSON.stringify(cartItems));
     
     if (sessionId) {
-      // Secretly track abandoned cart
       fetch('/api/abandoned-carts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           session_id: sessionId,
           cart_payload: cartItems,
-          email: localStorage.getItem('janu_bhai_email') // If we capture email early
+          email: safeGetItem('janu_bhai_email')
         })
-      }).catch(e => console.error("Tracking error", e));
+      }).catch(() => {});
     }
   }, [cartItems, sessionId]);
 

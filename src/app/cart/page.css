@@ -104,10 +104,19 @@
 .quantity-selector.small button {
   background: transparent;
   border: none;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   color: var(--text-primary);
-  width: 25px;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.quantity-selector.small button:active {
+  background: var(--bg-color-dark);
 }
 
 .quantity-selector.small span {
@@ -120,12 +129,14 @@
   border: none;
   color: var(--accent-red);
   cursor: pointer;
-  padding: 8px;
+  padding: 10px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  width: 44px;
+  height: 44px;
 }
 
 .remove-btn:hover {
@@ -213,15 +224,26 @@ hr {
 
 /* Mobile Responsiveness */
 @media (max-width: 800px) {
-  .cart-page { padding: 40px 0; }
+  .cart-page { padding: 30px 0; }
   .cart-title { font-size: 2.2rem; margin-bottom: 25px; }
-  .cart-master-card { flex-direction: column; }
-  .cart-items-section, .cart-summary-section { padding: 30px 20px; }
-  .cart-summary-section { border-left: none; border-top: 1px solid var(--border-color); }
+  .cart-master-card { flex-direction: column; border-radius: 12px; }
+  .cart-items-section { padding: 20px 16px; gap: 16px; }
+  .cart-summary-section { padding: 24px 16px; border-left: none; border-top: 1px solid var(--border-color); }
   
-  .cart-item { flex-direction: column; align-items: flex-start; gap: 15px; }
-  .cart-item-img-wrapper { margin: 0 auto; }
+  .cart-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+  .cart-item-img-wrapper { margin: 0 auto; width: 80px; height: 80px; }
   .cart-item-details { width: 100%; text-align: center; }
+  .cart-item-details h3 { font-size: 1rem; }
   .cart-item-actions { width: 100%; justify-content: space-between; }
-  .item-total { width: 100%; text-align: center; margin-top: 10px; }
+  .item-total { width: 100%; text-align: center; margin-top: 8px; font-size: 1.1rem; }
+
+  .cart-summary-section h2 { font-size: 1.2rem; margin-bottom: 20px; }
+  .summary-row { font-size: 0.95rem; }
+  .summary-row.total { font-size: 1.2rem; }
+  .cart-checkout-btn { padding: 16px; font-size: 1rem; margin-top: 20px; }
 }

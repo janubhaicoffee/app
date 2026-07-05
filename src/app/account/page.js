@@ -42,7 +42,7 @@ export default function AccountPage() {
   
   const router = useRouter();
 
-  useEffect(() => {
+useEffect(() => {
     let mounted = true;
 
     const fetchUserData = async (session) => {
@@ -54,6 +54,7 @@ export default function AccountPage() {
         
         setUser(session.user);
         setSessionToken(session.access_token);
+        setLoading(false);  // <-- FIXED: Set loading false after we have session
 
         // Fetch Profile for Address
         const { data: profile } = await supabase

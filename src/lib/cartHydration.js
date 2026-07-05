@@ -27,6 +27,53 @@ export function serializeCart(cartItems) {
   }
 }
 
+export function migrateCartFromCookies() {
+  if (typeof window === 'undefined') return [];
+  
+  try {
+    // Check if we have new encrypted localStorage version
+    const hasNewEncrypted = localStorage.getItem('janu_bhai_cart_encrypted');
+    if (hasNewEncrypted === 'true') {
+      // Use new encrypted version
+      const encrypted = localStorage.getItem('janu_bhai_cart_session');
+      if (encrypted) {
+        try {
+          return JSON.parse(atob(encrypted));
+        } catch (e) {
+          // If parsing fails, clear corrupted data
+          localStorage.removeItem('janu_bhai_cart_session');
+        }
+      }
+      return [];
+    }
+    
+    // Fallback to old cookie-based cart data
+    const cookies = document.cookie.split(';');
+    const sessionCookie = cookies.find(c => c.trim().startsWith('janu_bhai_cart_session='));
+    if (!sessionCookie) return [];
+    
+    const cookieValue = sessionCookie.split('=')[1];
+    try {
+      const parsed = JSON.parse(cookieValue);
+      
+      // Migrate to new encrypted format
+      const encrypted = btoa(JSON.stringify(parsed));
+      localStorage.setItem('janu_bhai_cart_session', encrypted);
+      localStorage.setItem('janu_bhai_cart_encrypted', 'true');
+      localStorage.setItem('janu_bhai_cart_timestamp', Date.now().toString());
+      
+      // Remove old cookie (we can't delete cookies via JS, but browser will eventually)
+      return parsed;
+    } catch (e) {
+      console.error('Failed to migrate cart from cookies:', e);
+      return [];
+    }
+  } catch (e) {
+    console.error('Error in cart migration:', e);
+    return [];
+  }
+}
+
 export function deserializeCart(payload) {
   if (!payload) return [];
   

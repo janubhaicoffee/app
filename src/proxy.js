@@ -8,8 +8,13 @@ const mainSitePaths = [
   '/articles', '/menu', '/claim', '/track'
 ];
 
+const BLOCKED_REFERRERS = [
+  'spam-site',
+  'buy-traffic',
+];
+
 export default async function proxy(request) {
-  const { pathname } = request.nextUrl
+  const { pathname, searchParams } = request.nextUrl
   const hostname = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
   const host = hostname.split(':')[0]
 
@@ -42,6 +47,21 @@ export default async function proxy(request) {
       return NextResponse.rewrite(
         new URL(`/admin${pathname}${request.nextUrl.search}`, request.url)
       )
+    }
+  }
+
+  // Security: block malicious referrers
+  const referer = request.headers.get('referer') || '';
+  if (BLOCKED_REFERRERS.some((r) => referer.includes(r))) {
+    return new NextResponse(null, { status: 403 });
+  }
+
+  // Security: CSRF protection for non-GET API requests
+  if (pathname.startsWith('/api/') && request.method !== 'GET') {
+    const origin = request.headers.get('origin');
+    const host = request.headers.get('host');
+    if (origin && host && !origin.includes(host)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
   }
 

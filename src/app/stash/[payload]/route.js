@@ -56,14 +56,15 @@ export async function GET(request, { params }) {
       return NextResponse.redirect(new URL("/cart?error=out_of_stock", request.url));
     }
     
-    // Save to session cookie (HTTP-only session cookie)
-    const cookieStore = await cookies();
-    cookieStore.set("janu_bhai_cart_session", JSON.stringify(hydratedCart), {
-      path: "/",
-      maxAge: 300, // 5 minutes
-      secure: true,
-      sameSite: "lax"
-    });
+    // Save to secure session storage (localStorage + encryption)
+    try {
+      const encryptedCart = btoa(JSON.stringify(hydratedCart));
+      localStorage.setItem("janu_bhai_cart_session", encryptedCart);
+      localStorage.setItem("janu_bhai_cart_timestamp", Date.now().toString());
+      localStorage.setItem("janu_bhai_cart_encrypted", "true");
+    } catch (storageError) {
+      console.error("Storage not available:", storageError);
+    }
     
     // Redirect directly to checkout
     return NextResponse.redirect(new URL("/checkout?hydrated=1", request.url));

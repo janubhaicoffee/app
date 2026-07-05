@@ -390,6 +390,7 @@ export default function ProductClient({ initialProduct }) {
           <span className="breadcrumb-sep">/</span>
           <span className="breadcrumb-current">{product?.name || "Product"}</span>
         </nav>
+        
         <div className="container">
           <div className="product-hero">
             <motion.div
@@ -406,7 +407,7 @@ export default function ProductClient({ initialProduct }) {
                 {isUnavailable && productStatus !== "published" && (
                   <div className="status-overlay">{productStatus === "draft" ? "Draft" : "Archived"}</div>
                 )}
-                <ImageGallery frontImage={frontImage} backImage={backImage} />
+                <ImageGallery frontImage={frontImage} backImage={backImage} productName={product.name} />
               </div>
             </motion.div>
 
@@ -735,6 +736,7 @@ export default function ProductClient({ initialProduct }) {
           font-weight: 600;
           color: var(--text-primary);
           transition: all 0.2s;
+          min-height: var(--touch-min, 44px);
         }
         .selector-btn:hover {
           border-color: var(--primary-color);

@@ -58,7 +58,7 @@ const ImageZoom = ({ src, alt }) => {
   );
 };
 
-export default function ImageGallery({ frontImage, backImage }) {
+export default function ImageGallery({ frontImage, backImage, productName }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const galleryRef = useRef(null);
 
@@ -113,10 +113,10 @@ export default function ImageGallery({ frontImage, backImage }) {
         onScroll={handleScroll}
       >
         <div className="swipe-item">
-          <ImageZoom src={frontImage} alt="Front View" />
+          <ImageZoom src={frontImage} alt={`${productName || 'Coffee'} - Front View`} />
         </div>
         <div className="swipe-item">
-          <ImageZoom src={backImage} alt="Back View" />
+          <ImageZoom src={backImage} alt={`${productName || 'Coffee'} - Back View`} />
         </div>
       </div>
       

@@ -9,6 +9,7 @@
   --accent-gold-light: #FFD54F;
   --border-color: #D7CCC8;
   --primary-color: #3E2723;
+  --touch-min: 44px;
 }
 
 * {
@@ -44,6 +45,27 @@ body {
 button, a, select, input, textarea, [role="button"], .clickable {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Touch-friendly interactive elements */
+button, a, [role="button"], .clickable, .nav-item, .selector-btn, .tab-btn {
+  min-height: var(--touch-min);
+}
+
+/* Active tap feedback for touch */
+@media (hover: none) and (pointer: coarse) {
+  button:active, 
+  .btn-primary:active, 
+  .btn-secondary:active, 
+  .btn-cta:active,
+  .action-icon:active,
+  .remove-btn:active,
+  .cart-checkout-btn:active,
+  .pulse-hover:active,
+  .selector-btn:active,
+  .tab-btn:active {
+    transform: scale(0.97) !important;
+  }
 }
 
 /* Prevent iOS callout/link preview on long-press */
@@ -137,6 +159,51 @@ img {
 }
 
 /* Selection */
+/* Keyboard focus indicator (visible only on tab navigation) */
+:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Skip-to-content link */
+.skip-link:focus {
+  clip: auto !important;
+  height: auto !important;
+  width: auto !important;
+  overflow: visible !important;
+}
+
+/* Main content anchor for skip link needs no visible outline on click but keeps :focus-visible */
+#main-content:focus {
+  outline: none;
+}
+
+/* Error boundary */
+.error-boundary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px 20px;
+  text-align: center;
+  gap: 16px;
+}
+
+.error-boundary h1 {
+  font-size: 2rem;
+  color: var(--accent-red);
+}
+
+.error-boundary p {
+  color: var(--text-secondary);
+  max-width: 400px;
+}
+
 ::selection {
   background: var(--accent-gold);
   color: var(--text-primary);
@@ -154,6 +221,10 @@ img {
   letter-spacing: 2px;
   border-radius: 4px;
   transition: all 0.2s ease;
+  min-height: var(--touch-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-secondary:hover {
@@ -173,6 +244,10 @@ img {
   letter-spacing: 2px;
   border-radius: 4px;
   transition: all 0.2s ease;
+  min-height: var(--touch-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-primary:hover {
@@ -180,6 +255,14 @@ img {
   border-color: var(--accent-red-hover);
   box-shadow: 0 6px 20px rgba(183, 28, 28, 0.3);
   transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .btn-primary, .btn-secondary {
+    padding: 14px 24px;
+    font-size: 0.95rem;
+    letter-spacing: 1.5px;
+  }
 }
 
 /* Interceptor Warning Modal Styles */

@@ -800,6 +800,7 @@
 
   .hero-desc {
     font-size: 0.95rem;
+    margin-bottom: 28px;
   }
 
   .hero-actions {
@@ -812,6 +813,8 @@
   .btn-cta-ghost {
     width: 100%;
     justify-content: center;
+    padding: 18px 36px;
+    font-size: 1rem;
   }
 
   .hero-image-frame {
@@ -846,7 +849,19 @@
     gap: 12px;
   }
 
+  .product-card-bottom .btn-outline {
+    width: 100%;
+    justify-content: center;
+    padding: 16px 24px;
+  }
+
   .story-heading {
     font-size: 1.8rem;
+  }
+
+  .story-cta .btn-cta {
+    width: 100%;
+    justify-content: center;
+    padding: 18px 36px;
   }
 }

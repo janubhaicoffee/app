@@ -178,6 +178,7 @@
   transition: all 0.3s ease;
   border-bottom: 3px solid transparent;
   position: relative;
+  min-height: var(--touch-min);
 }
 
 .tab-btn:hover {
@@ -518,6 +519,10 @@
 }
 
 @media (max-width: 480px) {
+  .product-page {
+    padding: 10px 0 100px;
+  }
+
   .product-name {
     font-size: 1.6rem;
   }
@@ -531,13 +536,31 @@
   }
 
   .tab-btn {
-    font-size: 0.75rem;
-    padding: 10px 6px;
+    font-size: 0.8rem;
+    padding: 12px 8px;
     letter-spacing: 1px;
   }
 
   .tab-pane {
     padding: 16px;
+  }
+
+  .tab-pane h3 {
+    font-size: 1rem;
+  }
+
+  .sub-freq-select {
+    min-height: 44px;
+    font-size: 0.85rem;
+  }
+
+  .mobile-sticky-btn {
+    padding: 16px;
+    font-size: 0.85rem;
+  }
+
+  .mobile-sticky-amount {
+    font-size: 1.2rem;
   }
 }
 

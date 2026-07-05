@@ -7,6 +7,9 @@ import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "react-hot-toast";
 import InterceptorModal from "@/components/InterceptorModal";
 import RegisterSW from "@/components/RegisterSW";
+import { SkipToContent } from "@/components/SkipToContent";
+import { WebVitals } from "@/components/WebVitals";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { headers } from "next/headers";
 
 const playfair = Playfair_Display({
@@ -45,16 +48,16 @@ export const metadata = {
   ],
   authors: [{ name: "Janu Bhai Coffee" }],
   creator: "Janu Bhai Coffee",
-  metadataBase: new URL("https://janubhaicoffee.com"),
+  metadataBase: new URL("https://janubhai.com"),
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "/",
+    url: "https://janubhai.com",
     title: "Janu Bhai Coffee | Premium Chikmagalur Coffee",
     description: "Authentic, small-batch roasted coffee from Chikmagaluru. Retail and commercial wholesale, delivered PAN India.",
     siteName: "Janu Bhai Coffee",
     images: [{
-      url: "/arsalanazad.png",
+      url: "https://janubhai.com/arsalanazad.png",
       width: 1200,
       height: 630,
       alt: "Janu Bhai Coffee - Born in the hills. Brewed for you."
@@ -64,7 +67,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Janu Bhai Coffee",
     description: "Authentic, small-batch roasted Chikmagalur coffee. Retail & wholesale.",
-    images: ["/arsalanazad.png"],
+    images: ["https://janubhai.com/arsalanazad.png"],
   },
   alternates: {
     canonical: "/",
@@ -76,18 +79,48 @@ export default async function RootLayout({ children }) {
   const host = headersList.get("host") || "";
   const isSubdomain = host.startsWith("admin.") || host.startsWith("outlet.") || host.startsWith("pos.");
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Janu Bhai Coffee",
-    "url": "https://janubhaicoffee.com",
-    "logo": "https://janubhaicoffee.com/icon.png",
-    "description": "Authentic, small-batch roasted coffee from the hills of Chikmagaluru. Available for retail and commercial wholesale.",
-    "sameAs": [
-      "https://www.instagram.com/janubhaicoffee",
-      "https://twitter.com/janubhaicoffee"
-    ]
-  };
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Janu Bhai Coffee",
+      "url": "https://janubhai.com",
+      "logo": "https://janubhai.com/icon.png",
+      "description": "Authentic, small-batch roasted coffee from the hills of Chikmagaluru. Available for retail and commercial wholesale.",
+      "sameAs": [
+        "https://www.instagram.com/janubhaicoffee",
+        "https://twitter.com/janubhaicoffee"
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Ground Floor, Shop 16, Building A1, Gafoor Nagar Dhalan, Jamia Nagar",
+        "addressLocality": "New Delhi",
+        "addressRegion": "Delhi",
+        "postalCode": "110025",
+        "addressCountry": "IN"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+91-8527976791",
+        "contactType": "customer service",
+        "availableLanguage": ["English", "Hindi"]
+      }
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Janu Bhai Coffee",
+      "url": "https://janubhai.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://janubhai.com/?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+  ];
 
   return (
     <html lang="en">
@@ -102,16 +135,24 @@ export default async function RootLayout({ children }) {
         />
       </head>
       <body className={`${playfair.variable} ${inter.variable}`}>
+        <SkipToContent />
+        <WebVitals />
         <RegisterSW />
-        <Toaster position="top-center" />
-        <AuthProvider>
-          <CartProvider>
-            {!isSubdomain && <TopBar />}
-            <InterceptorModal />
-            {children}
-            {!isSubdomain && <Footer />}
-          </CartProvider>
-        </AuthProvider>
+        <Toaster position="top-center" toastOptions={{
+          style: { minHeight: '44px', fontSize: '14px' },
+        }} />
+        <ErrorBoundary>
+          <AuthProvider>
+            <CartProvider>
+              {!isSubdomain && <TopBar />}
+              <main id="main-content" role="main" tabIndex={-1}>
+                <InterceptorModal />
+                {children}
+              </main>
+              {!isSubdomain && <Footer />}
+            </CartProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
