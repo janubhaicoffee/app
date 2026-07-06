@@ -8,6 +8,10 @@ import OutletDashboard from "./dashboard/page";
 
 export default function OutletPortalPage() {
   const router = useRouter();
+  const redirectAdmin = () => {
+    const isSub = typeof window !== "undefined" && window.location.hostname.startsWith("outlet.");
+    router.push(isSub ? "/dashboard" : "/outlet/dashboard");
+  };
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isAuthorizedAdmin, setIsAuthorizedAdmin] = useState(false);
@@ -45,7 +49,7 @@ export default function OutletPortalPage() {
             const data = await response.json();
             if (data.isAdmin) {
               setIsAuthorizedAdmin(true);
-              router.push("/dashboard");
+              redirectAdmin();
             } else {
               setIsAuthorizedAdmin(false);
             }
@@ -144,7 +148,7 @@ export default function OutletPortalPage() {
         localStorage.removeItem("outlet_login_lockout");
         setIsAuthenticated(true);
         setIsAuthorizedAdmin(true);
-        router.push("/dashboard");
+        redirectAdmin();
         return;
       }
 
@@ -163,7 +167,7 @@ export default function OutletPortalPage() {
         localStorage.removeItem("outlet_login_lockout");
         setIsAuthenticated(true);
         setIsAuthorizedAdmin(true);
-        router.push("/dashboard");
+        redirectAdmin();
         return;
       }
 
@@ -243,7 +247,7 @@ export default function OutletPortalPage() {
           localStorage.removeItem("outlet_login_lockout");
           setIsAuthenticated(true);
           setIsAuthorizedAdmin(true);
-          router.push("/dashboard");
+          redirectAdmin();
         } else {
           await supabase.auth.signOut();
           setLoginError("Access Denied: Only authorized managers have permission to enter the outlet portal.");

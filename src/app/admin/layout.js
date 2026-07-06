@@ -8,7 +8,13 @@ export const metadata = {
   robots: {
     index: false,
     follow: false
-  }
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "JBC Admin",
+  },
 };
 
 export default function AdminLayout({ children }) {

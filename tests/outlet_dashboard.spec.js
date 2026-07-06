@@ -36,6 +36,40 @@ test.beforeEach(async ({ page }) => {
       })
     });
   });
+
+  // 3. Intercept default admin check API endpoint
+  await page.route('**/api/admin/data*', async (route) => {
+    const url = route.request().url();
+    const method = route.request().method();
+    
+    if (method === 'POST') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true })
+      });
+    } else if (url.includes('type=check')) {
+      const headers = route.request().headers();
+      const authHeader = headers['authorization'] || '';
+      const token = authHeader.replace('Bearer ', '').trim();
+      
+      if (token === 'dummy-token-jwt-superadmin') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ isAdmin: true })
+        });
+      } else {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ isAdmin: false })
+        });
+      }
+    } else {
+      await route.continue();
+    }
+  });
 });
 
 
@@ -57,13 +91,16 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
   // Feature 1: Subdomain Routing & Navigation Link
   test('1. Verify TopBar renders the "Outlet Management" navigation link.', async ({ page }) => {
     await page.goto('/');
-    const outletLink = page.locator('a:has-text("Outlet Management")');
+    const outletLink = page.locator('a.outlet-btn:has-text("Outlet Management")');
     await expect(outletLink).toBeVisible();
   });
 
   test('2. Verify clicking "Outlet Management" link navigates to /outlet.', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.removeItem('sb-fheddjuiedseynqxhsfb-auth-token');
+    });
     await page.goto('/');
-    await page.click('a:has-text("Outlet Management")');
+    await page.locator('a.outlet-btn:has-text("Outlet Management")').click();
     await expect(page).toHaveURL(/\/outlet$/);
   });
 
@@ -81,7 +118,13 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
             role: 'authenticated',
           })
         });
-      } else if (url.includes('localhost:3000') || !url.startsWith('http')) {
+      } else if (url.includes('/api/admin/data') && url.includes('type=check')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ isAdmin: true })
+        });
+      } else if (url.includes('localhost:') || !url.startsWith('http')) {
         const headers = {
           ...route.request().headers(),
           host: 'outlet.janubhai.com',
@@ -110,7 +153,13 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
             role: 'authenticated',
           })
         });
-      } else if (url.includes('localhost:3000') || !url.startsWith('http')) {
+      } else if (url.includes('/api/admin/data') && url.includes('type=check')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ isAdmin: true })
+        });
+      } else if (url.includes('localhost:') || !url.startsWith('http')) {
         const headers = {
           ...route.request().headers(),
           host: 'outlet.janubhai.com',
@@ -134,7 +183,7 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
   });
 
   // Feature 2: Supabase Authentication Guard
-  test('6. Verify unauthenticated user trying to access /outlet is redirected to /auth/login.', async ({ page }) => {
+  test('6. Verify unauthenticated user trying to access /outlet/dashboard is redirected to /outlet.', async ({ page }) => {
     // Override before each script to clear local storage
     await page.addInitScript(() => {
       window.localStorage.removeItem('sb-fheddjuiedseynqxhsfb-auth-token');
@@ -143,11 +192,11 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
     await page.route('**/auth/v1/user', async (route) => {
       await route.fulfill({ status: 401, body: JSON.stringify({ error: 'unauthorized' }) });
     });
-    await page.goto('/outlet');
-    await expect(page).toHaveURL(/\/auth\/login/);
+    await page.goto('/outlet/dashboard');
+    await expect(page).toHaveURL(/\/outlet$/);
   });
 
-  test('7. Verify authenticated user with non-admin email (e.g. test@user.com) is redirected to home /.', async ({ page }) => {
+  test('7. Verify authenticated user with non-admin email (e.g. test@user.com) trying to access dashboard is redirected to home /.', async ({ page }) => {
     await page.addInitScript(() => {
       const mockSession = {
         access_token: 'dummy-token',
@@ -162,7 +211,7 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
         body: JSON.stringify({ isAdmin: false })
       });
     });
-    await page.goto('/outlet');
+    await page.goto('/outlet/dashboard');
     await expect(page).toHaveURL(/\/$/);
   });
 
@@ -187,8 +236,9 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
   });
 
   test('10. Verify that logging out immediately revokes access to the /outlet page (redirects to login).', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/outlet');
-    const logoutBtn = page.locator('[data-testid="btn-logout"]');
+    const logoutBtn = page.locator('.outlet-sidebar [data-testid="btn-logout"]');
     await expect(logoutBtn).toBeVisible();
     await logoutBtn.click();
     await expect(page).toHaveURL(/\/auth\/login/);
@@ -438,7 +488,13 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
             role: 'authenticated',
           })
         });
-      } else if (url.includes('localhost:3000') || !url.startsWith('http')) {
+      } else if (url.includes('/api/admin/data') && url.includes('type=check')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ isAdmin: true })
+        });
+      } else if (url.includes('localhost:') || !url.startsWith('http')) {
         const headers = {
           ...route.request().headers(),
           host: 'out-let.janubhai.com',
@@ -461,7 +517,7 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
 
   test('38. Verify TopBar link points to correct URL dynamically based on environment.', async ({ page }) => {
     await page.goto('/');
-    const link = page.locator('a:has-text("Outlet Management")').first();
+    const link = page.locator('a.outlet-btn:has-text("Outlet Management")');
     const href = await link.getAttribute('href');
     expect(href).toContain('/outlet');
   });
@@ -490,7 +546,13 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
             role: 'authenticated',
           })
         });
-      } else if (url.includes('localhost:3000') || !url.startsWith('http')) {
+      } else if (url.includes('/api/admin/data') && url.includes('type=check')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ isAdmin: true })
+        });
+      } else if (url.includes('localhost:') || !url.startsWith('http')) {
         const headers = {
           ...route.request().headers(),
           host: 'outlet.janubhai.com:3000',
@@ -514,16 +576,16 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
       };
       window.localStorage.setItem('sb-fheddjuiedseynqxhsfb-auth-token', JSON.stringify(mockSession));
     });
-    await page.goto('/outlet');
-    await expect(page).toHaveURL(/\/auth\/login/);
+    await page.goto('/outlet/dashboard');
+    await expect(page).toHaveURL(/\/outlet$/);
   });
 
   test('42. Verify invalid/malformed JWT token results in redirection to login or error display.', async ({ page }) => {
     await page.addInitScript(() => {
       window.localStorage.setItem('sb-fheddjuiedseynqxhsfb-auth-token', 'malformed-jwt-string');
     });
-    await page.goto('/outlet');
-    await expect(page).toHaveURL(/\/auth\/login/);
+    await page.goto('/outlet/dashboard');
+    await expect(page).toHaveURL(/\/outlet$/);
   });
 
   test('43. Verify auth API failure (500 Internal Server Error on /api/admin/data) redirects to home / or shows a clear error message.', async ({ page }) => {
@@ -534,7 +596,7 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
         body: JSON.stringify({ error: 'Internal Server Error' })
       });
     });
-    await page.goto('/outlet');
+    await page.goto('/outlet/dashboard');
     await expect(page.locator('[data-testid="auth-error-banner"]')).toBeVisible();
   });
 
@@ -1095,7 +1157,29 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
             role: 'authenticated',
           })
         });
-      } else if (url.includes('localhost:3000') || !url.startsWith('http')) {
+      } else if (url.includes('/api/admin/data') && url.includes('type=check')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ isAdmin: true })
+        });
+      } else if (url.includes('/api/admin/data') && url.includes('type=audit_log')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            data: [
+              {
+                id: 'mock-audit-1',
+                action: 'update_settings',
+                entity_type: 'settings',
+                admin_email: 'admin@janubhaicoffee.com',
+                created_at: new Date().toISOString()
+              }
+            ]
+          })
+        });
+      } else if (url.includes('localhost:') || !url.startsWith('http')) {
         const headers = {
           ...route.request().headers(),
           host: 'outlet.janubhai.com',

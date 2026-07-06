@@ -13,7 +13,7 @@ const BLOCKED_REFERRERS = [
   'buy-traffic',
 ];
 
-export default async function proxy(request) {
+export async function proxy(request) {
   const { pathname, searchParams } = request.nextUrl
   const hostname = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
   const host = hostname.split(':')[0]

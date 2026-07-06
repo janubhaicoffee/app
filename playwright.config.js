@@ -8,15 +8,15 @@ module.exports = defineConfig({
   workers: 1, // run tests sequentially to avoid database race conditions
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3009',
     trace: 'on-first-retry',
     // channel: 'chrome', // use system Chrome to bypass downloading binaries
     headless: true,
   },
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: true,
+    command: 'npx next start -p 3009',
+    url: 'http://localhost:3009',
+    reuseExistingServer: false,
     stdout: 'ignore',
     stderr: 'pipe',
     timeout: 120 * 1000,
