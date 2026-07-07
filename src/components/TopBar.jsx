@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -107,29 +108,53 @@ export default function TopBar() {
           {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
 
-        {isMobileMenuOpen && (
-          <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} aria-hidden="true"></div>
-        )}
-
-        <nav id="nav-menu" className={`nav-menu ${isMobileMenuOpen ? 'open' : ''}`} role="navigation" aria-label="Main navigation">
-          <div className="mobile-menu-header">
-            <Image src="/logo.png" alt="" width={50} height={50} />
-          </div>
-
+        {/* Desktop Menu */}
+        <nav id="desktop-nav-menu" className="nav-menu desktop-menu" role="navigation" aria-label="Main navigation">
           <Link href="/product/instantcoffee" className="nav-link">
             Instant Coffee
           </Link>
-          
           <Link href={outletHref} className="nav-link mobile-only-link">
             Outlet Management
           </Link>
-          
-          <Link href={user ? "/account" : "/auth/login"} className="nav-link mobile-only-link">
-            {user ? "My Account" : "Sign In"}
-          </Link>
-
           <Link href="/process" className="nav-link">Our Process</Link>
         </nav>
+
+        {/* Mobile Menu Portal */}
+        {typeof document !== 'undefined' && createPortal(
+          <>
+            {isMobileMenuOpen && (
+              <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} aria-hidden="true"></div>
+            )}
+            
+            <nav id="mobile-nav-menu" className={`nav-menu mobile-menu ${isMobileMenuOpen ? 'open' : ''}`} role="navigation" aria-label="Mobile navigation">
+              <div className="mobile-menu-header">
+                <Image src="/logo.png" alt="" width={50} height={50} />
+                <button 
+                  className="mobile-close-btn" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  aria-label="Close navigation menu"
+                >
+                  <X size={28} />
+                </button>
+              </div>
+
+              <Link href="/product/instantcoffee" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                Instant Coffee
+              </Link>
+              
+              <Link href={outletHref} className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                Outlet Management
+              </Link>
+              
+              <Link href={user ? "/account" : "/auth/login"} className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                {user ? "My Account" : "Sign In"}
+              </Link>
+
+              <Link href="/process" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Our Process</Link>
+            </nav>
+          </>,
+          document.body
+        )}
 
         <div className="topbar-actions" role="group" aria-label="User actions">
           <Link
