@@ -980,6 +980,10 @@
 }
 
 @media (max-width: 768px) {
+  .app-right-panel {
+    display: none !important;
+  }
+
   .app-left-panel {
     width: 100%;
     border-right: none;
