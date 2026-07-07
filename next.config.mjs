@@ -22,18 +22,6 @@ const nextConfig = {
         destination: '/product/instantcoffee',
         permanent: true,
       },
-      {
-        source: '/product/:path*',
-        has: [{ type: 'host', value: 'www.janubhai.com' }],
-        destination: 'https://janubhai.com/product/:path*',
-        permanent: true,
-      },
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'www.janubhai.com' }],
-        destination: 'https://janubhai.com/:path*',
-        permanent: true,
-      },
     ];
   },
   async headers() {
