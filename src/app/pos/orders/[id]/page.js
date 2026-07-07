@@ -162,7 +162,7 @@ export default function PosOrderDetail() {
     <div className="pos-fullscreen">
       {isOffline && (
         <div style={{
-          padding: "4px 8px", background: "#fff3cd", color: "#856404",
+          padding: "4px 8px", background: "var(--accent-gold-light)", color: "var(--accent-gold)",
           fontSize: 11, textAlign: "center",
         }}>
           <WifiOff size={12} style={{ verticalAlign: "middle", marginRight: 4 }} />
@@ -195,7 +195,7 @@ export default function PosOrderDetail() {
             )}
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 24, fontWeight: 800, color: "var(--accent-red)" }}>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "var(--accent-gold)" }}>
               ₹{parseFloat(order.total || 0).toFixed(2)}
             </div>
             <span className={`pos-badge ${order.status}`} style={{ marginTop: 4, display: "inline-block" }}>
@@ -205,7 +205,7 @@ export default function PosOrderDetail() {
         </div>
 
         <div className="pos-detail-items">
-          <div style={{ padding: "10px 16px", background: "var(--bg-color)", fontWeight: 600, fontSize: 14, borderBottom: "1px solid var(--border-color)" }}>
+          <div style={{ padding: "10px 16px", background: "var(--bg-espresso)", fontWeight: 600, fontSize: 14, borderBottom: "1px solid var(--border-color)" }}>
             Items
           </div>
           {(!items || items.length === 0) ? (
@@ -241,7 +241,7 @@ export default function PosOrderDetail() {
           )}
         </div>
 
-        <div style={{ background: "#fff", border: "1px solid var(--border-color)", borderRadius: 8, padding: 16, marginBottom: 16 }}>
+        <div style={{ background: "var(--bg-chocolate)", border: "1px solid var(--border-color)", borderRadius: 8, padding: 16, marginBottom: 16 }}>
           <div className="pos-total-row"><span>Subtotal</span><span>₹{parseFloat(order.subtotal || 0).toFixed(2)}</span></div>
           <div className="pos-total-row"><span>Tax</span><span>₹{parseFloat(order.tax || 0).toFixed(2)}</span></div>
           <div className="pos-total-row grand-total" style={{ fontSize: 20 }}><span>Total</span><span>₹{parseFloat(order.total || 0).toFixed(2)}</span></div>

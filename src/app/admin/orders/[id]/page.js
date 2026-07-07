@@ -5,11 +5,11 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 const STATUS_CONFIG = {
-  pending: { label: "Pending", color: "#856404", bg: "#fff3cd" },
-  processing: { label: "Processing", color: "#004085", bg: "#cce5ff" },
-  shipped: { label: "Shipped", color: "#e65100", bg: "#ffe0b2" },
-  delivered: { label: "Delivered", color: "#155724", bg: "#d4edda" },
-  cancelled: { label: "Cancelled", color: "#721c24", bg: "#f8d7da" },
+  pending: { label: "Pending", color: "#ffc107", bg: "rgba(255,193,7,0.15)" },
+  processing: { label: "Processing", color: "#42a5f5", bg: "rgba(66,165,245,0.15)" },
+  shipped: { label: "Shipped", color: "#ffa726", bg: "rgba(255,167,38,0.15)" },
+  delivered: { label: "Delivered", color: "#4caf50", bg: "rgba(76,175,80,0.15)" },
+  cancelled: { label: "Cancelled", color: "#ef5350", bg: "rgba(239,83,80,0.15)" },
 };
 
 export default function OrderDetailPage() {
@@ -104,7 +104,7 @@ export default function OrderDetailPage() {
     );
   }
   if (error) {
-    return <div className="admin-loading" style={{ color: "#c62828" }}>{error}</div>;
+    return <div className="admin-loading" style={{ color: "#ef5350" }}>{error}</div>;
   }
   if (!order) {
     return <div className="admin-loading">Order not found</div>;
@@ -143,7 +143,7 @@ export default function OrderDetailPage() {
       <div className="stats-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
         <div className="stat-card">
           <h3>Order Total</h3>
-          <p className="stat-value" style={{ color: "#2e7d32", fontSize: "1.5rem" }}>
+          <p className="stat-value" style={{ color: "#4caf50", fontSize: "1.5rem" }}>
             ₹{order.total_amount}
           </p>
         </div>
@@ -294,7 +294,7 @@ export default function OrderDetailPage() {
           <tfoot>
             <tr>
               <td colSpan="4" style={{ textAlign: "right", fontWeight: 700 }}>Total</td>
-              <td style={{ fontWeight: 700, color: "var(--accent-red)", fontSize: "1.1rem" }}>
+              <td style={{ fontWeight: 700, color: "var(--accent-primary)", fontSize: "1.1rem" }}>
                 ₹{order.total_amount}
               </td>
             </tr>
@@ -315,12 +315,14 @@ export default function OrderDetailPage() {
             style={{
               width: "100%",
               padding: "0.75rem",
-              border: "1px solid #ddd",
+              border: "1px solid var(--border-color)",
               borderRadius: "6px",
               fontFamily: "inherit",
               fontSize: "0.9rem",
               marginBottom: "0.75rem",
               resize: "vertical",
+              background: "var(--bg-espresso)",
+              color: "var(--text-warm-white)",
             }}
           />
           <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -348,7 +350,7 @@ export default function OrderDetailPage() {
             <h2>Refund Processing</h2>
           </div>
           {order.refund_status && order.refund_status !== "none" ? (
-            <div style={{ padding: "1rem", background: "#fff3cd", borderRadius: "6px" }}>
+            <div style={{ padding: "1rem", background: "rgba(255,193,7,0.15)", borderRadius: "6px", color: "var(--text-warm-white)" }}>
               <p style={{ fontWeight: 600, margin: "0 0 0.5rem" }}>
                 Refund {order.refund_status}
               </p>
@@ -470,8 +472,8 @@ function renderTimeline(order) {
                 width: "10px",
                 height: "10px",
                 borderRadius: "50%",
-                background: "var(--accent-red)",
-                border: "2px solid var(--bg-primary)",
+                background: "var(--accent-gold)",
+                border: "2px solid var(--bg-espresso)",
               }}
             />
             <p style={{ margin: 0, fontWeight: 500 }}>{ev.label}</p>
@@ -484,3 +486,4 @@ function renderTimeline(order) {
     </div>
   );
 }
+

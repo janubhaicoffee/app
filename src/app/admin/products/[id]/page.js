@@ -36,7 +36,7 @@ export default function EditProductPage() {
   }, [params.id]);
 
   if (loading) return <div className="admin-loading">Loading...</div>;
-  if (error) return <div className="admin-loading" style={{ color: "#c62828" }}>{error}</div>;
+  if (error) return <div className="admin-loading" style={{ color: "var(--accent-gold)" }}>{error}</div>;
   if (!product) return <div className="admin-loading">Product not found</div>;
 
   return <ProductEditorForm initialData={product} isNew={false} />;

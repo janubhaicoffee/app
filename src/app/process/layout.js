@@ -1,17 +1,1 @@
-export const metadata = {
-  title: "Our Process | From Chikmagaluru to Your Cup",
-  description: "Learn about how Janu Bhai Coffee is sourced from the lush hills of Chikmagaluru, handpicked, sun-dried, expertly roasted, and freeze-dried to perfection.",
-  openGraph: {
-    title: "Our Process | From Chikmagaluru to Your Cup",
-    description: "Learn about how Janu Bhai Coffee is sourced from the lush hills of Chikmagaluru, handpicked, sun-dried, expertly roasted, and freeze-dried to perfection.",
-    url: "https://janubhai.com/process",
-    images: [{ url: "https://janubhai.com/arsalanazad.png", width: 1200, height: 630 }],
-  },
-  alternates: {
-    canonical: "https://janubhai.com/process",
-  },
-};
-
-export default function ProcessLayout({ children }) {
-  return children;
-}
+﻿export const metadata = {  title: "Our Process | From Chikmagaluru to Your Cup",  description: "Learn about how Janu Bhai Coffee is sourced from the lush hills of Chikmagaluru, handpicked, sun-dried, expertly roasted, and freeze-dried to perfection.",  openGraph: {    title: "Our Process | From Chikmagaluru to Your Cup",    description: "Learn about how Janu Bhai Coffee is sourced from the lush hills of Chikmagaluru, handpicked, sun-dried, expertly roasted, and freeze-dried to perfection.",    url: "https://janubhai.com/process",    images: [{ url: "https://janubhai.com/arsalanazad.png", width: 1200, height: 630 }],  },  alternates: {    canonical: "https://janubhai.com/process",  },};export default function ProcessLayout({ children }) {  return children;}

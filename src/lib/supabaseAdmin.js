@@ -1,12 +1,1 @@
-import { createClient } from './supabaseWrapper';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "dummy-key-for-build";
-
-// This client should ONLY be used in server-side API routes to bypass RLS
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+﻿import { createClient } from './supabaseWrapper';const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "dummy-key-for-build";// This client should ONLY be used in server-side API routes to bypass RLSexport const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {  auth: {    autoRefreshToken: false,    persistSession: false  }});

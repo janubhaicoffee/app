@@ -104,8 +104,8 @@ export default function CustomerDetailPage() {
       {saveMsg && (
         <div style={{
           padding: "0.75rem 1rem", marginBottom: "1rem", borderRadius: "4px",
-          background: saveMsg.startsWith("Error") ? "#ffebee" : "#e8f5e9",
-          color: saveMsg.startsWith("Error") ? "#c62828" : "#2e7d32"
+          background: saveMsg.startsWith("Error") ? "rgba(198,40,40,0.2)" : "rgba(46,125,50,0.2)",
+          color: saveMsg.startsWith("Error") ? "#ef5350" : "#4caf50"
         }}>
           {saveMsg}
         </div>
@@ -141,14 +141,14 @@ export default function CustomerDetailPage() {
           value={tagsInput}
           onChange={e => setTagsInput(e.target.value)}
           placeholder="Enter tags separated by commas"
-          style={{ width: "100%", padding: "0.5rem", border: "1px solid var(--border-color)", borderRadius: "4px", marginBottom: "0.5rem" }}
+          style={{ width: "100%", padding: "0.5rem", border: "1px solid var(--border-color)", borderRadius: "4px", marginBottom: "0.5rem", background: "var(--bg-espresso)", color: "var(--text-warm-white)" }}
         />
         {customer.tags?.length > 0 && (
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             {customer.tags.map((tag, i) => (
               <span key={i} style={{
-                background: "var(--primary-color)", color: "#fff",
-                padding: "0.25rem 0.75rem", borderRadius: "12px", fontSize: "0.85rem"
+                background: "var(--accent-gold)", color: "#1a1a1a",
+                padding: "0.25rem 0.75rem", borderRadius: "12px", fontSize: "0.85rem", fontWeight: 600
               }}>{tag}</span>
             ))}
           </div>
@@ -165,7 +165,7 @@ export default function CustomerDetailPage() {
           onChange={e => setNotes(e.target.value)}
           placeholder="Add internal notes about this customer..."
           rows={4}
-          style={{ width: "100%", padding: "0.5rem", border: "1px solid var(--border-color)", borderRadius: "4px", resize: "vertical", fontFamily: "inherit" }}
+          style={{ width: "100%", padding: "0.5rem", border: "1px solid var(--border-color)", borderRadius: "4px", resize: "vertical", fontFamily: "inherit", background: "var(--bg-espresso)", color: "var(--text-warm-white)" }}
         />
       </div>
 
@@ -195,8 +195,8 @@ export default function CustomerDetailPage() {
                     <span style={{
                       textTransform: "capitalize", padding: "0.15rem 0.5rem", borderRadius: "4px",
                       fontSize: "0.85rem", fontWeight: 600,
-                      background: order.status === "delivered" ? "#e8f5e9" : order.status === "cancelled" ? "#ffebee" : order.status === "paid" ? "#fff3e0" : "#f3e5f5",
-                      color: order.status === "delivered" ? "#2e7d32" : order.status === "cancelled" ? "#c62828" : order.status === "paid" ? "#e65100" : "#6a1b9a"
+                      background: order.status === "delivered" ? "rgba(46,125,50,0.2)" : order.status === "cancelled" ? "rgba(198,40,40,0.2)" : order.status === "paid" ? "rgba(255,179,0,0.15)" : "rgba(106,27,154,0.15)",
+                      color: order.status === "delivered" ? "#4caf50" : order.status === "cancelled" ? "#ef5350" : order.status === "paid" ? "var(--accent-gold)" : "#ce93d8"
                     }}>{order.status}</span>
                   </td>
                 </tr>

@@ -14,13 +14,13 @@ import {
 } from 'recharts';
 
 const roleBadgeColors = {
-  superadmin: { bg: "#cce5ff", color: "#004085" },
-  owner: { bg: "#e8d5f5", color: "#6a1b9a" },
-  manager: { bg: "#bbdefb", color: "#1565c0" },
-  cashier: { bg: "#c8e6c9", color: "#2e7d32" },
-  barista: { bg: "#ffe0b2", color: "#e65100" },
-  kitchen: { bg: "#fff9c4", color: "#f57f17" },
-  staff: { bg: "#e2e3e5", color: "#383d41" }
+  superadmin: { bg: "rgba(66,165,245,0.15)", color: "#42a5f5" },
+  owner: { bg: "rgba(156,39,176,0.15)", color: "#ce93d8" },
+  manager: { bg: "rgba(66,165,245,0.15)", color: "#64b5f6" },
+  cashier: { bg: "rgba(76,175,80,0.15)", color: "#4caf50" },
+  barista: { bg: "rgba(255,167,38,0.15)", color: "#ffa726" },
+  kitchen: { bg: "rgba(216,154,30,0.15)", color: "var(--accent-gold)" },
+  staff: { bg: "rgba(158,158,158,0.15)", color: "#bdbdbd" }
 };
 
 export default function OutletDetail() {
@@ -153,8 +153,8 @@ export default function OutletDetail() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <h1 style={{ margin: 0 }}>{outlet.name}</h1>
               <span className="status-badge" style={{
-                background: outlet.status === 'active' ? '#d4edda' : '#e2e3e5',
-                color: outlet.status === 'active' ? '#155724' : '#383d41'
+                background: outlet.status === 'active' ? 'rgba(76,175,80,0.15)' : 'rgba(158,158,158,0.15)',
+                color: outlet.status === 'active' ? '#4caf50' : '#9e9e9e'
               }}>
                 {outlet.status}
               </span>
@@ -208,22 +208,22 @@ export default function OutletDetail() {
           <div className="admin-card">
             <div className="admin-card-header">
               <h2>Revenue Trend (30 Days)</h2>
-              <TrendingUp size={18} color="#2e7d32" />
+              <TrendingUp size={18} color="var(--accent-gold)" />
             </div>
             <div style={{ width: '100%', height: 280 }}>
               <ResponsiveContainer>
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="outletRevGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2e7d32" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#2e7d32" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--accent-gold)" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="var(--accent-gold)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={v => v.split('-').slice(1).join('/')} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
-                  <Tooltip formatter={v => [`₹${Number(v).toLocaleString('en-IN')}`, "Revenue"]} />
-                  <Area type="monotone" dataKey="revenue" stroke="#2e7d32" strokeWidth={2} fill="url(#outletRevGrad)" dot={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} tickFormatter={v => v.split('-').slice(1).join('/')} />
+                  <YAxis tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+                  <Tooltip formatter={v => [`₹${Number(v).toLocaleString('en-IN')}`, "Revenue"]} contentStyle={{ background: 'var(--bg-chocolate)', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
+                  <Area type="monotone" dataKey="revenue" stroke="var(--accent-gold)" strokeWidth={2} fill="url(#outletRevGrad)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -337,7 +337,7 @@ export default function OutletDetail() {
                         <span className="status-badge" style={{
                           background: order.status === 'delivered' ? '#d4edda' :
                             order.status === 'cancelled' ? '#f8d7da' :
-                            order.status === 'pending' ? '#fff3cd' : '#cce5ff',
+                            order.status === 'pending' ? 'rgba(216,154,30,0.15)' : 'rgba(216,154,30,0.1)',
                           color: order.status === 'delivered' ? '#155724' :
                             order.status === 'cancelled' ? '#721c24' :
                             order.status === 'pending' ? '#856404' : '#004085'
@@ -379,7 +379,7 @@ export default function OutletDetail() {
                 return (
                   <div key={member.id} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '0.75rem 1rem', background: '#fafafa', borderRadius: 8, border: '1px solid var(--border-color)'
+                    padding: '0.75rem 1rem', background: 'var(--bg-espresso)', borderRadius: 8, border: '1px solid var(--border-color)'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <div style={{
@@ -399,8 +399,8 @@ export default function OutletDetail() {
                         {member.role}
                       </span>
                       <span className="status-badge" style={{
-                        background: member.is_active !== false ? '#d4edda' : '#f8d7da',
-                        color: member.is_active !== false ? '#155724' : '#721c24'
+                        background: member.is_active !== false ? 'rgba(76,175,80,0.15)' : 'rgba(239,83,80,0.15)',
+                        color: member.is_active !== false ? '#4caf50' : '#ef5350'
                       }}>
                         {member.is_active !== false ? 'Active' : 'Inactive'}
                       </span>
@@ -562,7 +562,7 @@ function OutletSourcesTab({ outletId }) {
 
   return (
     <div>
-      {toast && <div style={{ padding: "10px 16px", background: toast.type === "success" ? "#d4edda" : "#f8d7da", color: toast.type === "success" ? "#155724" : "#721c24", borderRadius: "8px", marginBottom: "16px" }}>{toast.msg}</div>}
+      {toast && <div className="admin-toast" style={{ marginBottom: "16px" }}>{toast.msg}</div>}
 
       <div className="admin-card">
         <div className="admin-card-header">
@@ -593,11 +593,11 @@ function OutletSourcesTab({ outletId }) {
                   <td>₹{Number(pp.price).toLocaleString("en-IN")}</td>
                   <td>
                     {isLinked ? (
-                      <span style={{ color: "#155724", display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ color: "#4caf50", display: "flex", alignItems: "center", gap: 4 }}>
                         <Link2 size={14} /> {pp.source_product_id}
                       </span>
                     ) : (
-                      <span style={{ color: "#a0aec0" }}>Local item</span>
+                      <span style={{ color: "var(--text-secondary)" }}>Local item</span>
                     )}
                   </td>
                   <td>{isLinked ? `₹${Number(pp.commission_per_unit).toLocaleString("en-IN")}` : "-"}</td>
@@ -612,7 +612,7 @@ function OutletSourcesTab({ outletId }) {
                         saving={saving}
                       />
                     ) : isLinked ? (
-                      <button className="admin-btn outline sm" onClick={() => handleUnlink(pp.id)} disabled={saving} style={{ color: "#c62828" }}>
+                      <button className="admin-btn outline sm" onClick={() => handleUnlink(pp.id)} disabled={saving} style={{ color: "#ef5350" }}>
                         <Unlink size={12} /> Unlink
                       </button>
                     ) : (
@@ -644,15 +644,15 @@ function SourceLinkForm({ sourceProducts, searchQuery, setSearchQuery, onLink, o
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.5rem", minWidth: 250 }}>
       <div style={{ position: "relative" }}>
-        <Search size={14} style={{ position: "absolute", left: 8, top: 8, color: "#a0aec0" }} />
+        <Search size={14} style={{ position: "absolute", left: 8, top: 8, color: "var(--text-secondary)" }} />
         <input
           placeholder="Search Janu Bhai products..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          style={{ width: "100%", padding: "6px 8px 6px 28px", fontSize: "0.8rem", borderRadius: "4px", border: "1px solid var(--border-color)" }}
+          style={{ width: "100%", padding: "6px 8px 6px 28px", fontSize: "0.8rem", borderRadius: "4px", border: "1px solid var(--border-color)", background: "var(--bg-espresso)", color: "var(--text-warm-white)" }}
         />
       </div>
-      <select value={selected} onChange={e => setSelected(e.target.value)} style={{ padding: "6px", fontSize: "0.8rem", borderRadius: "4px", border: "1px solid var(--border-color)" }}>
+      <select value={selected} onChange={e => setSelected(e.target.value)} style={{ padding: "6px", fontSize: "0.8rem", borderRadius: "4px", border: "1px solid var(--border-color)", background: "var(--bg-espresso)", color: "var(--text-warm-white)" }}>
         <option value="">Select product...</option>
         {sourceProducts.filter(p => !p.already_linked).map(sp => (
           <option key={sp.id} value={sp.id}>{sp.name} - ₹{Number(sp.price).toLocaleString("en-IN")}</option>
@@ -661,7 +661,7 @@ function SourceLinkForm({ sourceProducts, searchQuery, setSearchQuery, onLink, o
       <input
         type="number" step="0.01" placeholder="Commission per unit (₹)"
         value={commission} onChange={e => setCommission(e.target.value)}
-        style={{ padding: "6px", fontSize: "0.8rem", borderRadius: "4px", border: "1px solid var(--border-color)" }}
+        style={{ padding: "6px", fontSize: "0.8rem", borderRadius: "4px", border: "1px solid var(--border-color)", background: "var(--bg-espresso)", color: "var(--text-warm-white)" }}
       />
       <div style={{ display: "flex", gap: "0.25rem" }}>
         <button type="submit" className="admin-btn sm" disabled={!selected || saving}>
@@ -680,10 +680,10 @@ function OutletCommissionsTab({ outletId }) {
   const [filterStatus, setFilterStatus] = useState("");
 
   const statusColors = {
-    pending: { bg: "#fff3cd", color: "#856404" },
-    approved: { bg: "#cce5ff", color: "#004085" },
-    paid: { bg: "#d4edda", color: "#155724" },
-    cancelled: { bg: "#f8d7da", color: "#721c24" }
+    pending: { bg: "rgba(255,193,7,0.15)", color: "#ffc107" },
+    approved: { bg: "rgba(66,165,245,0.15)", color: "#42a5f5" },
+    paid: { bg: "rgba(76,175,80,0.15)", color: "#4caf50" },
+    cancelled: { bg: "rgba(239,83,80,0.15)", color: "#ef5350" }
   };
 
   const fetchData = async () => {
@@ -723,14 +723,14 @@ function OutletCommissionsTab({ outletId }) {
   return (
     <div>
       <div className="admin-card" style={{ display: "flex", gap: "1.5rem", padding: "1.25rem", marginBottom: "1rem" }}>
-        <div><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Pending</span><div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#856404" }}>₹{(totals.pending || 0).toLocaleString()}</div></div>
-        <div><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Approved</span><div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#004085" }}>₹{(totals.approved || 0).toLocaleString()}</div></div>
-        <div><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Paid</span><div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#155724" }}>₹{(totals.paid || 0).toLocaleString()}</div></div>
+        <div><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Pending</span><div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#ffc107" }}>₹{(totals.pending || 0).toLocaleString()}</div></div>
+        <div><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Approved</span><div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#42a5f5" }}>₹{(totals.approved || 0).toLocaleString()}</div></div>
+        <div><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Paid</span><div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#4caf50" }}>₹{(totals.paid || 0).toLocaleString()}</div></div>
         <div><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Total</span><div style={{ fontSize: "1.1rem", fontWeight: 700 }}>₹{totals.total.toLocaleString()}</div></div>
       </div>
 
       <div className="admin-toolbar">
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: "0.5rem", borderRadius: "6px", border: "1px solid var(--border-color)", fontSize: "0.85rem" }}>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ padding: "0.5rem", borderRadius: "6px", border: "1px solid var(--border-color)", fontSize: "0.85rem", background: "var(--bg-espresso)", color: "var(--text-warm-white)" }}>
           <option value="">All Status</option>
           <option value="pending">Pending</option>
           <option value="approved">Approved</option>
@@ -770,18 +770,18 @@ function OutletCommissionsTab({ outletId }) {
                   <span style={{
                     display: "inline-block", padding: "0.15rem 0.5rem", borderRadius: "4px",
                     fontSize: "0.8rem", fontWeight: 600,
-                    ...(statusColors[c.status] || { bg: "#e2e3e5", color: "#383d41" })
+                    ...(statusColors[c.status] || { bg: "rgba(158,158,158,0.15)", color: "#9e9e9e" })
                   }}>{c.status}</span>
                 </td>
                 <td>
                   <div style={{ display: "flex", gap: "0.25rem" }}>
                     {c.status === "pending" && (
-                      <button className="admin-btn sm" onClick={() => doAction("approve_commission", c.id)} style={{ background: "#004085", color: "#fff", fontSize: "0.75rem" }}>
+                      <button className="admin-btn sm" onClick={() => doAction("approve_commission", c.id)} style={{ fontSize: "0.75rem" }}>
                         <CheckCircle size={12} /> Approve
                       </button>
                     )}
                     {c.status === "approved" && (
-                      <button className="admin-btn sm" onClick={() => doAction("pay_commission", c.id)} style={{ background: "#155724", color: "#fff", fontSize: "0.75rem" }}>
+                      <button className="admin-btn sm" onClick={() => doAction("pay_commission", c.id)} style={{ fontSize: "0.75rem" }}>
                         <DollarSign size={12} /> Pay
                       </button>
                     )}
