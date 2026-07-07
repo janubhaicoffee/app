@@ -6,7 +6,7 @@ import "./Footer.css";
 
 export default function Footer() {
   const pathname = usePathname();
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return null;
+  if (pathname === '/' || pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return null;
 
   return (
     <footer className="global-footer">

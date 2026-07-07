@@ -88,7 +88,7 @@ export default function TopBar() {
     return () => menu.removeEventListener('keydown', trap);
   }, [isMobileMenuOpen, pathname]);
 
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return null;
+  if (pathname === '/' || pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return null;
 
   const cartCount = getCartCount();
 
