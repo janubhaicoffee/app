@@ -22,10 +22,10 @@
 
 .image-wrapper {
   position: relative;
-  background: #fff;
+  background: var(--bg-color-dark);
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 4px 24px rgba(62, 39, 35, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
   border: 1px solid var(--border-color);
   overflow: hidden;
 }
@@ -35,7 +35,7 @@
   top: 16px;
   left: 16px;
   z-index: 20;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(42, 26, 23, 0.85);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
   border-radius: 100px;
@@ -153,11 +153,11 @@
 
 /* --- Purchase Card --- */
 .purchase-card {
-  background: #fff;
+  background: var(--bg-color-dark);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(62, 39, 35, 0.06);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
 .purchase-tabs {
@@ -183,14 +183,14 @@
 }
 
 .tab-btn:hover {
-  background: rgba(62, 39, 35, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   color: var(--text-primary);
 }
 
 .tab-btn.active {
-  color: var(--accent-red);
-  border-bottom-color: var(--accent-red);
-  background: rgba(183, 28, 28, 0.03);
+  color: var(--accent-gold);
+  border-bottom-color: var(--accent-gold);
+  background: rgba(216, 154, 30, 0.08);
 }
 
 .tab-btn-icon {
@@ -290,7 +290,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: #fff;
+  background: var(--bg-color-dark);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 0.8rem;
@@ -328,7 +328,7 @@
 }
 
 .nutrition-card {
-  background: #fff;
+  background: var(--bg-color-dark);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px;
@@ -397,18 +397,17 @@
 
 /* --- Mobile Sticky Bar --- */
 .mobile-sticky-bar {
-  display: none;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.97);
+  background: rgba(42, 26, 23, 0.95);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--border-color);
   padding: 12px 20px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  box-shadow: 0 -4px 20px rgba(62, 39, 35, 0.08);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .mobile-sticky-inner {

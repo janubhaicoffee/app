@@ -27,7 +27,7 @@
   font-size: clamp(3rem, 8vw, 6rem);
   font-weight: 900;
   line-height: 1.1;
-  color: var(--accent-red);
+  color: var(--accent-gold);
   text-transform: uppercase;
   margin-bottom: 1rem;
 }
@@ -42,7 +42,7 @@
 
 .hindi-text {
   font-size: clamp(1.8rem, 4vw, 3rem);
-  color: var(--accent-red);
+  color: var(--accent-gold);
   font-weight: 700;
 }
 
@@ -71,7 +71,7 @@
   font-family: var(--font-playfair), serif;
   font-size: clamp(1.8rem, 5vw, 2.2rem);
   color: var(--bg-color);
-  background-color: var(--accent-red);
+  background-color: var(--accent-gold);
   display: block;
   width: fit-content;
   padding: 0.5rem 2rem;
@@ -79,7 +79,7 @@
   margin: 0 auto 4rem;
   font-weight: 800;
   text-transform: uppercase;
-  box-shadow: 4px 4px 0px rgba(74, 48, 34, 0.5);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -153,14 +153,14 @@
 }
 
 .step-content {
-  background-color: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(74, 48, 34, 0.2);
+  background-color: var(--bg-color-dark);
+  border: 1px solid var(--border-color);
   padding: 1.5rem;
-  border-radius: 4px;
+  border-radius: 12px;
   width: 100%;
   max-width: 320px;
   text-align: center;
-  box-shadow: 2px 2px 0px rgba(74, 48, 34, 0.1);
+  box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.2);
   z-index: 3;
   position: relative;
 }
@@ -200,8 +200,8 @@
   margin: 4rem auto;
   padding: 2rem;
   border: 2px solid var(--border-color);
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  background-color: var(--bg-color-dark);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -216,13 +216,13 @@
 }
 
 .grade-badge {
-  background-color: var(--accent-red);
+  background-color: var(--accent-gold);
   color: var(--bg-color);
   padding: 1.5rem;
-  border-radius: 4px;
+  border-radius: 12px;
   text-align: center;
   min-width: 180px;
-  box-shadow: 4px 4px 0px rgba(74, 48, 34, 0.3);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.4);
 }
 
 .grade-badge h2 {
@@ -274,7 +274,7 @@
   gap: 1rem;
   font-weight: 700;
   font-size: 1.2rem;
-  color: var(--accent-red);
+  color: var(--accent-gold);
 }
 
 .feature-icon {
@@ -335,9 +335,9 @@
   width: 100%;
   max-width: 450px;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: 16px;
   aspect-ratio: 16/10;
-  box-shadow: 0 8px 24px rgba(62, 39, 35, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .step-loop-video {
@@ -359,13 +359,13 @@
 }
 
 .step-card-content {
-  background: #FFFDF9;
-  border: 2px solid var(--text-primary);
+  background: var(--bg-color-dark);
+  border: 1px solid var(--border-color);
   padding: 2rem;
-  border-radius: 6px;
+  border-radius: 16px;
   width: 100%;
   max-width: 420px;
-  box-shadow: 4px 4px 0px rgba(62, 39, 35, 0.1);
+  box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.2);
   position: relative;
 }
 
@@ -377,8 +377,8 @@
 }
 
 .step-icon-inner {
-  background: var(--accent-red);
-  color: #fff;
+  background: var(--accent-gold);
+  color: var(--bg-color);
   border-radius: 50%;
   padding: 6px;
   display: flex;

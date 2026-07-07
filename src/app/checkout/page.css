@@ -14,9 +14,9 @@
 
 .checkout-master-card {
   display: flex;
-  background: #fff;
+  background: var(--bg-color-dark);
   border-radius: 16px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
   overflow: hidden;
   border: 1px solid var(--border-color);
 }
@@ -25,7 +25,7 @@
 .checkout-form-section {
   flex: 3;
   padding: 50px;
-  background-color: #fff;
+  background-color: var(--bg-color-dark);
 }
 
 .section-label {
@@ -33,7 +33,7 @@
   font-family: var(--font-playfair);
   color: var(--primary-color);
   margin-bottom: 30px;
-  border-bottom: 2px solid rgba(0,0,0,0.05);
+  border-bottom: 2px solid var(--border-color);
   padding-bottom: 10px;
 }
 
@@ -83,7 +83,8 @@
   border-radius: 8px;
   font-family: var(--font-inter);
   font-size: 1rem;
-  background-color: #f9f6f0;
+  background-color: rgba(0, 0, 0, 0.15);
+  color: var(--text-primary);
   transition: all 0.3s ease;
   min-height: var(--touch-min);
 }
@@ -91,9 +92,9 @@
 .checkout-form input:focus,
 .checkout-form textarea:focus {
   outline: none;
-  border-color: var(--accent-red);
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.1);
+  border-color: var(--accent-gold);
+  background-color: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 0 3px rgba(216, 154, 30, 0.15);
 }
 
 /* RIGHT SIDE - SUMMARY */
@@ -101,7 +102,7 @@
   flex: 2;
   min-width: 350px;
   padding: 50px;
-  background-color: #fcfbfa;
+  background-color: rgba(0, 0, 0, 0.1);
   border-left: 1px solid var(--border-color);
 }
 
@@ -122,7 +123,7 @@
 
 .summary-qty {
   font-weight: bold;
-  color: var(--accent-red);
+  color: var(--accent-gold);
 }
 
 .summary-name {
@@ -161,7 +162,7 @@
 /* BUTTON & STATUS */
 .pulse-hover {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 0 4px 15px rgba(183, 28, 28, 0.3);
+  box-shadow: 0 4px 15px rgba(216, 154, 30, 0.2);
   border-radius: 8px;
   padding: 18px;
   font-size: 1.1rem;
@@ -171,7 +172,7 @@
 
 .pulse-hover:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(183, 28, 28, 0.4);
+  box-shadow: 0 8px 25px rgba(216, 154, 30, 0.35);
 }
 
 .shipping-status {
@@ -212,10 +213,10 @@
 }
 
 .typewriter-container {
-  background: #fff;
+  background: var(--bg-color-dark);
   padding: 15px 25px;
   border-radius: 50px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   border: 1px solid var(--border-color);
   display: inline-flex;
   align-items: center;
@@ -224,7 +225,7 @@
 
 .fact-label {
   font-weight: bold;
-  color: var(--accent-red);
+  color: var(--accent-gold);
   text-transform: uppercase;
   font-size: 0.85rem;
   letter-spacing: 1px;
@@ -239,7 +240,7 @@
 
 .cursor {
   font-weight: bold;
-  color: var(--accent-red);
+  color: var(--accent-gold);
   animation: blink 1s step-end infinite;
 }
 
@@ -299,9 +300,9 @@
 .checkout-assistant {
   display: flex;
   gap: 15px;
-  background-color: var(--light-bg, #f8f5f0);
+  background-color: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--accent-gold);
-  border-left: 4px solid var(--accent-red);
+  border-left: 4px solid var(--accent-gold);
   padding: 15px 20px;
   border-radius: 8px;
   margin-bottom: 25px;
@@ -318,8 +319,8 @@
 .assistant-avatar {
   width: 40px;
   height: 40px;
-  background-color: var(--accent-red);
-  color: white;
+  background-color: var(--accent-gold);
+  color: var(--bg-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
