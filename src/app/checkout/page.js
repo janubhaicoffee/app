@@ -39,6 +39,7 @@ export default function CheckoutPage() {
   
   const [checkoutMode, setCheckoutMode] = useState("standard");
   const [subFrequency, setSubFrequency] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("online");
   
   const [factIndex, setFactIndex] = useState(0);
   const [displayedFact, setDisplayedFact] = useState("");
@@ -198,6 +199,50 @@ export default function CheckoutPage() {
       let rzpOrderId = null;
       let subId = null;
 
+      const completeOrder = async (paymentId, orderId, signature) => {
+        const toastId = toast.loading("Confirming your order...");
+        try {
+          const res = await fetch('/api/order/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              formData,
+              cartItems,
+              shippingRate,
+              finalTotal,
+              paymentId,
+              razorpayOrderId: orderId,
+              razorpaySignature: signature,
+              userId,
+              isGift: checkoutMode === "gift",
+              giftMessage: formData.giftMessage,
+              isSubscription: checkoutMode === "subscription",
+              subscriptionId: subId,
+              subscriptionFrequency: subFrequency
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            toast.success(`Order Placed Successfully!`, { id: toastId });
+            clearCart();
+            const orderNumber = data.order_number || data.orderId || '';
+            router.push(`/order-confirmation?order=${encodeURIComponent(orderNumber)}`);
+          } else {
+            toast.error("Order completion failed: " + data.error, { id: toastId });
+            setPaymentLoading(false);
+          }
+        } catch (e) {
+          console.error(e);
+          toast.error("Error finalizing order. Please contact support.", { id: toastId });
+          setPaymentLoading(false);
+        }
+      };
+
+      if (paymentMethod === "cod") {
+        await completeOrder(`COD_${Date.now()}`, `ORDER_${Date.now()}`, "COD_SIGNATURE");
+        return;
+      }
+
       if (checkoutMode === "subscription") {
         const res = await fetch('/api/razorpay/subscription', {
           method: 'POST',
@@ -230,45 +275,6 @@ export default function CheckoutPage() {
       }
 
       const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-      
-      const completeOrder = async (paymentId, orderId, signature) => {
-        const toastId = toast.loading("Confirming your order...");
-        try {
-          const res = await fetch('/api/order/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              formData,
-              cartItems,
-              shippingRate,
-              finalTotal,
-              paymentId,
-              razorpayOrderId: orderId,
-              razorpaySignature: signature,
-              userId,
-              isGift: checkoutMode === "gift",
-              giftMessage: formData.giftMessage,
-              isSubscription: checkoutMode === "subscription",
-              subscriptionId: subId,
-              subscriptionFrequency: subFrequency
-            })
-          });
-          const data = await res.json();
-          if (data.success) {
-            toast.success(`Order Placed Successfully!`, { id: toastId });
-            clearCart();
-            const orderId = data.order_number || data.orderId || '';
-            router.push(`/order-confirmation?order=${encodeURIComponent(orderId)}`);
-          } else {
-            toast.error("Order completion failed: " + data.error, { id: toastId });
-            setPaymentLoading(false);
-          }
-        } catch (e) {
-          console.error(e);
-          toast.error("Error finalizing order. Please contact support.", { id: toastId });
-          setPaymentLoading(false);
-        }
-      };
 
       if (!keyId) {
         toast.error("Razorpay Configuration Missing. Please contact support.");
@@ -390,6 +396,22 @@ export default function CheckoutPage() {
                   <p className="shipping-days">Estimated: {shippingRate.estimated_delivery_days} Days</p>
                 </div>
               )}
+
+              <div className="payment-method-section mt-20 mb-20" style={{marginTop: '20px', marginBottom: '20px'}}>
+                <label className="section-label" style={{display: 'block', marginBottom: '10px'}}>Payment Method</label>
+                <div className="payment-methods-grid" style={{display: 'flex', gap: '15px'}}>
+                  <label className={`payment-option ${paymentMethod === 'online' ? 'active' : ''}`} style={{flex: 1, padding: '12px', border: paymentMethod === 'online' ? '2px solid var(--primary-color)' : '1px solid #ccc', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <input type="radio" name="paymentMethod" value="online" checked={paymentMethod === "online"} onChange={(e) => setPaymentMethod(e.target.value)} style={{accentColor: 'var(--primary-color)'}} />
+                    <span>Pay Online</span>
+                  </label>
+                  {checkoutMode !== "subscription" && (
+                    <label className={`payment-option ${paymentMethod === 'cod' ? 'active' : ''}`} style={{flex: 1, padding: '12px', border: paymentMethod === 'cod' ? '2px solid var(--primary-color)' : '1px solid #ccc', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                      <input type="radio" name="paymentMethod" value="cod" checked={paymentMethod === "cod"} onChange={(e) => setPaymentMethod(e.target.value)} style={{accentColor: 'var(--primary-color)'}} />
+                      <span>Cash on Delivery</span>
+                    </label>
+                  )}
+                </div>
+              </div>
 
               <button type="submit" className="btn-primary full-width mt-20 pulse-hover" disabled={shippingLoading || !!shippingError || formData.pincode.length !== 6 || paymentLoading}>
                 {paymentLoading ? 'PROCESSING...' : `PAY ₹ ${finalTotal}`}

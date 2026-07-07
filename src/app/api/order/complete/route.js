@@ -40,19 +40,23 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "Price mismatch detected. Order rejected." }, { status: 400 });
     }
 
-    // 1. Verify Razorpay Signature
-    const secret = process.env.NEXT_SECRET_RAZORPAY_KEY;
-    const payloadToSign = isSubscription 
-      ? paymentId + "|" + razorpayOrderId 
-      : razorpayOrderId + "|" + paymentId;
+    // 1. Verify Razorpay Signature (Skip if COD)
+    const isCOD = paymentId && paymentId.startsWith("COD_") && razorpaySignature === "COD_SIGNATURE";
 
-    const generatedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(payloadToSign)
-      .digest("hex");
+    if (!isCOD) {
+      const secret = process.env.NEXT_SECRET_RAZORPAY_KEY;
+      const payloadToSign = isSubscription 
+        ? paymentId + "|" + razorpayOrderId 
+        : razorpayOrderId + "|" + paymentId;
 
-    if (generatedSignature !== razorpaySignature) {
-      return NextResponse.json({ success: false, error: "Invalid payment signature. Payment verification failed." }, { status: 400 });
+      const generatedSignature = crypto
+        .createHmac("sha256", secret)
+        .update(payloadToSign)
+        .digest("hex");
+
+      if (generatedSignature !== razorpaySignature) {
+        return NextResponse.json({ success: false, error: "Invalid payment signature. Payment verification failed." }, { status: 400 });
+      }
     }
 
     const orderNumber = `JB-${Math.floor(Date.now() / 1000)}`;
@@ -74,8 +78,8 @@ export async function POST(request) {
         order_number: orderNumber,
         shipping_charges: parseFloat(shippingRate.shipping_cost),
         discount: 0,
-        cod_charges: 0,
-        payment_type: "prepaid",
+        cod_charges: isCOD ? finalTotal : 0,
+        payment_type: isCOD ? "cod" : "prepaid",
         order_amount: finalTotal,
         package_weight: weight,
         package_length: 10,

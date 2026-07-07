@@ -238,12 +238,14 @@
   
   .logo-container {
     grid-column: 2;
+    grid-row: 1;
     display: flex;
     justify-content: center;
   }
   
   .topbar-actions {
     grid-column: 3;
+    grid-row: 1;
     justify-content: flex-end;
   }
 
@@ -253,6 +255,7 @@
 
   .mobile-menu-btn {
     grid-column: 1;
+    grid-row: 1;
     justify-self: start;
     display: flex;
     align-items: center;
