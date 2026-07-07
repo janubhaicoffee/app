@@ -1,15 +1,22 @@
 :root {
-  --bg-color: #F8F1E4;
-  --bg-color-dark: #EDE3D0;
-  --text-primary: #3E2723;
-  --text-secondary: #5D4037;
-  --accent-red: #B71C1C;
-  --accent-red-hover: #9A1515;
-  --accent-gold: #FFB300;
-  --accent-gold-light: #FFD54F;
-  --border-color: #D7CCC8;
-  --primary-color: #3E2723;
+  --bg-color: #2A1A17;
+  --bg-color-dark: #3A241F;
+  --text-primary: #F5F0EA;
+  --text-secondary: #CBB9A8;
+  --accent-red: #D89A1E;
+  --accent-red-hover: #C28717;
+  --accent-gold: #D89A1E;
+  --accent-gold-light: #F7F3EC;
+  --border-color: rgba(245, 240, 234, 0.15);
+  --primary-color: #2A1A17;
   --touch-min: 44px;
+
+  /* Redesign specific tokens */
+  --bg-espresso: #2A1A17;
+  --bg-chocolate: #3A241F;
+  --accent-gold-mustard: #D89A1E;
+  --text-warm-white: #F5F0EA;
+  --bg-cream-section: #F7F3EC;
 }
 
 * {

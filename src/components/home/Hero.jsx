@@ -13,26 +13,25 @@ export default function Hero() {
           className="hero-text"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="hero-origin">Chikmagaluru, Karnataka</span>
           <h1 className="hero-heading">
-            Fresh Coffee,<br />
-            <span className="hero-heading-accent">Straight From</span><br />
-            The Hills.
+            REAL COFFEE.<br />
+            NO COMPROMISE.<br />
+            <span className="hero-heading-accent">JUST JANU BHAI.</span>
           </h1>
-          <p className="hero-sub">चिकमगलुरु की ताज़ा कॉफ़ी</p>
           <p className="hero-desc">
-            Single-origin, small-batch roasted coffee from one of India&apos;s
-            finest coffee growing regions. No middlemen, no compromise.
+            Single-origin, small-batch roasted coffee from India's finest estates.
+            Crafted for those who refuse to settle for anything less than perfection.
           </p>
           <div className="hero-actions">
-            <Link href="/product/instantcoffee" className="btn-cta">
+            <Link href="/product/instantcoffee" className="btn-cta-premium">
               Shop Coffee
-              <ArrowRight size={18} className="btn-arrow" />
+              <ArrowRight size={16} className="btn-arrow" />
             </Link>
-            <Link href="/process" className="btn-cta-ghost">
-              Our Process
+            <Link href="/#about" className="btn-cta-outline-premium">
+              Our Story
             </Link>
           </div>
         </motion.div>
@@ -41,17 +40,17 @@ export default function Hero() {
           className="hero-image"
           initial={{ opacity: 0, y: 40, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+          transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
         >
           <div className="hero-image-frame">
             <Image
-              src="/arsalanazad.png"
-              alt="Arsalan Azad holding Janu Bhai Coffee"
-              width={600}
-              height={600}
+              src="/product.png"
+              alt="Janu Bhai Coffee Packet - Premium Freeze Dried Instant Coffee"
+              width={650}
+              height={650}
               priority
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="hero-portrait"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 50vw"
+              className="hero-product-img"
             />
           </div>
         </motion.div>

@@ -4,22 +4,30 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { ChevronDown, ShoppingBag, User, Menu, X, ChevronRight } from "lucide-react";
+import { ShoppingBag, User, Menu, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import "./TopBar.css";
 
 export default function TopBar() {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { getCartCount } = useCart();
   const [user, setUser] = useState(null);
-  const [coffeeProducts, setCoffeeProducts] = useState([]);
   const [outletHref, setOutletHref] = useState('/outlet');
 
   const pathname = usePathname();
 
   useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+
     if (typeof window !== 'undefined') {
       const hostname = window.location.hostname;
       if (hostname.includes('janubhai.com')) {
@@ -33,19 +41,14 @@ export default function TopBar() {
       setUser(session?.user || null);
     });
 
-    async function loadProducts() {
-      const { data } = await supabase.from('products').select('id, name, category').order('created_at', { ascending: true });
-      if (data) {
-        setCoffeeProducts(data.filter(p => p.category !== 'merch'));
-      }
-    }
-    loadProducts();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Close mobile menu on Escape
@@ -90,11 +93,11 @@ export default function TopBar() {
   const cartCount = getCartCount();
 
   return (
-    <header className="topbar" role="banner">
+    <header className={`topbar ${isScrolled ? "scrolled" : "transparent"}`} role="banner">
       <div className="container topbar-container">
         <div className="logo-container">
           <Link href="/" aria-label="Janu Bhai Coffee - Home">
-            <Image src="/logo.png" alt="Janu Bhai Logo" width={75} height={75} className="logo-img" />
+            <Image src="/logo.png" alt="Janu Bhai Logo" width={60} height={60} className="logo-img" priority />
           </Link>
         </div>
 
@@ -105,80 +108,101 @@ export default function TopBar() {
           aria-controls="nav-menu"
           aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
         >
-          {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
-        {/* Desktop Menu */}
-        <nav id="desktop-nav-menu" className="nav-menu desktop-menu" role="navigation" aria-label="Main navigation">
+        {/* Desktop Menu - Centered */}
+        <nav id="desktop-nav-menu" className="desktop-menu" role="navigation" aria-label="Main navigation">
           <Link href="/product/instantcoffee" className="nav-link">
             Instant Coffee
           </Link>
-          <Link href={outletHref} className="nav-link mobile-only-link">
-            Outlet Management
+          <Link href="/process" className="nav-link">
+            Our Process
           </Link>
-          <Link href="/process" className="nav-link">Our Process</Link>
+          <Link href="/#about" className="nav-link">
+            About
+          </Link>
+          <Link href="/contact" className="nav-link">
+            Contact
+          </Link>
+          {user && (
+            <Link href={outletHref} className="nav-link">
+              Outlet
+            </Link>
+          )}
         </nav>
 
-        {/* Mobile Menu Portal */}
-        {typeof document !== 'undefined' && createPortal(
-          <>
-            {isMobileMenuOpen && (
-              <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} aria-hidden="true"></div>
-            )}
-            
-            <nav id="mobile-nav-menu" className={`nav-menu mobile-menu ${isMobileMenuOpen ? 'open' : ''}`} role="navigation" aria-label="Mobile navigation">
-              <div className="mobile-menu-header">
-                <Image src="/logo.png" alt="" width={50} height={50} />
-                <button 
-                  className="mobile-close-btn" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  aria-label="Close navigation menu"
-                >
-                  <X size={28} />
-                </button>
-              </div>
-
-              <Link href="/product/instantcoffee" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                Instant Coffee
-              </Link>
-              
-              <Link href={outletHref} className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                Outlet Management
-              </Link>
-              
-              <Link href={user ? "/account" : "/auth/login"} className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                {user ? "My Account" : "Sign In"}
-              </Link>
-
-              <Link href="/process" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Our Process</Link>
-            </nav>
-          </>,
-          document.body
-        )}
-
+        {/* Right side actions - Minimal */}
         <div className="topbar-actions" role="group" aria-label="User actions">
           <Link
             href={user ? "/account" : "/auth/login"}
-            className="action-icon"
-            aria-label={user ? "My Account" : "Sign In"}
+            className="action-link-text nav-link"
+            aria-label={user ? "My Account" : "Login"}
           >
-            <User size={24} color="var(--text-primary)" />
+            {user ? "Account" : "Login"}
           </Link>
-          <Link href={outletHref} className="outlet-btn" aria-label="Outlet Management">
-            Outlet Management
-          </Link>
+          
           <Link
             href="/cart"
             className="action-icon cart-icon"
             aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} items` : ', empty'}`}
           >
-            <ShoppingBag size={24} color="var(--text-primary)" />
+            <ShoppingBag size={20} />
             {cartCount > 0 && (
               <span className="cart-badge" aria-hidden="true">{cartCount}</span>
             )}
           </Link>
         </div>
       </div>
+
+      {/* Mobile Menu Portal */}
+      {typeof document !== 'undefined' && createPortal(
+        <>
+          {isMobileMenuOpen && (
+            <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} aria-hidden="true"></div>
+          )}
+          
+          <nav id="mobile-nav-menu" className={`mobile-menu-drawer ${isMobileMenuOpen ? 'open' : ''}`} role="navigation" aria-label="Mobile navigation">
+            <div className="mobile-menu-header">
+              <Image src="/logo.png" alt="" width={50} height={50} />
+              <button 
+                className="mobile-close-btn" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-label="Close navigation menu"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="mobile-menu-links">
+              <Link href="/product/instantcoffee" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                Instant Coffee
+              </Link>
+              <Link href="/process" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                Our Process
+              </Link>
+              <Link href="/#about" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                About
+              </Link>
+              <Link href="/contact" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                Contact
+              </Link>
+              {user && (
+                <Link href={outletHref} className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                  Outlet Management
+                </Link>
+              )}
+              <Link href={user ? "/account" : "/auth/login"} className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                {user ? "My Account" : "Login"}
+              </Link>
+              <Link href="/cart" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
+                Cart ({cartCount})
+              </Link>
+            </div>
+          </nav>
+        </>,
+        document.body
+      )}
     </header>
   );
 }
