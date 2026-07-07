@@ -26,9 +26,10 @@ export async function GET(request) {
     }
 
     // Allow superadmins to view/modify commissions for all outlets
-    const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com")
+    const adminEmails = (process.env.SUPERADMIN_EMAILS || "")
       .split(",")
-      .map(e => e.trim().toLowerCase());
+      .map(e => e.trim().toLowerCase())
+      .filter(Boolean);
     const isSuperAdmin = adminEmails.includes(user.email?.toLowerCase());
 
     if (!isSuperAdmin) {

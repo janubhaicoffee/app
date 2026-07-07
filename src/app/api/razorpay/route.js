@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import { calculateOrderTotal } from '@/lib/products';
-
-// Rate limiting stub
-const RATE_LIMIT_WINDOW = 60000;
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export async function POST(req) {
   try {
-    const { cartItems, shippingCost } = await req.json();
+    const { cartItems, shippingCost, formData, userId } = await req.json();
 
     if (!cartItems || shippingCost === undefined) {
       return NextResponse.json({ error: "Missing cart data" }, { status: 400 });
@@ -22,20 +20,72 @@ export async function POST(req) {
       key_secret: process.env.NEXT_SECRET_RAZORPAY_KEY,
     });
 
+    // 1. Calculate Server-Side Order Total
     const amount = await calculateOrderTotal(cartItems, Number(shippingCost));
+    const orderNumber = `JB-${Math.floor(Date.now() / 1000)}`;
 
+    // 2. Initialize Razorpay Order
     const options = {
       amount: amount * 100, // amount in the smallest currency unit
       currency: "INR",
-      receipt: `rcpt_${Date.now()}`
+      receipt: orderNumber,
+      notes: {
+        order_number: orderNumber
+      }
     };
-
-    // Order creation will use the actual keys
 
     const order = await razorpay.orders.create(options);
 
+    // 3. Pre-create the order in database with "pending" status (bypass RLS using supabaseAdmin)
+    const { data: orderRow, error: orderError } = await supabaseAdmin
+      .from('orders')
+      .insert({
+        user_id: userId || null,
+        customer_email: formData?.email || null,
+        customer_phone: formData?.phone || null,
+        total_amount: amount,
+        status: "pending",
+        razorpay_order_id: order.id,
+        order_number: orderNumber,
+        shipping_address: formData ? {
+          name: formData.name,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode
+        } : null
+      })
+      .select('id')
+      .single();
+
+    if (orderError || !orderRow) {
+      console.error('Failed to create pending order in Supabase:', orderError);
+      return NextResponse.json({ error: "Failed to initialize order database record" }, { status: 500 });
+    }
+
+    // 4. Save order items in database
+    const orderItemsToInsert = cartItems.map(item => ({
+      order_id: orderRow.id,
+      product_id: item.id.toString(),
+      product_name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+      variant_id: item.variant_id || null
+    }));
+
+    const { error: itemsError } = await supabaseAdmin
+      .from('order_items')
+      .insert(orderItemsToInsert);
+
+    if (itemsError) {
+      console.error('Failed to save pending order items:', itemsError);
+      // We don't fail the request, but log it
+    }
+
     return NextResponse.json({
       orderId: order.id,
+      orderNumber: orderNumber,
+      dbOrderId: orderRow.id
     });
   } catch (error) {
     console.error('Error creating Razorpay order:', error);

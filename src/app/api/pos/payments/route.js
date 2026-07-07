@@ -74,6 +74,78 @@ export async function POST(request) {
 
     if (updateError) throw updateError;
 
+    // Award Loyalty Points to Customer's associated User profile
+    try {
+      const { data: orderDetails } = await supabaseAdmin
+        .from("pos_orders")
+        .select("customer_id, total, order_number")
+        .eq("id", order_id)
+        .single();
+
+      if (orderDetails && orderDetails.customer_id) {
+        const { data: customer } = await supabaseAdmin
+          .from("customers")
+          .select("user_id, email, phone")
+          .eq("id", orderDetails.customer_id)
+          .single();
+
+        let pointsUser = customer?.user_id;
+        if (!pointsUser && customer) {
+          if (customer.email) {
+            const { data: matched } = await supabaseAdmin
+              .from('profiles')
+              .select('id')
+              .eq('email', customer.email)
+              .maybeSingle();
+            if (matched) pointsUser = matched.id;
+          }
+          if (!pointsUser && customer.phone) {
+            const { data: matched } = await supabaseAdmin
+              .from('profiles')
+              .select('id')
+              .eq('phone', customer.phone)
+              .maybeSingle();
+            if (matched) pointsUser = matched.id;
+          }
+        }
+
+        if (pointsUser) {
+          const pointsToAward = Math.floor(parseFloat(orderDetails.total || amount) / 10);
+          if (pointsToAward > 0) {
+            const { data: profile } = await supabaseAdmin
+              .from("user_profiles")
+              .select("total_points")
+              .eq("id", pointsUser)
+              .maybeSingle();
+
+            const currentPoints = profile?.total_points || 0;
+            const newPoints = currentPoints + pointsToAward;
+
+            if (profile) {
+              await supabaseAdmin
+                .from("user_profiles")
+                .update({ total_points: newPoints })
+                .eq("id", pointsUser);
+            } else {
+              await supabaseAdmin
+                .from("user_profiles")
+                .insert({ id: pointsUser, total_points: newPoints + 15 });
+            }
+
+            await supabaseAdmin
+              .from("points_ledger")
+              .insert({
+                user_id: pointsUser,
+                points_awarded: pointsToAward,
+                action_type: `POS Order #${orderDetails.order_number || order_id}`
+              });
+          }
+        }
+      }
+    } catch (pointsErr) {
+      console.error("Failed to award POS loyalty points:", pointsErr);
+    }
+
     if (shift_id) {
       const { data: shift } = await supabaseAdmin
         .from("pos_shifts")

@@ -11,7 +11,7 @@ async function verifyAdmin(request) {
   const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
   if (authError || !user) return { error: "Invalid token", status: 401 };
 
-  const adminEmails = (process.env.SUPERADMIN_EMAILS || "admin@janubhaicoffee.com").split(",").map(e => e.trim().toLowerCase());
+  const adminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
   const isEmailAdmin = adminEmails.includes(user.email?.toLowerCase());
 
   if (!isEmailAdmin) {

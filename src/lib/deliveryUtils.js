@@ -32,7 +32,7 @@ export async function processDeliveryOrder({ partner, items, total, couponUsed, 
 
   if (txData) {
     await supabaseAdmin.from("audit_log").insert({
-      admin_email: "admin@janubhaicoffee.com",
+      admin_email: "system-automated@janubhaicoffee.com",
       action: "add_transaction",
       entity_type: "transactions",
       entity_id: txData.id,

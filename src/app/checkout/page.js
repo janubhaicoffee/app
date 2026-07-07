@@ -262,7 +262,9 @@ export default function CheckoutPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             cartItems: cartItems, 
-            shippingCost: shippingRate ? shippingRate.shipping_cost : 0 
+            shippingCost: shippingRate ? shippingRate.shipping_cost : 0,
+            formData: formData,
+            userId: userId
           })
         });
         const data = await res.json();
@@ -350,41 +352,41 @@ export default function CheckoutPage() {
             <h2 className="section-label">{checkoutMode === "gift" ? "Recipient's Shipping Details" : "Shipping Details"}</h2>
             <form onSubmit={handlePayment} className="checkout-form">
               <div className="form-group">
-                <label>{checkoutMode === "gift" ? "Recipient's Full Name" : "Full Name"}</label>
-                <input type="text" name="name" required value={formData.name} onChange={handleInputChange} placeholder="e.g. Rahul Sharma" />
+                <label htmlFor="name">{checkoutMode === "gift" ? "Recipient's Full Name" : "Full Name"}</label>
+                <input id="name" type="text" name="name" required value={formData.name} onChange={handleInputChange} placeholder="e.g. Rahul Sharma" />
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Email</label>
-                  <input type="email" name="email" required value={formData.email} onChange={handleInputChange} placeholder="rahul@example.com" />
+                  <label htmlFor="email">Email</label>
+                  <input id="email" type="email" name="email" required value={formData.email} onChange={handleInputChange} placeholder="rahul@example.com" />
                 </div>
                 <div className="form-group">
-                  <label>Phone Number</label>
-                  <input type="tel" name="phone" required value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" />
+                  <label htmlFor="phone">Phone Number</label>
+                  <input id="phone" type="tel" name="phone" required value={formData.phone} onChange={handleInputChange} placeholder="+91 9876543210" />
                 </div>
               </div>
               <div className="form-group">
-                <label>Address</label>
-                <textarea name="address" rows="3" required value={formData.address} onChange={handleInputChange} placeholder="House/Flat No., Street, Landmark"></textarea>
+                <label htmlFor="address">Address</label>
+                <textarea id="address" name="address" rows="3" required value={formData.address} onChange={handleInputChange} placeholder="House/Flat No., Street, Landmark"></textarea>
               </div>
               {checkoutMode === "gift" && (
                 <div className="form-group">
-                  <label>Gift Message (Optional)</label>
-                  <textarea name="giftMessage" rows="2" value={formData.giftMessage} onChange={handleInputChange} placeholder="Write a nice message..."></textarea>
+                  <label htmlFor="giftMessage">Gift Message (Optional)</label>
+                  <textarea id="giftMessage" name="giftMessage" rows="2" value={formData.giftMessage} onChange={handleInputChange} placeholder="Write a nice message..."></textarea>
                 </div>
               )}
               <div className="form-row">
                 <div className="form-group">
-                  <label>City</label>
-                  <input type="text" name="city" required value={formData.city} onChange={handleInputChange} placeholder="New Delhi" />
+                  <label htmlFor="city">City</label>
+                  <input id="city" type="text" name="city" required value={formData.city} onChange={handleInputChange} placeholder="New Delhi" />
                 </div>
                 <div className="form-group">
-                  <label>State</label>
-                  <input type="text" name="state" required value={formData.state} onChange={handleInputChange} placeholder="Delhi" />
+                  <label htmlFor="state">State</label>
+                  <input id="state" type="text" name="state" required value={formData.state} onChange={handleInputChange} placeholder="Delhi" />
                 </div>
                 <div className="form-group">
-                  <label>PIN Code</label>
-                  <input type="text" name="pincode" required value={formData.pincode} onChange={handleInputChange} placeholder="110025" />
+                  <label htmlFor="pincode">PIN Code</label>
+                  <input id="pincode" type="text" name="pincode" required value={formData.pincode} onChange={handleInputChange} placeholder="110025" />
                 </div>
               </div>
               

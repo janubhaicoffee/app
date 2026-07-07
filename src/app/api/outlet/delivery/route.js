@@ -44,7 +44,7 @@ export async function POST(request) {
 
     // Log administrative action in audit_log table
     await supabaseAdmin.from('audit_log').insert({
-      admin_email: 'admin@janubhaicoffee.com',
+      admin_email: 'system-automated@janubhaicoffee.com',
       action: 'configure_delivery',
       entity_type: 'delivery_keys',
       entity_id: partner,

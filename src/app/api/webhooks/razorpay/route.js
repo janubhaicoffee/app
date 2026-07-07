@@ -1,12 +1,8 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { finalizeOrder } from "@/lib/orderUtils";
 import { createShipment } from "@/lib/nimbuspost";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 export async function POST(req) {
   try {
@@ -30,30 +26,40 @@ export async function POST(req) {
     }
 
     // Webhook Replay Protection
-    // Check if the event_id has already been processed to prevent replay attacks
-    const { data: existingEvent } = await supabase
+    const { data: existingEvent } = await supabaseAdmin
       .from('webhook_events')
       .select('id')
       .eq('event_id', event.id)
-      .single();
+      .maybeSingle();
 
     if (existingEvent) {
       return NextResponse.json({ status: "ok", message: "Event already processed" });
     }
 
     // Log the event as processed
-    await supabase.from('webhook_events').insert({ event_id: event.id, event_type: event.event });
+    await supabaseAdmin.from('webhook_events').insert({ event_id: event.id, event_type: event.event });
 
     if (event.event === "payment.captured" || event.event === "order.paid") {
       const paymentEntity = event.payload.payment.entity;
       const razorpayOrderId = paymentEntity.order_id;
       
-      const { error } = await supabase
+      // Fetch the pre-created order from Supabase
+      const { data: orderRow, error: fetchError } = await supabaseAdmin
         .from("orders")
-        .update({ status: "payment_webhook_received" })
-        .eq("razorpay_order_id", razorpayOrderId);
+        .select("*")
+        .eq("razorpay_order_id", razorpayOrderId)
+        .maybeSingle();
 
-      if (error) console.error("Razorpay Webhook Supabase Error");
+      if (fetchError) {
+        console.error("Error fetching order in Razorpay Webhook:", fetchError);
+      }
+
+      if (orderRow) {
+        // Finalize order using the shared order finalization logic
+        await finalizeOrder(orderRow, paymentEntity.id);
+      } else {
+        console.warn(`Order with razorpay_order_id ${razorpayOrderId} not found in DB in webhook.`);
+      }
     }
 
     if (event.event === "subscription.charged") {
@@ -62,18 +68,18 @@ export async function POST(req) {
       const paymentId = paymentEntity.id;
       const amount = paymentEntity.amount / 100;
 
-      const { data: existingOrder } = await supabase
+      const { data: existingOrder } = await supabaseAdmin
         .from("orders")
         .select("id")
         .eq("razorpay_payment_id", paymentId)
-        .single();
+        .maybeSingle();
         
       if (!existingOrder) {
-        const { data: subData } = await supabase
+        const { data: subData } = await supabaseAdmin
           .from("subscriptions")
           .select("*")
           .eq("razorpay_sub_id", subId)
-          .single();
+          .maybeSingle();
 
         if (subData) {
           const { cartItems, formData } = subData.cart_snapshot;
@@ -97,7 +103,7 @@ export async function POST(req) {
               address: formData.address,
               address_2: "",
               city: formData.city,
-              state: formData.city,
+              state: formData.state,
               pincode: formData.pincode,
               phone: formData.phone
             },
@@ -122,21 +128,30 @@ export async function POST(req) {
 
           let awbNumber = null;
           try {
-            // Using static import at top instead of dynamic require
             const shipmentData = await createShipment(orderData);
             awbNumber = shipmentData.awb_number;
           } catch (e) {
-            console.error("Auto Shipment failed");
+            console.error("Auto Shipment failed in subscription charge webhook:", e);
           }
 
-          await supabase
+          await supabaseAdmin
             .from("orders")
             .insert({
               user_id: subData.user_id,
+              customer_email: formData.email || null,
+              customer_phone: formData.phone || null,
               total_amount: amount,
               status: awbNumber ? "processing" : "payment_successful_shipping_failed",
               razorpay_payment_id: paymentId,
-              awb_number: awbNumber
+              order_number: orderNumber,
+              awb_number: awbNumber,
+              shipping_address: {
+                name: formData.name,
+                address: formData.address,
+                city: formData.city,
+                state: formData.state,
+                pincode: formData.pincode
+              }
             });
         }
       }
@@ -144,7 +159,7 @@ export async function POST(req) {
 
     return NextResponse.json({ status: "ok" });
   } catch (error) {
-    console.error("Razorpay Webhook Error");
+    console.error("Razorpay Webhook Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

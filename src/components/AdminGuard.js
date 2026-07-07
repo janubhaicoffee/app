@@ -53,6 +53,11 @@ export default function AdminGuard({ children }) {
           return;
         }
 
+        if (res.status === 403 || res.status === 401) {
+          setErrorBanner("Access Denied: This account does not have admin permissions.");
+          return;
+        }
+
         if (res.ok) {
           const data = await res.json();
           if (data.isAdmin) {
