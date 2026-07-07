@@ -88,6 +88,7 @@
 .indicator {
   width: 8px;
   height: 8px;
+  min-height: 8px !important;
   border-radius: 50%;
   background-color: var(--border-color);
   border: none;

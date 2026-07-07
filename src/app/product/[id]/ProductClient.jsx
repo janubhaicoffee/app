@@ -751,23 +751,26 @@ export default function ProductClient({ initialProduct }) {
         .scientific-details-box {
           background: #faf8f5;
           border: 1px solid #e8e0d8;
-          border-radius: 8px;
-          padding: 1rem 1.25rem;
-          margin-bottom: 1.5rem;
+          border-radius: 12px;
+          padding: 1.5rem;
+          margin-bottom: 2rem;
+          box-shadow: 0 4px 12px rgba(62, 39, 35, 0.03);
         }
         .scientific-details-box h4 {
-          margin: 0 0 0.5rem 0;
-          font-size: 0.9rem;
+          margin: 0 0 1rem 0;
+          font-size: 1.05rem;
+          font-weight: 700;
           color: var(--primary-color);
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
         }
         .scientific-details-box p {
           margin: 0;
-          font-size: 0.85rem;
+          font-size: 0.95rem;
           color: var(--text-secondary);
-          line-height: 1.5;
+          line-height: 1.7;
+          letter-spacing: 0.2px;
         }
 
         .live-update-banner {

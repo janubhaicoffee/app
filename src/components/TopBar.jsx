@@ -123,6 +123,10 @@ export default function TopBar() {
           <Link href={outletHref} className="nav-link mobile-only-link">
             Outlet Management
           </Link>
+          
+          <Link href={user ? "/account" : "/auth/login"} className="nav-link mobile-only-link">
+            {user ? "My Account" : "Sign In"}
+          </Link>
 
           <Link href="/process" className="nav-link">Our Process</Link>
         </nav>

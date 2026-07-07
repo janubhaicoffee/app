@@ -488,7 +488,7 @@
   }
 
   .product-page {
-    padding: 20px 0 100px;
+    padding: 20px 0 140px;
   }
 
   .trust-strip {
@@ -520,7 +520,7 @@
 
 @media (max-width: 480px) {
   .product-page {
-    padding: 10px 0 100px;
+    padding: 10px 0 140px;
   }
 
   .product-name {
