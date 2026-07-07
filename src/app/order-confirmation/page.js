@@ -68,22 +68,23 @@ export default function OrderConfirmationPage() {
           display: flex;
           align-items: center;
           justify-content: center;
+          padding-top: 80px;
         }
         .confirmation-card {
-          background: #fff;
+          background: var(--bg-color-dark);
           border: 1px solid var(--border-color);
           border-radius: 16px;
           padding: 3rem 2rem;
           text-align: center;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+          box-shadow: 0 20px 50px rgba(0,0,0,0.3);
         }
         .confirmation-icon {
-          color: #16a34a;
+          color: var(--accent-gold);
           margin-bottom: 1rem;
         }
         .confirmation-title {
           font-size: 1.8rem;
-          color: var(--primary-color);
+          color: var(--text-primary);
           margin: 0 0 0.5rem;
         }
         .confirmation-subtitle {
@@ -95,9 +96,9 @@ export default function OrderConfirmationPage() {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          background: #f0fdf4;
-          border: 1px solid #bbf7d0;
-          color: #15803d;
+          background: rgba(216, 154, 30, 0.1);
+          border: 1px solid rgba(216, 154, 30, 0.25);
+          color: var(--accent-gold);
           padding: 0.5rem 1.2rem;
           border-radius: 100px;
           font-weight: 700;
@@ -131,9 +132,10 @@ export default function OrderConfirmationPage() {
           color: var(--text-primary);
         }
         .confirmation-actions .btn-secondary:hover {
-          border-color: var(--primary-color);
+          border-color: var(--accent-gold);
         }
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+          .order-confirmation-page { padding-top: 100px; }
           .confirmation-card { padding: 2rem 1.2rem; }
           .confirmation-title { font-size: 1.4rem; }
         }

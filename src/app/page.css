@@ -41,8 +41,8 @@
 /* Main App Layout */
 .app-viewport {
   max-width: 1400px;
-  height: 100vh;
-  margin: 0 auto;
+  height: calc(100vh - 80px);
+  margin: 80px auto 0;
   display: flex;
   position: relative;
   z-index: 1;
@@ -990,7 +990,7 @@
   }
   
   .app-scroll-content {
-    padding: 24px 20px 100px;
+    padding: 24px 20px 160px; /* Extra bottom space for sticky bottom nav */
   }
   
   .app-header {

@@ -6,7 +6,7 @@
   --accent-red: #D89A1E;
   --accent-red-hover: #C28717;
   --accent-gold: #D89A1E;
-  --accent-gold-light: #F7F3EC;
+  --accent-gold-light: rgba(216, 154, 30, 0.15);
   --border-color: rgba(245, 240, 234, 0.15);
   --primary-color: #2A1A17;
   --touch-min: 44px;
@@ -16,7 +16,7 @@
   --bg-chocolate: #3A241F;
   --accent-gold-mustard: #D89A1E;
   --text-warm-white: #F5F0EA;
-  --bg-cream-section: #F7F3EC;
+  --bg-cream-section: #3A241F;
 }
 
 * {
@@ -235,8 +235,8 @@ img {
 }
 
 .btn-secondary:hover {
-  background-color: rgba(62, 39, 35, 0.05);
-  box-shadow: 0 4px 12px rgba(62, 39, 35, 0.1);
+  background-color: rgba(216, 154, 30, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transform: translateY(-2px);
 }
 
@@ -260,7 +260,7 @@ img {
 .btn-primary:hover {
   background-color: var(--accent-red-hover);
   border-color: var(--accent-red-hover);
-  box-shadow: 0 6px 20px rgba(183, 28, 28, 0.3);
+  box-shadow: 0 6px 20px rgba(216, 154, 30, 0.3);
   transform: translateY(-2px);
 }
 
@@ -289,8 +289,8 @@ img {
 }
 
 .modal-box {
-  background: #FDFBF7;
-  border: 3px solid var(--text-primary);
+  background: var(--bg-color-dark);
+  border: 1px solid var(--border-color);
   padding: 30px;
   max-width: 500px;
   width: 100%;
@@ -315,7 +315,7 @@ img {
 }
 
 .warning-text {
-  background: rgba(183, 28, 28, 0.08);
+  background: rgba(216, 154, 30, 0.1);
   border-left: 4px solid var(--accent-red);
   padding: 12px;
   font-weight: 500;
@@ -367,7 +367,7 @@ img {
 }
 
 .btn-cancel:hover {
-  background: rgba(62, 39, 35, 0.05);
+  background: rgba(245, 240, 234, 0.08);
 }
 
 .btn-confirm {

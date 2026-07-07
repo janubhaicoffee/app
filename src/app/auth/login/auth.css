@@ -1,33 +1,35 @@
+/* ==========================================================================
+   AUTH PAGES — Dark Luxury Theme (Login, Signup, Confirm)
+   ========================================================================== */
+
 .auth-page {
-  padding: 80px 0;
+  padding: 120px 0 80px;
   min-height: 80vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url("https://www.transparenttextures.com/patterns/always-grey.png");
+  background-color: var(--bg-color);
 }
 
 .auth-box {
-  background-color: #fff;
+  background-color: var(--bg-color-dark);
   padding: 40px;
   max-width: 450px;
+  width: 100%;
   margin: 0 auto;
-  box-shadow: 10px 10px 0px var(--text-primary);
-  border: 4px solid var(--text-primary);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
   position: relative;
 }
 
 .auth-box::before {
-  content: '';
-  position: absolute;
-  top: 6px; left: 6px; right: 6px; bottom: 6px;
-  border: 1px solid var(--border-color);
-  pointer-events: none;
+  display: none;
 }
 
 .auth-title {
   font-size: 2.5rem;
-  color: var(--accent-red);
+  color: var(--accent-gold);
   margin-bottom: 5px;
   text-align: center;
 }
@@ -49,34 +51,41 @@
 
 .auth-form label {
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   margin-bottom: 5px;
   display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.85rem;
 }
 
 .auth-form input {
   width: 100%;
   padding: 12px;
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   font-family: var(--font-inter);
   font-size: 1rem;
-  background-color: var(--bg-color);
-  transition: border-color 0.2s ease;
+  background-color: rgba(0, 0, 0, 0.15);
+  color: var(--text-primary);
+  transition: border-color 0.3s ease;
 }
 
 .auth-form input:focus {
   outline: none;
-  border-color: var(--accent-red);
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(216, 154, 30, 0.15);
 }
 
 .auth-footer {
   text-align: center;
   margin-top: 25px;
   font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .auth-link {
-  color: var(--accent-red);
+  color: var(--accent-gold);
   text-decoration: underline;
 }
 
@@ -85,20 +94,22 @@
 }
 
 .error-box {
-  background-color: #ffebee;
-  color: #c62828;
-  padding: 10px;
-  border: 1px solid #ef9a9a;
+  background-color: rgba(239, 83, 80, 0.12);
+  color: #ef5350;
+  padding: 10px 16px;
+  border: 1px solid rgba(239, 83, 80, 0.25);
+  border-radius: 8px;
   margin-bottom: 20px;
   font-size: 0.9rem;
   text-align: center;
 }
 
 .success-box {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  padding: 10px;
-  border: 1px solid #a5d6a7;
+  background-color: rgba(102, 187, 106, 0.12);
+  color: #66bb6a;
+  padding: 10px 16px;
+  border: 1px solid rgba(102, 187, 106, 0.25);
+  border-radius: 8px;
   margin-bottom: 20px;
   font-size: 0.9rem;
   text-align: center;
@@ -119,14 +130,14 @@
   display: flex;
   align-items: center;
   margin: 20px 0;
-  color: var(--text-muted, #999);
+  color: var(--text-secondary);
   font-size: 0.85rem;
 }
 .auth-divider::before, .auth-divider::after {
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--border-color, #ddd);
+  background: var(--border-color);
 }
 .auth-divider span {
   padding: 0 15px;
@@ -139,17 +150,19 @@
   gap: 10px;
   width: 100%;
   padding: 12px;
-  border: 2px solid var(--border-color, #ddd);
-  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: rgba(245, 240, 234, 0.06);
+  color: var(--text-primary);
   font-family: var(--font-inter);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
 }
 .btn-google:hover {
-  border-color: var(--text-primary);
-  background: #fafafa;
+  border-color: var(--accent-gold);
+  background: rgba(216, 154, 30, 0.08);
 }
 .btn-google:disabled {
   opacity: 0.5;
@@ -159,7 +172,7 @@
 .link-btn {
   background: none;
   border: none;
-  color: var(--accent-red);
+  color: var(--accent-gold);
   font-family: var(--font-inter);
   font-size: inherit;
   cursor: pointer;
@@ -190,4 +203,17 @@
 @keyframes popIn {
   0% { transform: scale(0.8); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .auth-page {
+    padding: 100px 16px 120px;
+  }
+  .auth-box {
+    padding: 28px 20px;
+  }
+  .auth-title {
+    font-size: 2rem;
+  }
 }

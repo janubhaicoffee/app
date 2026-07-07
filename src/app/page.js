@@ -17,7 +17,8 @@ import {
   ChevronRight, 
   Play,
   RotateCcw,
-  Plus
+  Plus,
+  User
 } from "lucide-react";
 
 // Recipes dataset (No references to "freezedried" or "0 chicory")
@@ -133,7 +134,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [selectedRecipe, setSelectedRecipe] = useState(recipes[0]);
-  const [activeSize, setActiveSize] = useState("M");
+  const [activeSize, setActiveSize] = useState("100g");
   const [favorites, setFavorites] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -171,11 +172,12 @@ export default function Home() {
   // Trigger Add to Cart for the coffee variant used
   const handleAddToCart = (e) => {
     e.stopPropagation();
+    const isLarge = activeSize === "1kg";
     const itemToAdd = {
       id: "instantcoffee",
-      variant_id: "v_thoda_100",
-      name: "Janu Bhai Instant Coffee (Thoda Hard - 100g)",
-      price: 300,
+      variant_id: isLarge ? "v_thoda_1000" : "v_thoda_100",
+      name: `Janu Bhai Instant Coffee (Thoda Hard - ${isLarge ? "1kg" : "100g"})`,
+      price: isLarge ? 3000 : 300,
       image: "/product/100gram/100gramfront.png",
       quantity: 1,
     };
@@ -186,11 +188,12 @@ export default function Home() {
 
   const handleBuyNow = () => {
     clearCart();
+    const isLarge = activeSize === "1kg";
     const itemToAdd = {
       id: "instantcoffee",
-      variant_id: "v_thoda_100",
-      name: "Janu Bhai Instant Coffee (Thoda Hard - 100g)",
-      price: 300,
+      variant_id: isLarge ? "v_thoda_1000" : "v_thoda_100",
+      name: `Janu Bhai Instant Coffee (Thoda Hard - ${isLarge ? "1kg" : "100g"})`,
+      price: isLarge ? 3000 : 300,
       image: "/product/100gram/100gramfront.png",
       quantity: 1,
     };
@@ -215,19 +218,7 @@ export default function Home() {
       <div className="app-viewport">
         {/* LEFT PANEL / MAIN LISTING */}
         <div className="app-left-panel">
-          {/* App Header */}
-          <header className="app-header">
-            <button className="app-icon-btn" onClick={() => setIsMenuOpen(true)} aria-label="Open navigation menu">
-              <Menu size={22} />
-            </button>
-            <h1 className="app-logo">Janu Bhai Coffeehouse</h1>
-            <Link href="/cart" className="app-icon-btn relative-badge" aria-label="Shopping Cart">
-              <ShoppingBag size={22} />
-              {getCartCount() > 0 && (
-                <span className="app-cart-badge">{getCartCount()}</span>
-              )}
-            </Link>
-          </header>
+
 
           <div className="app-scroll-content">
             {/* Welcoming Banner */}
@@ -339,24 +330,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Bottom Navigation Cue for Mobile Feel */}
-          <nav className="app-bottom-nav">
-            <button className="nav-nav-btn active" onClick={() => { setActiveCategory("all"); setSearchQuery(""); }}>
-              <span className="nav-nav-icon">●</span>
-              <span className="nav-nav-text">Home</span>
-            </button>
-            <button className="nav-nav-btn" onClick={() => toggleFavorite(selectedRecipe.id, { stopPropagation: () => {} })}>
-              <Heart size={20} fill={favorites.includes(selectedRecipe.id) ? "var(--accent-gold-mustard)" : "none"} color={favorites.includes(selectedRecipe.id) ? "var(--accent-gold-mustard)" : "currentColor"} />
-              <span className="nav-nav-text">Favorite</span>
-            </button>
-            <button className="nav-nav-btn" onClick={() => router.push("/cart")}>
-              <div className="relative-badge">
-                <ShoppingBag size={20} />
-                {getCartCount() > 0 && <span className="app-cart-badge-nav">{getCartCount()}</span>}
-              </div>
-              <span className="nav-nav-text">Cart</span>
-            </button>
-          </nav>
+
         </div>
 
         {/* RIGHT PANEL / DETAIL VIEW (DESKTOP) */}
@@ -391,21 +365,22 @@ export default function Home() {
                   </div>
                   <div className="detail-price-box">
                     <span className="detail-price-label">Janu Bhai Coffee</span>
-                    <span className="detail-price-amount">₹300</span>
+                    <span className="detail-price-amount">{activeSize === "1kg" ? "₹3,000" : "₹300"}</span>
                   </div>
                 </div>
 
-                {/* Size Selector */}
+                {/* Pack Size Selector */}
                 <div className="detail-size-selector">
-                  <span className="selector-title">Select Serving Size</span>
+                  <span className="selector-title">Select Coffee Powder Pack</span>
                   <div className="size-options-group">
-                    {["S", "M", "L"].map((size) => (
+                    {["100g", "1kg"].map((size) => (
                       <button 
                         key={size}
                         className={`size-btn ${activeSize === size ? "active" : ""}`}
                         onClick={() => setActiveSize(size)}
+                        style={{ borderRadius: "20px", width: "auto", padding: "0 20px" }}
                       >
-                        {size}
+                        {size} {size === "100g" ? "Starter" : "Value (Save 10%)"}
                       </button>
                     ))}
                   </div>
@@ -504,21 +479,22 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="drawer-price-tag">
-                      <span>₹300</span>
+                      <span>{activeSize === "1kg" ? "₹3,000" : "₹300"}</span>
                     </div>
                   </div>
 
-                  {/* Size Selector */}
+                  {/* Pack Size Selector */}
                   <div className="detail-size-selector">
-                    <span className="selector-title">Select Serving Size</span>
+                    <span className="selector-title">Select Coffee Powder Pack</span>
                     <div className="size-options-group">
-                      {["S", "M", "L"].map((size) => (
+                      {["100g", "1kg"].map((size) => (
                         <button 
                           key={size}
                           className={`size-btn ${activeSize === size ? "active" : ""}`}
                           onClick={() => setActiveSize(size)}
+                          style={{ borderRadius: "20px", width: "auto", padding: "0 20px" }}
                         >
-                          {size}
+                          {size} {size === "100g" ? "Starter" : "Value"}
                         </button>
                       ))}
                     </div>
@@ -565,59 +541,6 @@ export default function Home() {
                 <button className="btn-buy-now-app" onClick={handleBuyNow}>
                   Buy Now
                 </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Hamburger Menu Sidebar Navigation */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <>
-            <motion.div 
-              className="drawer-overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsMenuOpen(false)}
-              style={{ zIndex: 1100 }}
-            />
-            <motion.div 
-              className="menu-sidebar"
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            >
-              <div className="sidebar-header">
-                <h2 className="sidebar-logo">Janu Bhai</h2>
-                <button className="sidebar-close-btn" onClick={() => setIsMenuOpen(false)} aria-label="Close menu">
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="sidebar-links-list">
-                <Link href="/product/instantcoffee" className="sidebar-link-item" onClick={() => setIsMenuOpen(false)}>
-                  <span>Buy Coffee Packet</span>
-                  <ChevronRight size={16} />
-                </Link>
-                <Link href="/process" className="sidebar-link-item" onClick={() => setIsMenuOpen(false)}>
-                  <span>Our Sourcing Process</span>
-                  <ChevronRight size={16} />
-                </Link>
-                <Link href="/contact" className="sidebar-link-item" onClick={() => setIsMenuOpen(false)}>
-                  <span>Contact Us / Bulk Orders</span>
-                  <ChevronRight size={16} />
-                </Link>
-                <Link href="/track" className="sidebar-link-item" onClick={() => setIsMenuOpen(false)}>
-                  <span>Track Order</span>
-                  <ChevronRight size={16} />
-                </Link>
-              </div>
-
-              <div className="sidebar-footer">
-                <p>© {new Date().getFullYear()} Janu Bhai Coffeehouse.</p>
               </div>
             </motion.div>
           </>

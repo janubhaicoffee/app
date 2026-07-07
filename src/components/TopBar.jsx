@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ShoppingBag, User, Menu, X } from "lucide-react";
+import { ShoppingBag, Menu, X, ArrowLeft, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
+import { motion, AnimatePresence } from "framer-motion";
 import "./TopBar.css";
 
 export default function TopBar() {
@@ -17,6 +17,7 @@ export default function TopBar() {
   const [outletHref, setOutletHref] = useState('/outlet');
 
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,78 +52,51 @@ export default function TopBar() {
     };
   }, []);
 
-  // Close mobile menu on Escape
-  useEffect(() => {
-    if (pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return;
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        setIsMobileMenuOpen(false);
-      }
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isMobileMenuOpen, pathname]);
-
-  // Trap focus inside mobile menu
-  useEffect(() => {
-    if (!isMobileMenuOpen) return;
-    if (pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return;
-    const menu = document.querySelector('.nav-menu');
-    if (!menu) return;
-    const focusable = menu.querySelectorAll('a[href], button');
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    const trap = (e) => {
-      if (e.key === 'Tab') {
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-    menu.addEventListener('keydown', trap);
-    first?.focus();
-    return () => menu.removeEventListener('keydown', trap);
-  }, [isMobileMenuOpen, pathname]);
-
-  if (pathname === '/' || pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return null;
+  // Return null for admin/outlet/pos subdomains/paths
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return null;
 
   const cartCount = getCartCount();
+  const isHome = pathname === "/";
+
+  const getPageTitle = () => {
+    if (pathname === "/") return "Janu Bhai Coffeehouse";
+    if (pathname === "/cart") return "Shopping Cart";
+    if (pathname === "/checkout") return "Checkout";
+    if (pathname === "/process") return "Our Sourcing";
+    if (pathname === "/account") return "My Account";
+    if (pathname === "/contact") return "Contact Us";
+    if (pathname?.startsWith("/product/")) return "Product Details";
+    return "Janu Bhai Coffeehouse";
+  };
 
   return (
-    <header className={`topbar ${isScrolled ? "scrolled" : "transparent"}`} role="banner">
-      <div className="container topbar-container">
-        <div className="logo-container">
+    <header className={`topbar-global-wrapper ${isScrolled ? "scrolled" : ""}`} role="banner">
+      {/* 1. DESKTOP VIEWPORT LAYOUT */}
+      <div className="topbar-desktop-inner">
+        <div className="logo-container-desktop">
           <Link href="/" aria-label="Janu Bhai Coffee - Home">
-            <Image src="/logo.png" alt="Janu Bhai Logo" width={60} height={60} className="logo-img" priority />
+            <Image 
+              src="/logo.png" 
+              alt="Janu Bhai Logo" 
+              width={55} 
+              height={55} 
+              className="logo-img-desktop" 
+              priority 
+            />
           </Link>
         </div>
 
-        <button
-          className="mobile-menu-btn"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-expanded={isMobileMenuOpen}
-          aria-controls="nav-menu"
-          aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-        >
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-
-        {/* Desktop Menu - Centered */}
-        <nav id="desktop-nav-menu" className="desktop-menu" role="navigation" aria-label="Main navigation">
-          <Link href="/product/instantcoffee" className="nav-link">
-            Instant Coffee
+        <nav className="desktop-navigation-links" role="navigation" aria-label="Desktop navigation">
+          <Link href="/product/instantcoffee" className={`nav-link ${pathname.startsWith('/product/') ? 'active' : ''}`}>
+            Coffee Powder
           </Link>
-          <Link href="/process" className="nav-link">
-            Our Process
+          <Link href="/" className={`nav-link ${pathname === '/' ? 'active' : ''}`}>
+            Recipes
           </Link>
-          <Link href="/#about" className="nav-link">
-            About
+          <Link href="/process" className={`nav-link ${pathname === '/process' ? 'active' : ''}`}>
+            Our Sourcing
           </Link>
-          <Link href="/contact" className="nav-link">
+          <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>
             Contact
           </Link>
           {user && (
@@ -132,77 +106,109 @@ export default function TopBar() {
           )}
         </nav>
 
-        {/* Right side actions - Minimal */}
-        <div className="topbar-actions" role="group" aria-label="User actions">
-          <Link
-            href={user ? "/account" : "/auth/login"}
-            className="action-link-text nav-link"
-            aria-label={user ? "My Account" : "Login"}
-          >
+        <div className="desktop-action-group">
+          <Link href={user ? "/account" : "/auth/login"} className="desktop-account-link-text">
             {user ? "Account" : "Login"}
           </Link>
-          
-          <Link
-            href="/cart"
-            className="action-icon cart-icon"
-            aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} items` : ', empty'}`}
-          >
+          <Link href="/cart" className="desktop-cart-icon relative-badge" aria-label="Shopping Cart">
             <ShoppingBag size={20} />
             {cartCount > 0 && (
-              <span className="cart-badge" aria-hidden="true">{cartCount}</span>
+              <span className="cart-badge">{cartCount}</span>
             )}
           </Link>
         </div>
       </div>
 
-      {/* Mobile Menu Portal */}
-      {typeof document !== 'undefined' && createPortal(
-        <>
-          {isMobileMenuOpen && (
-            <div className="mobile-overlay" onClick={() => setIsMobileMenuOpen(false)} aria-hidden="true"></div>
-          )}
-          
-          <nav id="mobile-nav-menu" className={`mobile-menu-drawer ${isMobileMenuOpen ? 'open' : ''}`} role="navigation" aria-label="Mobile navigation">
-            <div className="mobile-menu-header">
-              <Image src="/logo.png" alt="" width={50} height={50} />
-              <button 
-                className="mobile-close-btn" 
-                onClick={() => setIsMobileMenuOpen(false)}
-                aria-label="Close navigation menu"
-              >
-                <X size={24} />
-              </button>
-            </div>
+      {/* 2. MOBILE VIEWPORT LAYOUT */}
+      <div className="topbar-mobile-inner">
+        {isHome ? (
+          <button 
+            className="app-icon-btn" 
+            onClick={() => setIsMobileMenuOpen(true)} 
+            aria-label="Open navigation menu"
+          >
+            <Menu size={22} />
+          </button>
+        ) : (
+          <Link href="/" className="app-icon-btn" aria-label="Go back to Home">
+            <ArrowLeft size={22} />
+          </Link>
+        )}
 
-            <div className="mobile-menu-links">
-              <Link href="/product/instantcoffee" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                Instant Coffee
-              </Link>
-              <Link href="/process" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                Our Process
-              </Link>
-              <Link href="/#about" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                About
-              </Link>
-              <Link href="/contact" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                Contact
-              </Link>
-              {user && (
-                <Link href={outletHref} className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                  Outlet Management
+        <div className="mobile-center-title-area">
+          {isHome ? (
+            <Image 
+              src="/logo.png" 
+              alt="Janu Bhai Logo" 
+              width={45} 
+              height={45} 
+              className="logo-img-mobile" 
+              priority 
+            />
+          ) : (
+            <span className="mobile-page-title-text">{getPageTitle()}</span>
+          )}
+        </div>
+
+        <Link href="/cart" className="app-icon-btn relative-badge" aria-label="Shopping Cart">
+          <ShoppingBag size={22} />
+          {cartCount > 0 && (
+            <span className="app-cart-badge">{cartCount}</span>
+          )}
+        </Link>
+      </div>
+
+      {/* Hamburger Sidebar Navigation Drawer (Mobile) */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div 
+              className="sidebar-overlay-global"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <motion.div 
+              className="menu-sidebar-global"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            >
+              <div className="sidebar-header-global">
+                <Image src="/logo.png" alt="Janu Bhai Logo" width={50} height={50} />
+                <button className="sidebar-close-btn-global" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="sidebar-links-list-global">
+                <Link href="/product/instantcoffee" className="sidebar-link-item-global" onClick={() => setIsMobileMenuOpen(false)}>
+                  <span>Buy Coffee Powder</span>
+                  <ChevronRight size={16} />
                 </Link>
-              )}
-              <Link href={user ? "/account" : "/auth/login"} className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                {user ? "My Account" : "Login"}
-              </Link>
-              <Link href="/cart" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>
-                Cart ({cartCount})
-              </Link>
-            </div>
-          </nav>
-        </>,
-        document.body
-      )}
+                <Link href="/process" className="sidebar-link-item-global" onClick={() => setIsMobileMenuOpen(false)}>
+                  <span>Our Sourcing Process</span>
+                  <ChevronRight size={16} />
+                </Link>
+                <Link href="/contact" className="sidebar-link-item-global" onClick={() => setIsMobileMenuOpen(false)}>
+                  <span>Contact Us / Bulk Orders</span>
+                  <ChevronRight size={16} />
+                </Link>
+                <Link href="/track" className="sidebar-link-item-global" onClick={() => setIsMobileMenuOpen(false)}>
+                  <span>Track Order</span>
+                  <ChevronRight size={16} />
+                </Link>
+              </div>
+
+              <div className="sidebar-footer-global">
+                <p>© {new Date().getFullYear()} Janu Bhai Coffeehouse.</p>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
