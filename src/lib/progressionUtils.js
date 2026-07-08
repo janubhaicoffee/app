@@ -1,1 +1,66 @@
-﻿// Coffee Lore & Progression Tier Utilityexport const TIER_THRESHOLDS = [  {     name: "Seed Sorter",     minPoints: 0,     maxPoints: 99,     description: "Sorting the finest ripe cherries. The beginning of your Chikmagalur coffee lore."   },  {     name: "Sprout Caretaker",     minPoints: 100,     maxPoints: 299,     description: "Nurturing the delicate coffee saplings under the shade trees of Chikmagalur hills."   },  {     name: "Roast Master",     minPoints: 300,     maxPoints: 599,     description: "Harnessing the flames. Crafting micro-batches of high-intensity roasts with precision."   },  {     name: "Grand Brewmaster",     minPoints: 600,     maxPoints: Infinity,     description: "The ultimate legend. Master of extraction, temperature, and single-origin Chikmagalur AAA grade beans."   }];export function getTierInfo(points) {  const currentPoints = Number(points) || 0;    // Find current tier  const currentTier = TIER_THRESHOLDS.find(t => currentPoints >= t.minPoints && currentPoints <= t.maxPoints) || TIER_THRESHOLDS[0];    // Find next tier  const currentTierIdx = TIER_THRESHOLDS.indexOf(currentTier);  const nextTier = currentTierIdx + 1 < TIER_THRESHOLDS.length ? TIER_THRESHOLDS[currentTierIdx + 1] : null;    let progressPercent = 100;  let pointsToNext = 0;    if (nextTier) {    const totalTierRange = nextTier.minPoints - currentTier.minPoints;    const progressInCurrentTier = currentPoints - currentTier.minPoints;    progressPercent = Math.min(100, Math.max(0, Math.round((progressInCurrentTier / totalTierRange) * 100)));    pointsToNext = nextTier.minPoints - currentPoints;  }    return {    currentTier,    nextTier,    progressPercent,    pointsToNext,    totalPoints: currentPoints  };}
+// Coffee Lore & Progression Tier Utility
+
+export const TIER_THRESHOLDS = [
+  {
+    name: 'Seed Sorter',
+    minPoints: 0,
+    maxPoints: 99,
+    description: 'Sorting the finest ripe cherries. The beginning of your Chikmagalur coffee lore.',
+  },
+  {
+    name: 'Sprout Caretaker',
+    minPoints: 100,
+    maxPoints: 299,
+    description:
+      'Nurturing the delicate coffee saplings under the shade trees of Chikmagalur hills.',
+  },
+  {
+    name: 'Roast Master',
+    minPoints: 300,
+    maxPoints: 599,
+    description:
+      'Harnessing the flames. Crafting micro-batches of high-intensity roasts with precision.',
+  },
+  {
+    name: 'Grand Brewmaster',
+    minPoints: 600,
+    maxPoints: Infinity,
+    description:
+      'The ultimate legend. Master of extraction, temperature, and single-origin Chikmagalur AAA grade beans.',
+  },
+];
+
+export function getTierInfo(points) {
+  const currentPoints = Number(points) || 0;
+
+  // Find current tier
+  const currentTier =
+    TIER_THRESHOLDS.find((t) => currentPoints >= t.minPoints && currentPoints <= t.maxPoints) ||
+    TIER_THRESHOLDS[0];
+
+  // Find next tier
+  const currentTierIdx = TIER_THRESHOLDS.indexOf(currentTier);
+  const nextTier =
+    currentTierIdx + 1 < TIER_THRESHOLDS.length ? TIER_THRESHOLDS[currentTierIdx + 1] : null;
+
+  let progressPercent = 100;
+  let pointsToNext = 0;
+
+  if (nextTier) {
+    const totalTierRange = nextTier.minPoints - currentTier.minPoints;
+    const progressInCurrentTier = currentPoints - currentTier.minPoints;
+    progressPercent = Math.min(
+      100,
+      Math.max(0, Math.round((progressInCurrentTier / totalTierRange) * 100)),
+    );
+    pointsToNext = nextTier.minPoints - currentPoints;
+  }
+
+  return {
+    currentTier,
+    nextTier,
+    progressPercent,
+    pointsToNext,
+    totalPoints: currentPoints,
+  };
+}

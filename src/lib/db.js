@@ -1,1 +1,182 @@
-﻿import { openDB } from "idb";const DB_NAME = "jbc-pos-db";const DB_VERSION = 1;let dbPromise;function getDb() {  if (!dbPromise) {    dbPromise = openDB(DB_NAME, DB_VERSION, {      upgrade(db) {        if (!db.objectStoreNames.contains("products")) {          db.createObjectStore("products", { keyPath: "id" });        }        if (!db.objectStoreNames.contains("categories")) {          db.createObjectStore("categories", { keyPath: "id" });        }        if (!db.objectStoreNames.contains("tables")) {          db.createObjectStore("tables", { keyPath: "id" });        }        if (!db.objectStoreNames.contains("outlets")) {          db.createObjectStore("outlets", { keyPath: "id" });        }        if (!db.objectStoreNames.contains("orders")) {          db.createObjectStore("orders", { keyPath: "id" });        }        if (!db.objectStoreNames.contains("syncQueue")) {          const store = db.createObjectStore("syncQueue", { keyPath: "id", autoIncrement: true });          store.createIndex("status", "status");          store.createIndex("createdAt", "createdAt");        }        if (!db.objectStoreNames.contains("cacheMeta")) {          db.createObjectStore("cacheMeta", { keyPath: "key" });        }      },    });  }  return dbPromise;}async function getAll(storeName) {  const db = await getDb();  return db.getAll(storeName);}async function get(storeName, key) {  const db = await getDb();  return db.get(storeName, key);}async function put(storeName, value) {  const db = await getDb();  return db.put(storeName, value);}async function del(storeName, key) {  const db = await getDb();  return db.delete(storeName, key);}async function clearStore(storeName) {  const db = await getDb();  return db.clear(storeName);}export async function cacheProducts(outletId, products) {  const entries = products.map((p) => ({ ...p, _outletId: outletId }));  const db = await getDb();  const tx = db.transaction("products", "readwrite");  await Promise.all(entries.map((p) => tx.store.put(p)));  await tx.done;  await put("cacheMeta", { key: `products_${outletId}`, timestamp: Date.now() });}export async function getCachedProducts(outletId) {  const db = await getDb();  const all = await db.getAll("products");  return all.filter((p) => p._outletId === outletId);}export async function cacheCategories(outletId, categories) {  const entries = categories.map((c) => ({ ...c, _outletId: outletId }));  const db = await getDb();  const tx = db.transaction("categories", "readwrite");  await Promise.all(entries.map((c) => tx.store.put(c)));  await tx.done;  await put("cacheMeta", { key: `categories_${outletId}`, timestamp: Date.now() });}export async function getCachedCategories(outletId) {  const db = await getDb();  const all = await db.getAll("categories");  return all.filter((c) => c._outletId === outletId);}export async function cacheTables(outletId, tables) {  const entries = tables.map((t) => ({ ...t, _outletId: outletId }));  const db = await getDb();  const tx = db.transaction("tables", "readwrite");  await Promise.all(entries.map((t) => tx.store.put(t)));  await tx.done;  await put("cacheMeta", { key: `tables_${outletId}`, timestamp: Date.now() });}export async function getCachedTables(outletId) {  const db = await getDb();  const all = await db.getAll("tables");  return all.filter((t) => t._outletId === outletId);}export async function cacheOutlets(outlets) {  const db = await getDb();  const tx = db.transaction("outlets", "readwrite");  await Promise.all(outlets.map((o) => tx.store.put(o)));  await tx.done;}export async function getCachedOutlets() {  return getAll("outlets");}export async function cacheOrder(order) {  await put("orders", order);}export async function getCachedOrder(orderId) {  return get("orders", orderId);}export async function getCachedOrders(outletId) {  const db = await getDb();  const all = await db.getAll("orders");  return all.filter((o) => o.outlet_id === outletId);}export async function addToSyncQueue(item) {  const db = await getDb();  return db.add("syncQueue", {    ...item,    status: "pending",    createdAt: Date.now(),    retryCount: 0,  });}export async function getPendingSyncItems() {  const db = await getDb();  const index = db.transaction("syncQueue").store.index("status");  return index.getAll("pending");}export async function updateSyncItem(id, updates) {  const db = await getDb();  const item = await db.get("syncQueue", id);  if (item) {    await db.put("syncQueue", { ...item, ...updates });  }}export async function removeSyncItem(id) {  return del("syncQueue", id);}export async function getSyncQueueCount() {  const db = await getDb();  const index = db.transaction("syncQueue").store.index("status");  const items = await index.getAll("pending");  return items.length;}export async function getCacheTimestamp(key) {  const meta = await get("cacheMeta", key);  return meta?.timestamp || 0;}export async function getOutletUpConfig(outletId) {  const db = await getDb();  const all = await db.getAll("products");  return { hasCachedData: all.some((p) => p._outletId === outletId) };}export { getDb, getAll, put, del, clearStore };
+import { openDB } from 'idb';
+
+const DB_NAME = 'jbc-pos-db';
+const DB_VERSION = 1;
+
+let dbPromise;
+
+function getDb() {
+  if (!dbPromise) {
+    dbPromise = openDB(DB_NAME, DB_VERSION, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains('products')) {
+          db.createObjectStore('products', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('categories')) {
+          db.createObjectStore('categories', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('tables')) {
+          db.createObjectStore('tables', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('outlets')) {
+          db.createObjectStore('outlets', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('orders')) {
+          db.createObjectStore('orders', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('syncQueue')) {
+          const store = db.createObjectStore('syncQueue', { keyPath: 'id', autoIncrement: true });
+          store.createIndex('status', 'status');
+          store.createIndex('createdAt', 'createdAt');
+        }
+        if (!db.objectStoreNames.contains('cacheMeta')) {
+          db.createObjectStore('cacheMeta', { keyPath: 'key' });
+        }
+      },
+    });
+  }
+  return dbPromise;
+}
+
+async function getAll(storeName) {
+  const db = await getDb();
+  return db.getAll(storeName);
+}
+
+async function get(storeName, key) {
+  const db = await getDb();
+  return db.get(storeName, key);
+}
+
+async function put(storeName, value) {
+  const db = await getDb();
+  return db.put(storeName, value);
+}
+
+async function del(storeName, key) {
+  const db = await getDb();
+  return db.delete(storeName, key);
+}
+
+async function clearStore(storeName) {
+  const db = await getDb();
+  return db.clear(storeName);
+}
+
+export async function cacheProducts(outletId, products) {
+  const entries = products.map((p) => ({ ...p, _outletId: outletId }));
+  const db = await getDb();
+  const tx = db.transaction('products', 'readwrite');
+  await Promise.all(entries.map((p) => tx.store.put(p)));
+  await tx.done;
+  await put('cacheMeta', { key: `products_${outletId}`, timestamp: Date.now() });
+}
+
+export async function getCachedProducts(outletId) {
+  const db = await getDb();
+  const all = await db.getAll('products');
+  return all.filter((p) => p._outletId === outletId);
+}
+
+export async function cacheCategories(outletId, categories) {
+  const entries = categories.map((c) => ({ ...c, _outletId: outletId }));
+  const db = await getDb();
+  const tx = db.transaction('categories', 'readwrite');
+  await Promise.all(entries.map((c) => tx.store.put(c)));
+  await tx.done;
+  await put('cacheMeta', { key: `categories_${outletId}`, timestamp: Date.now() });
+}
+
+export async function getCachedCategories(outletId) {
+  const db = await getDb();
+  const all = await db.getAll('categories');
+  return all.filter((c) => c._outletId === outletId);
+}
+
+export async function cacheTables(outletId, tables) {
+  const entries = tables.map((t) => ({ ...t, _outletId: outletId }));
+  const db = await getDb();
+  const tx = db.transaction('tables', 'readwrite');
+  await Promise.all(entries.map((t) => tx.store.put(t)));
+  await tx.done;
+  await put('cacheMeta', { key: `tables_${outletId}`, timestamp: Date.now() });
+}
+
+export async function getCachedTables(outletId) {
+  const db = await getDb();
+  const all = await db.getAll('tables');
+  return all.filter((t) => t._outletId === outletId);
+}
+
+export async function cacheOutlets(outlets) {
+  const db = await getDb();
+  const tx = db.transaction('outlets', 'readwrite');
+  await Promise.all(outlets.map((o) => tx.store.put(o)));
+  await tx.done;
+}
+
+export async function getCachedOutlets() {
+  return getAll('outlets');
+}
+
+export async function cacheOrder(order) {
+  await put('orders', order);
+}
+
+export async function getCachedOrder(orderId) {
+  return get('orders', orderId);
+}
+
+export async function getCachedOrders(outletId) {
+  const db = await getDb();
+  const all = await db.getAll('orders');
+  return all.filter((o) => o.outlet_id === outletId);
+}
+
+export async function addToSyncQueue(item) {
+  const db = await getDb();
+  return db.add('syncQueue', {
+    ...item,
+    status: 'pending',
+    createdAt: Date.now(),
+    retryCount: 0,
+  });
+}
+
+export async function getPendingSyncItems() {
+  const db = await getDb();
+  const index = db.transaction('syncQueue').store.index('status');
+  return index.getAll('pending');
+}
+
+export async function updateSyncItem(id, updates) {
+  const db = await getDb();
+  const item = await db.get('syncQueue', id);
+  if (item) {
+    await db.put('syncQueue', { ...item, ...updates });
+  }
+}
+
+export async function removeSyncItem(id) {
+  return del('syncQueue', id);
+}
+
+export async function getSyncQueueCount() {
+  const db = await getDb();
+  const index = db.transaction('syncQueue').store.index('status');
+  const items = await index.getAll('pending');
+  return items.length;
+}
+
+export async function getCacheTimestamp(key) {
+  const meta = await get('cacheMeta', key);
+  return meta?.timestamp || 0;
+}
+
+export async function getOutletUpConfig(outletId) {
+  const db = await getDb();
+  const all = await db.getAll('products');
+  return { hasCachedData: all.some((p) => p._outletId === outletId) };
+}
+
+export { getDb, getAll, put, del, clearStore };

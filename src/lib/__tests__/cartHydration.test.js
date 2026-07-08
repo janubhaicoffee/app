@@ -1,1 +1,114 @@
-﻿import { describe, it, expect, beforeEach } from 'vitest';import { migrateCartFromCookies, serializeCart, deserializeCart } from '../cartHydration';describe('cartHydration', () => {  beforeEach(() => {    localStorage.clear();    document.cookie = '';  });  describe('migrateCartFromCookies', () => {    it('should return empty array when no data exists', () => {      const result = migrateCartFromCookies();      expect(result).toEqual([]);    });    it('should migrate old cookie data to localStorage', () => {      const cartData = JSON.stringify([        { id: 'instantcoffee', name: 'Instant Coffee', price: 299, quantity: 2 },      ]);      document.cookie = `janu_bhai_cart_session=${cartData}; path=/`;      const result = migrateCartFromCookies();      expect(result).toHaveLength(1);      expect(result[0].id).toBe('instantcoffee');      expect(localStorage.getItem('janu_bhai_cart_encrypted')).toBe('true');      expect(localStorage.getItem('janu_bhai_cart_session')).toBeTruthy();    });    it('should handle malformed cookie data gracefully', () => {      document.cookie = 'janu_bhai_cart_session=not-valid-json; path=/';      const result = migrateCartFromCookies();      expect(result).toEqual([]);    });    it('should handle malformed encrypted data gracefully', () => {      localStorage.setItem('janu_bhai_cart_encrypted', 'true');      localStorage.setItem('janu_bhai_cart_session', 'not-base64');      const result = migrateCartFromCookies();      expect(result).toEqual([]);    });  });  describe('serializeCart', () => {    it('should return empty string for empty cart', () => {      expect(serializeCart([])).toBe('');      expect(serializeCart(null)).toBe('');    });    it('should serialize cart items to base64url', () => {      const items = [        { id: 'instantcoffee', quantity: 2, variantSlug: null, variant_id: null, subscription: null, isGift: false },      ];      const result = serializeCart(items);      expect(result).toBeTruthy();      expect(typeof result).toBe('string');      expect(result).not.toContain('+');      expect(result).not.toContain('/');    });  });  describe('deserializeCart', () => {    it('should return empty array for empty payload', () => {      expect(deserializeCart(null)).toEqual([]);      expect(deserializeCart('')).toEqual([]);    });    it('should round-trip serialize and deserialize', () => {      const items = [        { id: 'instantcoffee', quantity: 2, variantSlug: null, variant_id: null, subscription: 'weekly', isGift: false },        { id: 'coffee-beans', quantity: 1, variantSlug: 'medium-roast', variant_id: null, subscription: null, isGift: true },      ];      const serialized = serializeCart(items);      const deserialized = deserializeCart(serialized);      expect(deserialized).toHaveLength(2);      expect(deserialized[0].id).toBe('instantcoffee');      expect(deserialized[0].quantity).toBe(2);      expect(deserialized[0].subscription).toBe('weekly');      expect(deserialized[1].isGift).toBe(true);    });    it('should handle invalid payload gracefully', () => {      const result = deserializeCart('this-is-not-valid-base64url');      expect(result).toEqual([]);    });    it('should handle non-array JSON gracefully', () => {      const payload = btoa(JSON.stringify({ not: 'an array' }));      const result = deserializeCart(payload);      expect(result).toEqual([]);    });  });});
+import { describe, it, expect, beforeEach } from 'vitest';
+import { migrateCartFromCookies, serializeCart, deserializeCart } from '../cartHydration';
+
+describe('cartHydration', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.cookie = '';
+  });
+
+  describe('migrateCartFromCookies', () => {
+    it('should return empty array when no data exists', () => {
+      const result = migrateCartFromCookies();
+      expect(result).toEqual([]);
+    });
+
+    it('should migrate old cookie data to localStorage', () => {
+      const cartData = JSON.stringify([
+        { id: 'instantcoffee', name: 'Instant Coffee', price: 299, quantity: 2 },
+      ]);
+      document.cookie = `janu_bhai_cart_session=${cartData}; path=/`;
+
+      const result = migrateCartFromCookies();
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('instantcoffee');
+      expect(localStorage.getItem('janu_bhai_cart_encrypted')).toBe('true');
+      expect(localStorage.getItem('janu_bhai_cart_session')).toBeTruthy();
+    });
+
+    it('should handle malformed cookie data gracefully', () => {
+      document.cookie = 'janu_bhai_cart_session=not-valid-json; path=/';
+      const result = migrateCartFromCookies();
+      expect(result).toEqual([]);
+    });
+
+    it('should handle malformed encrypted data gracefully', () => {
+      localStorage.setItem('janu_bhai_cart_encrypted', 'true');
+      localStorage.setItem('janu_bhai_cart_session', 'not-base64');
+      const result = migrateCartFromCookies();
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('serializeCart', () => {
+    it('should return empty string for empty cart', () => {
+      expect(serializeCart([])).toBe('');
+      expect(serializeCart(null)).toBe('');
+    });
+
+    it('should serialize cart items to base64url', () => {
+      const items = [
+        {
+          id: 'instantcoffee',
+          quantity: 2,
+          variantSlug: null,
+          variant_id: null,
+          subscription: null,
+          isGift: false,
+        },
+      ];
+      const result = serializeCart(items);
+      expect(result).toBeTruthy();
+      expect(typeof result).toBe('string');
+      expect(result).not.toContain('+');
+      expect(result).not.toContain('/');
+    });
+  });
+
+  describe('deserializeCart', () => {
+    it('should return empty array for empty payload', () => {
+      expect(deserializeCart(null)).toEqual([]);
+      expect(deserializeCart('')).toEqual([]);
+    });
+
+    it('should round-trip serialize and deserialize', () => {
+      const items = [
+        {
+          id: 'instantcoffee',
+          quantity: 2,
+          variantSlug: null,
+          variant_id: null,
+          subscription: 'weekly',
+          isGift: false,
+        },
+        {
+          id: 'coffee-beans',
+          quantity: 1,
+          variantSlug: 'medium-roast',
+          variant_id: null,
+          subscription: null,
+          isGift: true,
+        },
+      ];
+      const serialized = serializeCart(items);
+      const deserialized = deserializeCart(serialized);
+      expect(deserialized).toHaveLength(2);
+      expect(deserialized[0].id).toBe('instantcoffee');
+      expect(deserialized[0].quantity).toBe(2);
+      expect(deserialized[0].subscription).toBe('weekly');
+      expect(deserialized[1].isGift).toBe(true);
+    });
+
+    it('should handle invalid payload gracefully', () => {
+      const result = deserializeCart('this-is-not-valid-base64url');
+      expect(result).toEqual([]);
+    });
+
+    it('should handle non-array JSON gracefully', () => {
+      const payload = btoa(JSON.stringify({ not: 'an array' }));
+      const result = deserializeCart(payload);
+      expect(result).toEqual([]);
+    });
+  });
+});

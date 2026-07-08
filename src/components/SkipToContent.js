@@ -1,1 +1,47 @@
-﻿'use client';import { useEffect, useRef } from 'react';export function SkipToContent() {  const skipRef = useRef(null);  useEffect(() => {    const handleKeyDown = (e) => {      if (e.key === 'Tab' && skipRef.current) {        skipRef.current.focus();      }    };    document.addEventListener('keydown', handleKeyDown);    return () => document.removeEventListener('keydown', handleKeyDown);  }, []);  return (    <a      ref={skipRef}      href="#main-content"      className="skip-link"      style={{        position: 'absolute',        left: '-9999px',        zIndex: 9999,        padding: '8px 16px',        backgroundColor: '#c8a87c',        color: 'var(--text-warm-white)',        textDecoration: 'none',        borderRadius: '0 0 4px 4px',        fontWeight: 600,      }}      onFocus={(e) => {        e.target.style.left = '16px';        e.target.style.top = '100px';        e.target.style.position = 'fixed';      }}      onBlur={(e) => {        e.target.style.left = '-9999px';        e.target.style.position = 'absolute';      }}    >      Skip to main content    </a>  );}
+'use client';
+
+import { useEffect, useRef } from 'react';
+
+export function SkipToContent() {
+  const skipRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Tab' && skipRef.current) {
+        skipRef.current.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  return (
+    <a
+      ref={skipRef}
+      href="#main-content"
+      className="skip-link"
+      style={{
+        position: 'absolute',
+        left: '-9999px',
+        zIndex: 9999,
+        padding: '8px 16px',
+        backgroundColor: '#c8a87c',
+        color: '#fff',
+        textDecoration: 'none',
+        borderRadius: '0 0 4px 4px',
+        fontWeight: 600,
+      }}
+      onFocus={(e) => {
+        e.target.style.left = '16px';
+        e.target.style.top = '100px';
+        e.target.style.position = 'fixed';
+      }}
+      onBlur={(e) => {
+        e.target.style.left = '-9999px';
+        e.target.style.position = 'absolute';
+      }}
+    >
+      Skip to main content
+    </a>
+  );
+}

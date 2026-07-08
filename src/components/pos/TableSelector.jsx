@@ -1,1 +1,29 @@
-﻿"use client";export default function TableSelector({ tables, onSelectTable, selectedTable }) {  if (!tables || tables.length === 0) {    return <div className="pos-empty">No tables available</div>;  }  return (    <div className="pos-table-grid">      {tables.map((table) => {        let cls = "pos-table-btn";        if (table.status === "available") cls += " available";        else if (table.status === "occupied") cls += " occupied";        else if (table.status === "reserved") cls += " reserved";        if (selectedTable === table.id) cls += " selected";        return (          <button            key={table.id}            className={cls}            onClick={() => table.status === "available" && onSelectTable(table.id)}            disabled={table.status !== "available"}            title={`Table ${table.number} - ${table.status}`}          >            {table.number}          </button>        );      })}    </div>  );}
+'use client';
+export default function TableSelector({ tables, onSelectTable, selectedTable }) {
+  if (!tables || tables.length === 0) {
+    return <div className="pos-empty">No tables available</div>;
+  }
+
+  return (
+    <div className="pos-table-grid">
+      {tables.map((table) => {
+        let cls = 'pos-table-btn';
+        if (table.status === 'available') cls += ' available';
+        else if (table.status === 'occupied') cls += ' occupied';
+        else if (table.status === 'reserved') cls += ' reserved';
+        if (selectedTable === table.id) cls += ' selected';
+        return (
+          <button
+            key={table.id}
+            className={cls}
+            onClick={() => table.status === 'available' && onSelectTable(table.id)}
+            disabled={table.status !== 'available'}
+            title={`Table ${table.number} - ${table.status}`}
+          >
+            {table.number}
+          </button>
+        );
+      })}
+    </div>
+  );
+}

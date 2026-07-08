@@ -1,10 +1,10 @@
-"use client";
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { useCart } from "@/context/CartContext";
-import toast from "react-hot-toast";
-import "./checkout.css";
+'use client';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
+import toast from 'react-hot-toast';
+import './checkout.css';
 
 export default function CheckoutPage() {
   const { outletCode } = useParams();
@@ -12,10 +12,10 @@ export default function CheckoutPage() {
   const { user, customerProfile } = useAuth();
   const { cartItems, getCartTotal, clearCart } = useCart();
 
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [notes, setNotes] = useState("");
-  const [paymentMode, setPaymentMode] = useState("counter"); // "counter" | "online"
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [notes, setNotes] = useState('');
+  const [paymentMode, setPaymentMode] = useState('counter'); // "counter" | "online"
   const [ordering, setOrdering] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(null);
 
@@ -33,19 +33,19 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     if (!customerName.trim()) {
-      toast.error("Please enter your name");
+      toast.error('Please enter your name');
       return;
     }
     if (!customerPhone.trim()) {
-      toast.error("Please enter your phone number");
+      toast.error('Please enter your phone number');
       return;
     }
 
     setOrdering(true);
     try {
-      const res = await fetch("/api/orders/qr-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/orders/qr-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           outletCode,
           items: cartItems,
@@ -59,27 +59,27 @@ export default function CheckoutPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to place order");
+      if (!res.ok) throw new Error(data.error || 'Failed to place order');
 
       setOrderPlaced(data);
 
-      if (paymentMode === "online" && data.razorpayOrderId) {
+      if (paymentMode === 'online' && data.razorpayOrderId) {
         const options = {
           key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
           amount: data.amount,
-          currency: "INR",
-          name: "Janu Bhai Coffee",
+          currency: 'INR',
+          name: 'Janu Bhai Coffee',
           description: `Order #${data.orderNumber}`,
           order_id: data.razorpayOrderId,
           prefill: {
             name: customerName,
             contact: customerPhone,
-            email: user?.email || "",
+            email: user?.email || '',
           },
           handler: async function (response) {
-            await fetch("/api/orders/verify-payment", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
+            await fetch('/api/orders/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 orderId: data.orderId,
                 razorpayPaymentId: response.razorpay_payment_id,
@@ -87,12 +87,12 @@ export default function CheckoutPage() {
                 razorpaySignature: response.razorpay_signature,
               }),
             });
-            toast.success("Payment successful!");
+            toast.success('Payment successful!');
             clearCart();
           },
           modal: {
             ondismiss: function () {
-              toast("Payment cancelled. You can pay at counter.");
+              toast('Payment cancelled. You can pay at counter.');
             },
           },
         };
@@ -100,7 +100,7 @@ export default function CheckoutPage() {
         const razorpay = new window.Razorpay(options);
         razorpay.open();
       } else {
-        toast.success("Order placed! Pay at counter.");
+        toast.success('Order placed! Pay at counter.');
         clearCart();
       }
     } catch (err) {
@@ -116,14 +116,22 @@ export default function CheckoutPage() {
           <div className="success-icon">✓</div>
           <h1>Order Placed!</h1>
           <p className="order-number">Order #{orderPlaced.orderNumber}</p>
-          {paymentMode === "counter" && (
-            <p className="pay-at-counter-msg">Please pay at the counter when your order is ready.</p>
+          {paymentMode === 'counter' && (
+            <p className="pay-at-counter-msg">
+              Please pay at the counter when your order is ready.
+            </p>
           )}
           <div className="order-summary">
             <p>Total: ₹{orderPlaced.total}</p>
-            <p>Status: {orderPlaced.paymentStatus === "paid" ? "Paid ✓" : "Pending Payment"}</p>
+            <p>Status: {orderPlaced.paymentStatus === 'paid' ? 'Paid ✓' : 'Pending Payment'}</p>
           </div>
-          <button className="btn-primary" onClick={() => { clearCart(); router.push(`/menu/${outletCode}`); }}>
+          <button
+            className="btn-primary"
+            onClick={() => {
+              clearCart();
+              router.push(`/menu/${outletCode}`);
+            }}
+          >
             Order Again
           </button>
         </div>
@@ -191,26 +199,26 @@ export default function CheckoutPage() {
         <div className="checkout-section">
           <h3>Payment Method</h3>
           <div className="payment-options">
-            <label className={`payment-option ${paymentMode === "counter" ? "selected" : ""}`}>
+            <label className={`payment-option ${paymentMode === 'counter' ? 'selected' : ''}`}>
               <input
                 type="radio"
                 name="payment"
                 value="counter"
-                checked={paymentMode === "counter"}
-                onChange={() => setPaymentMode("counter")}
+                checked={paymentMode === 'counter'}
+                onChange={() => setPaymentMode('counter')}
               />
               <div className="payment-option-content">
                 <span className="payment-option-title">Pay at Counter</span>
                 <span className="payment-option-desc">Pay when your order is ready</span>
               </div>
             </label>
-            <label className={`payment-option ${paymentMode === "online" ? "selected" : ""}`}>
+            <label className={`payment-option ${paymentMode === 'online' ? 'selected' : ''}`}>
               <input
                 type="radio"
                 name="payment"
                 value="online"
-                checked={paymentMode === "online"}
-                onChange={() => setPaymentMode("online")}
+                checked={paymentMode === 'online'}
+                onChange={() => setPaymentMode('online')}
               />
               <div className="payment-option-content">
                 <span className="payment-option-title">Pay Online</span>
@@ -225,7 +233,7 @@ export default function CheckoutPage() {
           onClick={handlePlaceOrder}
           disabled={ordering}
         >
-          {ordering ? "PLACING ORDER..." : `PLACE ORDER • ₹${getCartTotal()}`}
+          {ordering ? 'PLACING ORDER...' : `PLACE ORDER • ₹${getCartTotal()}`}
         </button>
       </div>
     </div>

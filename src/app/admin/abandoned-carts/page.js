@@ -1,1 +1,53 @@
-﻿"use client";import { useEffect, useState } from "react";import { useRouter } from "next/navigation";import CartsClient from "./CartsClient";import { supabase } from "@/lib/supabase";export default function AbandonedCartsPage() {  const router = useRouter();  const [carts, setCarts] = useState([]);  const [loading, setLoading] = useState(true);  useEffect(() => {    async function checkAuthAndFetch() {      const { data: { session } } = await supabase.auth.getSession();      if (!session) {        router.push("/auth/login");        return;      }            const { data, error } = await supabase        .from("abandoned_carts")        .select("*")        .order("updated_at", { ascending: false });              if (!error && data) {        setCarts(data);      }      setLoading(false);    }    checkAuthAndFetch();  }, [router]);  if (loading) return <div className="admin-loading"><div className="admin-spinner"></div></div>;  return (    <div className="admin-dashboard">      <div className="admin-header" style={{ marginBottom: "2rem" }}>        <h1>Abandoned Carts</h1>        <p className="form-hint">Recover lost revenue by sending discounts to users who didn't complete checkout.</p>      </div>      <CartsClient initialCarts={carts} />    </div>  );}
+'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import CartsClient from './CartsClient';
+import { supabase } from '@/lib/supabase';
+
+export default function AbandonedCartsPage() {
+  const router = useRouter();
+  const [carts, setCarts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkAuthAndFetch() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/auth/login');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('abandoned_carts')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (!error && data) {
+        setCarts(data);
+      }
+      setLoading(false);
+    }
+    checkAuthAndFetch();
+  }, [router]);
+
+  if (loading)
+    return (
+      <div className="admin-loading">
+        <div className="admin-spinner"></div>
+      </div>
+    );
+
+  return (
+    <div className="admin-dashboard">
+      <div className="admin-header" style={{ marginBottom: '2rem' }}>
+        <h1>Abandoned Carts</h1>
+        <p className="form-hint">
+          Recover lost revenue by sending discounts to users who didn't complete checkout.
+        </p>
+      </div>
+      <CartsClient initialCarts={carts} />
+    </div>
+  );
+}

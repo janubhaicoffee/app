@@ -1,1 +1,71 @@
-﻿"use client";import { motion } from "framer-motion";export default function WhyJanuBhai() {  return (    <section className="why-section section-padding">      <div className="container-premium">        <motion.div          initial={{ opacity: 0, y: 30 }}          whileInView={{ opacity: 1, y: 0 }}          viewport={{ once: true, margin: "-100px" }}          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}        >          <h2 className="heading-luxury">            WHY JANU BHAI.<br />            <span className="heading-luxury-accent">THE DIFFERENCE.</span>          </h2>          <p className="body-luxury">            We exist for those who appreciate the finer details of their daily ritual. No shortcuts, no artificial additions. Just pure, premium coffee.          </p>        </motion.div>        <div className="why-grid">          <motion.div             className="why-block"            initial={{ opacity: 0, y: 20 }}            whileInView={{ opacity: 1, y: 0 }}            viewport={{ once: true, margin: "-100px" }}            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}          >            <h3 className="why-block-title">100% Chikmagaluru</h3>            <p className="why-block-desc">              Sourced directly from the high-altitude estates of Karnataka. The unique soil and canopy shade yield beans of exceptional depth, character, and moderate acidity.            </p>          </motion.div>          <motion.div             className="why-block"            initial={{ opacity: 0, y: 20 }}            whileInView={{ opacity: 1, y: 0 }}            viewport={{ once: true, margin: "-100px" }}            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}          >            <h3 className="why-block-title">Zero Chicory</h3>            <p className="why-block-desc">              Unlike mass-market instant coffee brands that blend in cheap root powders, we guarantee 100% pure Arabica. Taste coffee the way nature intended.            </p>          </motion.div>          <motion.div             className="why-block"            initial={{ opacity: 0, y: 20 }}            whileInView={{ opacity: 1, y: 0 }}            viewport={{ once: true, margin: "-100px" }}            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}          >            <h3 className="why-block-title">Freeze Dried</h3>            <p className="why-block-desc">              Our advanced sub-zero dehydration lock locks in the original taste, volatile compounds, and essential oils. Rehydrates instantly to a perfect barista-level cup.            </p>          </motion.div>        </div>      </div>    </section>  );}
+'use client';
+import { motion } from 'framer-motion';
+
+export default function WhyJanuBhai() {
+  return (
+    <section className="why-section section-padding">
+      <div className="container-premium">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <h2 className="heading-luxury">
+            WHY JANU BHAI.
+            <br />
+            <span className="heading-luxury-accent">THE DIFFERENCE.</span>
+          </h2>
+          <p className="body-luxury">
+            We exist for those who appreciate the finer details of their daily ritual. No shortcuts,
+            no artificial additions. Just pure, premium coffee.
+          </p>
+        </motion.div>
+
+        <div className="why-grid">
+          <motion.div
+            className="why-block"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+          >
+            <h3 className="why-block-title">100% Chikmagaluru</h3>
+            <p className="why-block-desc">
+              Sourced directly from the high-altitude estates of Karnataka. The unique soil and
+              canopy shade yield beans of exceptional depth, character, and moderate acidity.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="why-block"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+          >
+            <h3 className="why-block-title">Zero Chicory</h3>
+            <p className="why-block-desc">
+              Unlike mass-market instant coffee brands that blend in cheap root powders, we
+              guarantee 100% pure Arabica. Taste coffee the way nature intended.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="why-block"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+          >
+            <h3 className="why-block-title">Freeze Dried</h3>
+            <p className="why-block-desc">
+              Our advanced sub-zero dehydration lock locks in the original taste, volatile
+              compounds, and essential oils. Rehydrates instantly to a perfect barista-level cup.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}

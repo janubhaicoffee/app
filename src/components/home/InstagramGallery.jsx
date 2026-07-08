@@ -1,1 +1,49 @@
-﻿"use client";import Image from "next/image";import { motion } from "framer-motion";const galleryImages = [  { id: 1, src: "/handpicked.png", alt: "Fresh red coffee cherries handpicked" },  { id: 2, src: "/sun_dried.png", alt: "Coffee beans drying in the sun" },  { id: 3, src: "/expertly_roasted.png", alt: "Coffee beans being roasted professionally" },  { id: 4, src: "/served_fresh.png", alt: "A warm cup of fresh espresso coffee" },  { id: 5, src: "/arsalanazad.png", alt: "Founder Arsalan Azad holding a cup" },  { id: 6, src: "/product.png", alt: "Janu Bhai Coffee premium product packaging" }];export default function InstagramGallery() {  return (    <section className="instagram-section">      <div className="instagram-grid">        {galleryImages.map((image) => (          <div key={image.id} className="instagram-item">            <Image              src={image.src}              alt={image.alt}              width={350}              height={350}              className="instagram-img"              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"            />            <div className="instagram-overlay">              <svg viewBox="0 0 24 24" width="28" height="28" stroke="var(--text-warm-white)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>            </div>          </div>        ))}      </div>    </section>  );}
+'use client';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+
+const galleryImages = [
+  { id: 1, src: '/handpicked.png', alt: 'Fresh red coffee cherries handpicked' },
+  { id: 2, src: '/sun_dried.png', alt: 'Coffee beans drying in the sun' },
+  { id: 3, src: '/expertly_roasted.png', alt: 'Coffee beans being roasted professionally' },
+  { id: 4, src: '/served_fresh.png', alt: 'A warm cup of fresh espresso coffee' },
+  { id: 5, src: '/arsalanazad.png', alt: 'Founder Arsalan Azad holding a cup' },
+  { id: 6, src: '/product.png', alt: 'Janu Bhai Coffee premium product packaging' },
+];
+
+export default function InstagramGallery() {
+  return (
+    <section className="instagram-section">
+      <div className="instagram-grid">
+        {galleryImages.map((image) => (
+          <div key={image.id} className="instagram-item">
+            <Image
+              src={image.src}
+              alt={image.alt}
+              width={350}
+              height={350}
+              className="instagram-img"
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"
+            />
+            <div className="instagram-overlay">
+              <svg
+                viewBox="0 0 24 24"
+                width="28"
+                height="28"
+                stroke="var(--text-warm-white)"
+                strokeWidth="1.5"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+              </svg>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}

@@ -1,1 +1,101 @@
-﻿/* ==========================================================================   LEGAL / CONTACT PAGES â€” Dark Luxury Theme   ========================================================================== */.legal-page {  padding: 120px 0 80px;  min-height: 80vh;  background-color: var(--bg-color, #2A1A17);}.legal-container {  max-width: 800px;  margin: 0 auto;  background-color: var(--bg-color-dark, #3A241F);  padding: 40px 50px;  border-radius: 16px;  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);  border: 1px solid var(--border-color, rgba(245, 240, 234, 0.08));}.legal-container h1 {  font-family: var(--font-playfair);  color: var(--accent-gold, #D89A1E);  font-size: 2.5rem;  margin-bottom: 30px;  text-align: center;  border-bottom: 2px solid var(--border-color, rgba(245, 240, 234, 0.08));  padding-bottom: 15px;}.legal-container h2 {  font-family: var(--font-playfair);  color: var(--text-primary, #F5F0EA);  margin-top: 30px;  margin-bottom: 15px;  font-size: 1.5rem;}.legal-container p, .legal-container ul {  color: var(--text-secondary, #CBB9A8);  line-height: 1.6;  margin-bottom: 15px;}.legal-container ul {  padding-left: 20px;}.legal-container a {  color: var(--accent-gold, #D89A1E);  text-decoration: underline;}.legal-container a:hover {  opacity: 0.8;}.legal-container input,.legal-container textarea {  background-color: rgba(0, 0, 0, 0.15) !important;  border: 1px solid var(--border-color, rgba(245, 240, 234, 0.08)) !important;  border-radius: 8px;  color: var(--text-primary, #F5F0EA) !important;  font-family: var(--font-inter), sans-serif;  transition: border-color 0.3s;}.legal-container input:focus,.legal-container textarea:focus {  outline: none;  border-color: var(--accent-gold, #D89A1E) !important;  box-shadow: 0 0 0 3px rgba(216, 154, 30, 0.15);}.legal-container label {  color: var(--text-secondary, #CBB9A8);  font-weight: 600;  text-transform: uppercase;  letter-spacing: 0.5px;  font-size: 0.85rem;}.legal-container strong {  color: var(--accent-gold, #D89A1E);}/* Mobile Responsiveness */@media (max-width: 768px) {  .legal-page {    padding: 100px 0 120px;  }  .legal-container {    padding: 24px 20px;    margin: 0 16px;    border-radius: 12px;  }  .legal-container h1 {    font-size: 1.8rem;  }}
+/* ==========================================================================
+   LEGAL / CONTACT PAGES — Dark Luxury Theme
+   ========================================================================== */
+
+.legal-page {
+  padding: 120px 0 80px;
+  min-height: 80vh;
+  background-color: var(--bg-color, #2a1a17);
+}
+
+.legal-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--bg-color-dark, #3a241f);
+  padding: 40px 50px;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color, rgba(245, 240, 234, 0.08));
+}
+
+.legal-container h1 {
+  font-family: var(--font-playfair);
+  color: var(--accent-gold, #d89a1e);
+  font-size: 2.5rem;
+  margin-bottom: 30px;
+  text-align: center;
+  border-bottom: 2px solid var(--border-color, rgba(245, 240, 234, 0.08));
+  padding-bottom: 15px;
+}
+
+.legal-container h2 {
+  font-family: var(--font-playfair);
+  color: var(--text-primary, #f5f0ea);
+  margin-top: 30px;
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+.legal-container p,
+.legal-container ul {
+  color: var(--text-secondary, #cbb9a8);
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.legal-container ul {
+  padding-left: 20px;
+}
+
+.legal-container a {
+  color: var(--accent-gold, #d89a1e);
+  text-decoration: underline;
+}
+
+.legal-container a:hover {
+  opacity: 0.8;
+}
+
+.legal-container input,
+.legal-container textarea {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid var(--border-color, rgba(245, 240, 234, 0.08)) !important;
+  border-radius: 8px;
+  color: var(--text-primary, #f5f0ea) !important;
+  font-family: var(--font-inter), sans-serif;
+  transition: border-color 0.3s;
+}
+
+.legal-container input:focus,
+.legal-container textarea:focus {
+  outline: none;
+  border-color: var(--accent-gold, #d89a1e) !important;
+  box-shadow: 0 0 0 3px rgba(216, 154, 30, 0.15);
+}
+
+.legal-container label {
+  color: var(--text-secondary, #cbb9a8);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.85rem;
+}
+
+.legal-container strong {
+  color: var(--accent-gold, #d89a1e);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .legal-page {
+    padding: 100px 0 120px;
+  }
+  .legal-container {
+    padding: 24px 20px;
+    margin: 0 16px;
+    border-radius: 12px;
+  }
+  .legal-container h1 {
+    font-size: 1.8rem;
+  }
+}

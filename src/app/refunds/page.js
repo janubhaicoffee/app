@@ -1,1 +1,40 @@
-﻿"use client";import "../legal.css";export default function RefundsPage() {  return (    <main className="legal-page">      <div className="container legal-container">        <h1>Cancellation & Refund Policy</h1>        <p>Last updated: {new Date().toLocaleDateString()}</p>        <h2>1. Cancellations</h2>        <p>Orders can only be cancelled before they are dispatched. Once an order is shipped, we cannot accept any cancellation requests. If you wish to cancel an order, please contact us immediately at hello@janubhai.com.</p>        <h2>2. Returns & Refunds</h2>        <p>Due to the perishable nature of coffee, we do not accept returns. However, if you receive a damaged product or the wrong item, please notify us within 48 hours of delivery with photographic evidence.</p>        <p>If your refund is approved, it will be processed, and a credit will automatically be applied to your credit card or original method of payment, within 5-7 business days.</p>        <h2>3. Late or Missing Refunds</h2>        <p>If you havenâ€™t received a refund yet, first check your bank account again. Then contact your credit card company, it may take some time before your refund is officially posted. Next, contact your bank. There is often some processing time before a refund is posted. If youâ€™ve done all of this and you still have not received your refund yet, please contact us.</p>      </div>    </main>  );}
+'use client';
+import '../legal.css';
+
+export default function RefundsPage() {
+  return (
+    <main className="legal-page">
+      <div className="container legal-container">
+        <h1>Cancellation & Refund Policy</h1>
+        <p>Last updated: {new Date().toLocaleDateString()}</p>
+
+        <h2>1. Cancellations</h2>
+        <p>
+          Orders can only be cancelled before they are dispatched. Once an order is shipped, we
+          cannot accept any cancellation requests. If you wish to cancel an order, please contact us
+          immediately at hello@janubhai.com.
+        </p>
+
+        <h2>2. Returns & Refunds</h2>
+        <p>
+          Due to the perishable nature of coffee, we do not accept returns. However, if you receive
+          a damaged product or the wrong item, please notify us within 48 hours of delivery with
+          photographic evidence.
+        </p>
+        <p>
+          If your refund is approved, it will be processed, and a credit will automatically be
+          applied to your credit card or original method of payment, within 5-7 business days.
+        </p>
+
+        <h2>3. Late or Missing Refunds</h2>
+        <p>
+          If you haven’t received a refund yet, first check your bank account again. Then contact
+          your credit card company, it may take some time before your refund is officially posted.
+          Next, contact your bank. There is often some processing time before a refund is posted. If
+          you’ve done all of this and you still have not received your refund yet, please contact
+          us.
+        </p>
+      </div>
+    </main>
+  );
+}

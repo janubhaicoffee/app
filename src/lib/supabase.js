@@ -1,1 +1,27 @@
-﻿import { createClient } from './supabaseWrapper';if (typeof window !== "undefined") {  try {    for (let i = 0; i < window.localStorage.length; i++) {      const key = window.localStorage.key(i);      if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {        const raw = window.localStorage.getItem(key);        if (raw) {          const session = JSON.parse(raw);          if (session && (!session.expires_at || !session.refresh_token)) {            session.expires_at = session.expires_at || (Math.floor(Date.now() / 1000) + 3600);            session.expires_in = session.expires_in || 3600;            session.refresh_token = session.refresh_token || "dummy-refresh-token";            session.token_type = session.token_type || "bearer";            window.localStorage.setItem(key, JSON.stringify(session));          }        }      }    }  } catch (e) {}}const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;export const supabase = createClient(supabaseUrl, supabaseKey);
+import { createClient } from './supabaseWrapper';
+
+if (typeof window !== 'undefined') {
+  try {
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        const raw = window.localStorage.getItem(key);
+        if (raw) {
+          const session = JSON.parse(raw);
+          if (session && (!session.expires_at || !session.refresh_token)) {
+            session.expires_at = session.expires_at || Math.floor(Date.now() / 1000) + 3600;
+            session.expires_in = session.expires_in || 3600;
+            session.refresh_token = session.refresh_token || 'dummy-refresh-token';
+            session.token_type = session.token_type || 'bearer';
+            window.localStorage.setItem(key, JSON.stringify(session));
+          }
+        }
+      }
+    }
+  } catch (e) {}
+}
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseKey);

@@ -1,1 +1,797 @@
-﻿"use client";import { useEffect, useState } from "react";import { supabase } from "@/lib/supabase";import { useRouter } from "next/navigation";import { LayoutDashboard, Package, MapPin, Coffee, LogOut, CheckCircle2, Settings, Award, Compass, Calendar, Zap, AlertTriangle } from "lucide-react";import { getUserProgression } from "@/actions/progression";import { getTierInfo } from "@/lib/progressionUtils";import { optimizeDeliverySchedule } from "@/actions/schedule";import { motion } from "framer-motion";import "./account.css";export default function AccountPage() {  const [user, setUser] = useState(null);  const [sessionToken, setSessionToken] = useState(null);  const [loading, setLoading] = useState(true);  const [orders, setOrders] = useState([]);  const [activeTab, setActiveTab] = useState("overview");  const [isAdmin, setIsAdmin] = useState(false);    // Progression & Lore State  const [progressionData, setProgressionData] = useState({    profile: { total_points: 0 },    ledger: []  });  // Scheduling Optimizer Form State  const [agendaForm, setAgendaForm] = useState({    busyDays: ["Monday", "Wednesday"],    peakHours: "14:00",    sleepHours: 6  });  const [optimizationMatrix, setOptimizationMatrix] = useState(null);  const [optimizing, setOptimizing] = useState(false);  // Address Form State  const [addressForm, setAddressForm] = useState({    address: "",    city: "",    pincode: ""  });  const [savingAddress, setSavingAddress] = useState(false);    const router = useRouter();useEffect(() => {    let mounted = true;    const fetchUserData = async (session) => {      try {        if (!session) {          router.push("/auth/unified");          return;        }                setUser(session.user);        setSessionToken(session.access_token);        setLoading(false);  // <-- FIXED: Set loading false after we have session        // Fetch Profile for Address        const { data: profile } = await supabase          .from('profiles')          .select('address, city, pincode')          .eq('id', session.user.id)          .single();                  if (profile && mounted) {          setAddressForm({            address: profile.address || "",            city: profile.city || "",            pincode: profile.pincode || ""          });        }        // Fetch Progression live from Supabase via Server Action        const progRes = await getUserProgression(session.access_token);        if (progRes.success && mounted) {          setProgressionData({            profile: progRes.profile,            ledger: progRes.ledger          });        }        // Fetch Orders        let orCondition = `user_id.eq.${session.user.id}`;        if (session.user.email) orCondition += `,customer_email.eq.${session.user.email}`;        const { data: orderData } = await supabase          .from('orders')          .select('*')          .or(orCondition)          .order('created_at', { ascending: false });                  if (orderData && mounted) {          setOrders(orderData);        }        // Check Admin Status        const adminRes = await fetch("/api/admin/data?type=check", {          headers: { "Authorization": `Bearer ${session.access_token}` }        });        if (adminRes.ok) {          const adminData = await adminRes.json();          if (adminData.isAdmin && mounted) {            setIsAdmin(true);          }        }      } catch (error) {        console.error("Error fetching user data:", error);      } finally {        if (mounted) setLoading(false);      }    };    // First check current session    supabase.auth.getSession().then(({ data: { session } }) => {      if (session) {        fetchUserData(session);      }    });    // Listen for auth state changes    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {      if (event === 'SIGNED_IN' && session) {        setSessionToken(session.access_token);        fetchUserData(session);      } else if (event === 'SIGNED_OUT') {        if (mounted) {          setUser(null);          setSessionToken(null);          router.push("/auth/unified");        }      }    });    const timeout = setTimeout(() => {      supabase.auth.getSession().then(({ data: { session } }) => {        if (!session && mounted) {          router.push("/auth/login");        }      });    }, 2000);    return () => {      mounted = false;      subscription.unsubscribe();      clearTimeout(timeout);    };  }, [router]);  const handleLogout = async () => {    await supabase.auth.signOut();    router.push("/");  };  const handleSaveAddress = async (e) => {    e.preventDefault();    setSavingAddress(true);        const { error } = await supabase      .from('profiles')      .upsert({        id: user.id,        email: user.email,        full_name: user.user_metadata?.full_name || '',        address: addressForm.address,        city: addressForm.city,        pincode: addressForm.pincode      });          if (error) {      alert("Failed to save address. Please try again.");      console.error(error);    } else {      alert("Address saved successfully!");    }    setSavingAddress(false);  };  // Submit Agenda for Scheduling Optimization  const handleOptimizeSchedule = async (e) => {    e.preventDefault();    setOptimizing(true);    try {      const res = await optimizeDeliverySchedule(agendaForm);      if (res.success) {        setOptimizationMatrix(res.matrix);      }    } catch (e) {      console.error("Optimization failed:", e);    } finally {      setOptimizing(false);    }  };  const toggleBusyDay = (day) => {    setAgendaForm(prev => {      const busy = prev.busyDays.includes(day)        ? prev.busyDays.filter(d => d !== day)        : [...prev.busyDays, day];      return { ...prev, busyDays: busy };    });  };  if (loading) {    return <main className="account-page text-center"><p>Loading your portal...</p></main>;  }  if (!user) return null;  // Compute tier progression parameters  const tierInfo = getTierInfo(progressionData.profile.total_points);  return (    <main className="account-page">      <div className="container">        <div className="account-layout">                    {/* Sidebar */}          <aside className="sidebar">            <nav className="sidebar-nav">              <div                 className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}                onClick={() => setActiveTab('overview')}              >                <LayoutDashboard size={20} />                <span>Overview</span>              </div>              <div                 className={`nav-item ${activeTab === 'progression' ? 'active' : ''}`}                onClick={() => setActiveTab('progression')}              >                <Award size={20} />                <span>Lore & Progression</span>              </div>              <div                 className={`nav-item ${activeTab === 'optimizer' ? 'active' : ''}`}                onClick={() => setActiveTab('optimizer')}              >                <Compass size={20} />                <span>Delivery Optimizer</span>              </div>              <div                 className={`nav-item ${activeTab === 'orders' ? 'active' : ''}`}                onClick={() => setActiveTab('orders')}              >                <Package size={20} />                <span>Order History</span>              </div>              <div                 className={`nav-item ${activeTab === 'addresses' ? 'active' : ''}`}                onClick={() => setActiveTab('addresses')}              >                <MapPin size={20} />                <span>Addresses</span>              </div>              <div                 className={`nav-item ${activeTab === 'subscriptions' ? 'active' : ''}`}                onClick={() => setActiveTab('subscriptions')}              >                <Coffee size={20} />                <span>Subscriptions</span>              </div>                            {isAdmin && (                <div                   className="nav-item"                  onClick={() => router.push('/admin')}                  style={{ color: 'var(--accent-primary)', fontWeight: 'bold' }}                >                  <Settings size={20} />                  <span>Admin Panel</span>                </div>              )}                            <div className="nav-item logout" onClick={handleLogout}>                <LogOut size={20} />                <span>Logout</span>              </div>            </nav>          </aside>          {/* Main Content */}          <section className="main-content">                        {activeTab === 'overview' && (              <div className="tab-content fade-in">                <h2 className="tab-header">Welcome back, {user.user_metadata?.full_name?.split(' ')[0] || "Coffee Lover"}!</h2>                                <div className="overview-cards">                  <div className="stat-card">                    <h3>Total Orders</h3>                    <div className="stat-value">{orders.length}</div>                  </div>                  <div className="stat-card">                    <h3>Lore Tier</h3>                    <div className="stat-value" style={{ fontSize: '1.2rem', marginTop: '10px' }}>                      <span className="tier-badge">{tierInfo.currentTier.name}</span>                    </div>                  </div>                  <div className="stat-card">                    <h3>Janu Bhai Points</h3>                    <div className="stat-value">{tierInfo.totalPoints}</div>                  </div>                </div>                                <div className="profile-details">                  <h3 style={{ marginBottom: '15px', color: 'var(--primary-color)' }}>Account Details</h3>                  <p><strong>Name:</strong> {user.user_metadata?.full_name || "N/A"}</p>                  <p><strong>Email:</strong> {user.email}</p>                </div>              </div>            )}            {/* Feature 5: Native Account Progression & Lore Dashboard */}            {activeTab === 'progression' && (              <div className="tab-content fade-in progression-container">                <h2 className="tab-header">Coffee Lore & Progression</h2>                                <div className="lore-card">                  <div className="tier-title-container">                    <h3 style={{ margin: 0, fontSize: '1.4rem' }}>{tierInfo.currentTier.name}</h3>                    <span className="tier-badge">Rank Tier</span>                  </div>                                    <p style={{ fontStyle: 'italic', fontSize: '0.95rem', color: 'var(--text-secondary)' }}>                    &ldquo;{tierInfo.currentTier.description}&rdquo;                  </p>                                    <div style={{ marginTop: '20px' }}>                    <div className="progress-bar-outer">                      <motion.div                        className="progress-bar-inner"                        initial={{ width: '0%' }}                        animate={{ width: `${tierInfo.progressPercent}%` }}                        transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}                      />                      <motion.div                        className="progress-bar-glow"                        initial={{ left: '-40%' }}                        animate={{ left: '140%' }}                        transition={{                          duration: 0.8,                          ease: "easeInOut",                          delay: 1.5,                          repeat: Infinity,                          repeatDelay: 3                        }}                      />                    </div>                                        <div className="points-text-summary">                      <span>{tierInfo.totalPoints} Points Accumulated</span>                      {tierInfo.nextTier ? (                        <span>{tierInfo.pointsToNext} points to {tierInfo.nextTier.name}</span>                      ) : (                        <span>Max Lore Level Achieved</span>                      )}                    </div>                  </div>                </div>                <div className="ledger-card-container">                  <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>Points Ledger</h3>                  {progressionData.ledger.length === 0 ? (                    <p style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>                      No ledger history available. Complete orders to earn coffee lore points!                    </p>                  ) : (                    <div className="ledger-cards">                      {progressionData.ledger.map(entry => (                        <motion.div                          key={entry.id}                          className="ledger-card-item"                          whileHover={{                            scale: 1.02,                            boxShadow: '4px 6px 0px var(--text-primary)',                            y: -2                          }}                          transition={{ type: "spring", stiffness: 300, damping: 20 }}                        >                          <div className="ledger-card-left">                            <span className="ledger-action-type">{entry.action_type}</span>                            <span className="ledger-date">{new Date(entry.created_at).toLocaleDateString()}</span>                          </div>                          <div className="ledger-card-right">                            <span className="ledger-points">+{entry.points_awarded}</span>                          </div>                        </motion.div>                      ))}                    </div>                  )}                </div>              </div>            )}            {/* Feature 8: Next.js Server-Side Scheduling Optimization Panel */}            {activeTab === 'optimizer' && (              <div className="tab-content fade-in">                <h2 className="tab-header">Next.js Delivery Agenda Optimizer</h2>                <p style={{ marginBottom: '25px', fontSize: '0.95rem', color: 'var(--text-secondary)' }}>                  Provide your weekly schedule agenda and daily peak focus workloads. Our edge algorithms will calculate optimal batch roast times, local shipping dispatch windows, and a precise caffeine timeline custom-suited to your active agenda.                </p>                <form className="optimizer-form" onSubmit={handleOptimizeSchedule}>                  <div className="form-group" style={{ marginBottom: '20px' }}>                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Select Weekly Busy Days</label>                    <div className="checkbox-grid">                      {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => (                        <label key={day} className="checkbox-item">                          <input                             type="checkbox"                             checked={agendaForm.busyDays.includes(day)}                            onChange={() => toggleBusyDay(day)}                          />                          <span>{day}</span>                        </label>                      ))}                    </div>                  </div>                  <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>                    <div className="form-group">                      <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Peak Focus / Workload Hour</label>                      <input                         type="time"                         required                        value={agendaForm.peakHours}                        onChange={(e) => setAgendaForm({...agendaForm, peakHours: e.target.value})}                        style={{ width: '100%', padding: '10px', border: '1px solid var(--border-color)', borderRadius: '4px' }}                      />                    </div>                    <div className="form-group">                      <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>Sleep Target (Hours)</label>                      <input                         type="number"                         min="3"                        max="12"                        required                        value={agendaForm.sleepHours}                        onChange={(e) => setAgendaForm({...agendaForm, sleepHours: Number(e.target.value)})}                        style={{ width: '100%', padding: '10px', border: '1px solid var(--border-color)', borderRadius: '4px' }}                      />                    </div>                  </div>                  <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={optimizing}>                    {optimizing ? "RUNNING EDGE COMPUTATIONS..." : "COMPUTE SCHEDULING MATRIX"}                  </button>                </form>                {optimizationMatrix && (                  <div className="matrix-grid">                    {/* Logistical adjustments */}                    <div className="matrix-card">                      <h3>Logistical Dispatch Matrix</h3>                      <p><strong>Primary Dispatch Day:</strong> {optimizationMatrix.primaryDeliveryDay}</p>                      <p><strong>Secondary Backup Day:</strong> {optimizationMatrix.backupDeliveryDay}</p>                      <hr style={{ margin: '15px 0', border: 0, borderTop: '1px solid var(--border-color)' }} />                                            {optimizationMatrix.logisticalAdjustments.map((adj, i) => (                        <div key={i} style={{ marginBottom: '12px' }}>                          <span style={{ fontWeight: 'bold', display: 'block', fontSize: '0.9rem' }}>{adj.factor}</span>                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{adj.adjustment}</span>                        </div>                      ))}                    </div>                    {/* Caffeine schedule */}                    <div className="matrix-card">                      <h3>Agenda Caffeine Timeline</h3>                      {optimizationMatrix.brewTimeline.map((item, i) => (                        <div key={i} className="timeline-item-matrix">                          <span style={{ fontWeight: 'bold', color: 'var(--accent-primary)', display: 'block' }}>                            {item.time} - {item.action}                          </span>                          <p style={{ margin: '3px 0', fontSize: '0.9rem', fontWeight: '500' }}>                            {item.recommendedBlend}                          </p>                          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>                            {item.rationale}                          </p>                        </div>                      ))}                    </div>                  </div>                )}              </div>            )}            {activeTab === 'orders' && (              <div className="tab-content fade-in">                <h2 className="tab-header">Your Orders</h2>                <div className="orders-list">                  {orders.length === 0 ? (                    <p className="no-orders" style={{ textAlign: 'center', padding: '40px' }}>                      You haven&apos;t placed any orders yet. Start your journey with Janu Bhai!                    </p>                  ) : (                    orders.map(order => (                      <div key={order.id} className="order-card" style={{ marginBottom: '1.5rem', padding: '1.5rem', background: '#fdfdfd', border: '1px solid var(--border-color)', borderRadius: '8px' }}>                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>                          <div>                            <p style={{ margin: 0, fontWeight: 'bold', fontSize: '1.1rem' }}>Order #{order.id.split('-')[0]}</p>                            <p style={{ margin: '5px 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>                              {new Date(order.created_at).toLocaleDateString()}                            </p>                          </div>                          <div style={{ textAlign: 'right' }}>                            <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--primary-color)', fontSize: '1.1rem' }}>â‚¹ {order.total_amount}</p>                            <p style={{ margin: '5px 0 0 0', fontSize: '0.9rem', textTransform: 'capitalize', color: 'var(--accent-primary)' }}>                              {order.status.replace(/_/g, ' ')}                            </p>                          </div>                        </div>                        {order.awb_number && (                          <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>                            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>AWB: {order.awb_number}</p>                            <button                               className="btn-secondary"                               style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}                              onClick={() => router.push(`/track?awb=${order.awb_number}`)}                            >                              Track Order                            </button>                          </div>                        )}                      </div>                    ))                  )}                </div>              </div>            )}            {activeTab === 'addresses' && (              <div className="tab-content fade-in">                <h2 className="tab-header">Saved Addresses</h2>                <form className="address-form" onSubmit={handleSaveAddress}>                  <div className="form-group">                    <label>Street Address</label>                    <textarea                       rows="3"                       required                      placeholder="123 Coffee Bean Lane, Near Roastery..."                      value={addressForm.address}                      onChange={(e) => setAddressForm({...addressForm, address: e.target.value})}                    ></textarea>                  </div>                                    <div className="form-grid">                    <div className="form-group">                      <label>City</label>                      <input                         type="text"                         required                        placeholder="Chikmagaluru"                        value={addressForm.city}                        onChange={(e) => setAddressForm({...addressForm, city: e.target.value})}                      />                    </div>                    <div className="form-group">                      <label>Pincode / ZIP</label>                      <input                         type="text"                         required                        placeholder="577101"                        value={addressForm.pincode}                        onChange={(e) => setAddressForm({...addressForm, pincode: e.target.value})}                      />                    </div>                  </div>                                    <button type="submit" className="btn-primary" disabled={savingAddress}>                    {savingAddress ? "SAVING..." : "SAVE ADDRESS"}                  </button>                </form>              </div>            )}            {activeTab === 'subscriptions' && (              <div className="tab-content fade-in">                <h2 className="tab-header">Coffee Subscriptions</h2>                                <div className="subscription-card">                  <h3>Coffee On Autopilot</h3>                  <p>Never run out of freshly roasted single-origin coffee again. Get your favorite blend delivered right to your door every 2 or 4 weeks.</p>                                    <div className="subscription-features">                    <span className="feature-badge"><CheckCircle2 size={16} /> 15% Off Every Order</span>                    <span className="feature-badge"><CheckCircle2 size={16} /> Free Shipping</span>                    <span className="feature-badge"><CheckCircle2 size={16} /> Pause or Cancel Anytime</span>                  </div>                                    <button className="subscribe-btn" onClick={() => alert("Subscription Engine coming soon!")}>                    Explore Plans                  </button>                </div>              </div>            )}          </section>        </div>      </div>    </main>  );}
+'use client';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
+import {
+  LayoutDashboard,
+  Package,
+  MapPin,
+  Coffee,
+  LogOut,
+  CheckCircle2,
+  Settings,
+  Award,
+  Compass,
+  Calendar,
+  Zap,
+  AlertTriangle,
+} from 'lucide-react';
+import { getUserProgression } from '@/actions/progression';
+import { getTierInfo } from '@/lib/progressionUtils';
+import { optimizeDeliverySchedule } from '@/actions/schedule';
+import { motion } from 'framer-motion';
+import './account.css';
+
+export default function AccountPage() {
+  const [user, setUser] = useState(null);
+  const [sessionToken, setSessionToken] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState([]);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Progression & Lore State
+  const [progressionData, setProgressionData] = useState({
+    profile: { total_points: 0 },
+    ledger: [],
+  });
+
+  // Scheduling Optimizer Form State
+  const [agendaForm, setAgendaForm] = useState({
+    busyDays: ['Monday', 'Wednesday'],
+    peakHours: '14:00',
+    sleepHours: 6,
+  });
+  const [optimizationMatrix, setOptimizationMatrix] = useState(null);
+  const [optimizing, setOptimizing] = useState(false);
+
+  // Address Form State
+  const [addressForm, setAddressForm] = useState({
+    address: '',
+    city: '',
+    pincode: '',
+  });
+  const [savingAddress, setSavingAddress] = useState(false);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchUserData = async (session) => {
+      try {
+        if (!session) {
+          router.push('/auth/unified');
+          return;
+        }
+
+        setUser(session.user);
+        setSessionToken(session.access_token);
+        setLoading(false); // <-- FIXED: Set loading false after we have session
+
+        // Fetch Profile for Address
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('address, city, pincode')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile && mounted) {
+          setAddressForm({
+            address: profile.address || '',
+            city: profile.city || '',
+            pincode: profile.pincode || '',
+          });
+        }
+
+        // Fetch Progression live from Supabase via Server Action
+        const progRes = await getUserProgression(session.access_token);
+        if (progRes.success && mounted) {
+          setProgressionData({
+            profile: progRes.profile,
+            ledger: progRes.ledger,
+          });
+        }
+
+        // Fetch Orders
+        let orCondition = `user_id.eq.${session.user.id}`;
+        if (session.user.email) orCondition += `,customer_email.eq.${session.user.email}`;
+
+        const { data: orderData } = await supabase
+          .from('orders')
+          .select('*')
+          .or(orCondition)
+          .order('created_at', { ascending: false });
+
+        if (orderData && mounted) {
+          setOrders(orderData);
+        }
+
+        // Check Admin Status
+        const adminRes = await fetch('/api/admin/data?type=check', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        if (adminRes.ok) {
+          const adminData = await adminRes.json();
+          if (adminData.isAdmin && mounted) {
+            setIsAdmin(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    // First check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        fetchUserData(session);
+      }
+    });
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        setSessionToken(session.access_token);
+        fetchUserData(session);
+      } else if (event === 'SIGNED_OUT') {
+        if (mounted) {
+          setUser(null);
+          setSessionToken(null);
+          router.push('/auth/unified');
+        }
+      }
+    });
+
+    const timeout = setTimeout(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session && mounted) {
+          router.push('/auth/login');
+        }
+      });
+    }, 2000);
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
+  }, [router]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  };
+
+  const handleSaveAddress = async (e) => {
+    e.preventDefault();
+    setSavingAddress(true);
+
+    const { error } = await supabase.from('profiles').upsert({
+      id: user.id,
+      email: user.email,
+      full_name: user.user_metadata?.full_name || '',
+      address: addressForm.address,
+      city: addressForm.city,
+      pincode: addressForm.pincode,
+    });
+
+    if (error) {
+      alert('Failed to save address. Please try again.');
+      console.error(error);
+    } else {
+      alert('Address saved successfully!');
+    }
+    setSavingAddress(false);
+  };
+
+  // Submit Agenda for Scheduling Optimization
+  const handleOptimizeSchedule = async (e) => {
+    e.preventDefault();
+    setOptimizing(true);
+    try {
+      const res = await optimizeDeliverySchedule(agendaForm);
+      if (res.success) {
+        setOptimizationMatrix(res.matrix);
+      }
+    } catch (e) {
+      console.error('Optimization failed:', e);
+    } finally {
+      setOptimizing(false);
+    }
+  };
+
+  const toggleBusyDay = (day) => {
+    setAgendaForm((prev) => {
+      const busy = prev.busyDays.includes(day)
+        ? prev.busyDays.filter((d) => d !== day)
+        : [...prev.busyDays, day];
+      return { ...prev, busyDays: busy };
+    });
+  };
+
+  if (loading) {
+    return (
+      <main className="account-page text-center">
+        <p>Loading your portal...</p>
+      </main>
+    );
+  }
+
+  if (!user) return null;
+
+  // Compute tier progression parameters
+  const tierInfo = getTierInfo(progressionData.profile.total_points);
+
+  return (
+    <main className="account-page">
+      <div className="container">
+        <div className="account-layout">
+          {/* Sidebar */}
+          <aside className="sidebar">
+            <nav className="sidebar-nav">
+              <div
+                className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => setActiveTab('overview')}
+              >
+                <LayoutDashboard size={20} />
+                <span>Overview</span>
+              </div>
+              <div
+                className={`nav-item ${activeTab === 'progression' ? 'active' : ''}`}
+                onClick={() => setActiveTab('progression')}
+              >
+                <Award size={20} />
+                <span>Lore & Progression</span>
+              </div>
+              <div
+                className={`nav-item ${activeTab === 'optimizer' ? 'active' : ''}`}
+                onClick={() => setActiveTab('optimizer')}
+              >
+                <Compass size={20} />
+                <span>Delivery Optimizer</span>
+              </div>
+              <div
+                className={`nav-item ${activeTab === 'orders' ? 'active' : ''}`}
+                onClick={() => setActiveTab('orders')}
+              >
+                <Package size={20} />
+                <span>Order History</span>
+              </div>
+              <div
+                className={`nav-item ${activeTab === 'addresses' ? 'active' : ''}`}
+                onClick={() => setActiveTab('addresses')}
+              >
+                <MapPin size={20} />
+                <span>Addresses</span>
+              </div>
+              <div
+                className={`nav-item ${activeTab === 'subscriptions' ? 'active' : ''}`}
+                onClick={() => setActiveTab('subscriptions')}
+              >
+                <Coffee size={20} />
+                <span>Subscriptions</span>
+              </div>
+
+              {isAdmin && (
+                <div
+                  className="nav-item"
+                  onClick={() => router.push('/admin')}
+                  style={{ color: 'var(--accent-red)', fontWeight: 'bold' }}
+                >
+                  <Settings size={20} />
+                  <span>Admin Panel</span>
+                </div>
+              )}
+
+              <div className="nav-item logout" onClick={handleLogout}>
+                <LogOut size={20} />
+                <span>Logout</span>
+              </div>
+            </nav>
+          </aside>
+
+          {/* Main Content */}
+          <section className="main-content">
+            {activeTab === 'overview' && (
+              <div className="tab-content fade-in">
+                <h2 className="tab-header">
+                  Welcome back, {user.user_metadata?.full_name?.split(' ')[0] || 'Coffee Lover'}!
+                </h2>
+
+                <div className="overview-cards">
+                  <div className="stat-card">
+                    <h3>Total Orders</h3>
+                    <div className="stat-value">{orders.length}</div>
+                  </div>
+                  <div className="stat-card">
+                    <h3>Lore Tier</h3>
+                    <div className="stat-value" style={{ fontSize: '1.2rem', marginTop: '10px' }}>
+                      <span className="tier-badge">{tierInfo.currentTier.name}</span>
+                    </div>
+                  </div>
+                  <div className="stat-card">
+                    <h3>Janu Bhai Points</h3>
+                    <div className="stat-value">{tierInfo.totalPoints}</div>
+                  </div>
+                </div>
+
+                <div className="profile-details">
+                  <h3 style={{ marginBottom: '15px', color: 'var(--primary-color)' }}>
+                    Account Details
+                  </h3>
+                  <p>
+                    <strong>Name:</strong> {user.user_metadata?.full_name || 'N/A'}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {user.email}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Feature 5: Native Account Progression & Lore Dashboard */}
+            {activeTab === 'progression' && (
+              <div className="tab-content fade-in progression-container">
+                <h2 className="tab-header">Coffee Lore & Progression</h2>
+
+                <div className="lore-card">
+                  <div className="tier-title-container">
+                    <h3 style={{ margin: 0, fontSize: '1.4rem' }}>{tierInfo.currentTier.name}</h3>
+                    <span className="tier-badge">Rank Tier</span>
+                  </div>
+
+                  <p
+                    style={{
+                      fontStyle: 'italic',
+                      fontSize: '0.95rem',
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    &ldquo;{tierInfo.currentTier.description}&rdquo;
+                  </p>
+
+                  <div style={{ marginTop: '20px' }}>
+                    <div className="progress-bar-outer">
+                      <motion.div
+                        className="progress-bar-inner"
+                        initial={{ width: '0%' }}
+                        animate={{ width: `${tierInfo.progressPercent}%` }}
+                        transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
+                      />
+                      <motion.div
+                        className="progress-bar-glow"
+                        initial={{ left: '-40%' }}
+                        animate={{ left: '140%' }}
+                        transition={{
+                          duration: 0.8,
+                          ease: 'easeInOut',
+                          delay: 1.5,
+                          repeat: Infinity,
+                          repeatDelay: 3,
+                        }}
+                      />
+                    </div>
+
+                    <div className="points-text-summary">
+                      <span>{tierInfo.totalPoints} Points Accumulated</span>
+                      {tierInfo.nextTier ? (
+                        <span>
+                          {tierInfo.pointsToNext} points to {tierInfo.nextTier.name}
+                        </span>
+                      ) : (
+                        <span>Max Lore Level Achieved</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ledger-card-container">
+                  <h3
+                    style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}
+                  >
+                    Points Ledger
+                  </h3>
+                  {progressionData.ledger.length === 0 ? (
+                    <p
+                      style={{
+                        padding: '20px',
+                        textAlign: 'center',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
+                      No ledger history available. Complete orders to earn coffee lore points!
+                    </p>
+                  ) : (
+                    <div className="ledger-cards">
+                      {progressionData.ledger.map((entry) => (
+                        <motion.div
+                          key={entry.id}
+                          className="ledger-card-item"
+                          whileHover={{
+                            scale: 1.02,
+                            boxShadow: '4px 6px 0px var(--text-primary)',
+                            y: -2,
+                          }}
+                          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                        >
+                          <div className="ledger-card-left">
+                            <span className="ledger-action-type">{entry.action_type}</span>
+                            <span className="ledger-date">
+                              {new Date(entry.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="ledger-card-right">
+                            <span className="ledger-points">+{entry.points_awarded}</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Feature 8: Next.js Server-Side Scheduling Optimization Panel */}
+            {activeTab === 'optimizer' && (
+              <div className="tab-content fade-in">
+                <h2 className="tab-header">Next.js Delivery Agenda Optimizer</h2>
+                <p
+                  style={{
+                    marginBottom: '25px',
+                    fontSize: '0.95rem',
+                    color: 'var(--text-secondary)',
+                  }}
+                >
+                  Provide your weekly schedule agenda and daily peak focus workloads. Our edge
+                  algorithms will calculate optimal batch roast times, local shipping dispatch
+                  windows, and a precise caffeine timeline custom-suited to your active agenda.
+                </p>
+
+                <form className="optimizer-form" onSubmit={handleOptimizeSchedule}>
+                  <div className="form-group" style={{ marginBottom: '20px' }}>
+                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>
+                      Select Weekly Busy Days
+                    </label>
+                    <div className="checkbox-grid">
+                      {[
+                        'Monday',
+                        'Tuesday',
+                        'Wednesday',
+                        'Thursday',
+                        'Friday',
+                        'Saturday',
+                        'Sunday',
+                      ].map((day) => (
+                        <label key={day} className="checkbox-item">
+                          <input
+                            type="checkbox"
+                            checked={agendaForm.busyDays.includes(day)}
+                            onChange={() => toggleBusyDay(day)}
+                          />
+                          <span>{day}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div
+                    className="form-grid"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '20px',
+                      marginBottom: '20px',
+                    }}
+                  >
+                    <div className="form-group">
+                      <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>
+                        Peak Focus / Workload Hour
+                      </label>
+                      <input
+                        type="time"
+                        required
+                        value={agendaForm.peakHours}
+                        onChange={(e) =>
+                          setAgendaForm({ ...agendaForm, peakHours: e.target.value })
+                        }
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '4px',
+                        }}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>
+                        Sleep Target (Hours)
+                      </label>
+                      <input
+                        type="number"
+                        min="3"
+                        max="12"
+                        required
+                        value={agendaForm.sleepHours}
+                        onChange={(e) =>
+                          setAgendaForm({ ...agendaForm, sleepHours: Number(e.target.value) })
+                        }
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '4px',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    style={{ width: '100%' }}
+                    disabled={optimizing}
+                  >
+                    {optimizing ? 'RUNNING EDGE COMPUTATIONS...' : 'COMPUTE SCHEDULING MATRIX'}
+                  </button>
+                </form>
+
+                {optimizationMatrix && (
+                  <div className="matrix-grid">
+                    {/* Logistical adjustments */}
+                    <div className="matrix-card">
+                      <h3>Logistical Dispatch Matrix</h3>
+                      <p>
+                        <strong>Primary Dispatch Day:</strong>{' '}
+                        {optimizationMatrix.primaryDeliveryDay}
+                      </p>
+                      <p>
+                        <strong>Secondary Backup Day:</strong>{' '}
+                        {optimizationMatrix.backupDeliveryDay}
+                      </p>
+                      <hr
+                        style={{
+                          margin: '15px 0',
+                          border: 0,
+                          borderTop: '1px solid var(--border-color)',
+                        }}
+                      />
+
+                      {optimizationMatrix.logisticalAdjustments.map((adj, i) => (
+                        <div key={i} style={{ marginBottom: '12px' }}>
+                          <span
+                            style={{ fontWeight: 'bold', display: 'block', fontSize: '0.9rem' }}
+                          >
+                            {adj.factor}
+                          </span>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                            {adj.adjustment}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Caffeine schedule */}
+                    <div className="matrix-card">
+                      <h3>Agenda Caffeine Timeline</h3>
+                      {optimizationMatrix.brewTimeline.map((item, i) => (
+                        <div key={i} className="timeline-item-matrix">
+                          <span
+                            style={{
+                              fontWeight: 'bold',
+                              color: 'var(--accent-red)',
+                              display: 'block',
+                            }}
+                          >
+                            {item.time} - {item.action}
+                          </span>
+                          <p style={{ margin: '3px 0', fontSize: '0.9rem', fontWeight: '500' }}>
+                            {item.recommendedBlend}
+                          </p>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: '0.8rem',
+                              color: 'var(--text-secondary)',
+                            }}
+                          >
+                            {item.rationale}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'orders' && (
+              <div className="tab-content fade-in">
+                <h2 className="tab-header">Your Orders</h2>
+                <div className="orders-list">
+                  {orders.length === 0 ? (
+                    <p className="no-orders" style={{ textAlign: 'center', padding: '40px' }}>
+                      You haven&apos;t placed any orders yet. Start your journey with Janu Bhai!
+                    </p>
+                  ) : (
+                    orders.map((order) => (
+                      <div
+                        key={order.id}
+                        className="order-card"
+                        style={{
+                          marginBottom: '1.5rem',
+                          padding: '1.5rem',
+                          background: '#fdfdfd',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '8px',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <div>
+                            <p style={{ margin: 0, fontWeight: 'bold', fontSize: '1.1rem' }}>
+                              Order #{order.id.split('-')[0]}
+                            </p>
+                            <p
+                              style={{
+                                margin: '5px 0 0 0',
+                                fontSize: '0.9rem',
+                                color: 'var(--text-secondary)',
+                              }}
+                            >
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <p
+                              style={{
+                                margin: 0,
+                                fontWeight: 'bold',
+                                color: 'var(--primary-color)',
+                                fontSize: '1.1rem',
+                              }}
+                            >
+                              ₹ {order.total_amount}
+                            </p>
+                            <p
+                              style={{
+                                margin: '5px 0 0 0',
+                                fontSize: '0.9rem',
+                                textTransform: 'capitalize',
+                                color: 'var(--accent-red)',
+                              }}
+                            >
+                              {order.status.replace(/_/g, ' ')}
+                            </p>
+                          </div>
+                        </div>
+                        {order.awb_number && (
+                          <div
+                            style={{
+                              marginTop: '1.5rem',
+                              paddingTop: '1rem',
+                              borderTop: '1px solid var(--border-color)',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <p
+                              style={{
+                                margin: 0,
+                                fontSize: '0.9rem',
+                                color: 'var(--text-secondary)',
+                              }}
+                            >
+                              AWB: {order.awb_number}
+                            </p>
+                            <button
+                              className="btn-secondary"
+                              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                              onClick={() => router.push(`/track?awb=${order.awb_number}`)}
+                            >
+                              Track Order
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'addresses' && (
+              <div className="tab-content fade-in">
+                <h2 className="tab-header">Saved Addresses</h2>
+                <form className="address-form" onSubmit={handleSaveAddress}>
+                  <div className="form-group">
+                    <label>Street Address</label>
+                    <textarea
+                      rows="3"
+                      required
+                      placeholder="123 Coffee Bean Lane, Near Roastery..."
+                      value={addressForm.address}
+                      onChange={(e) => setAddressForm({ ...addressForm, address: e.target.value })}
+                    ></textarea>
+                  </div>
+
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>City</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Chikmagaluru"
+                        value={addressForm.city}
+                        onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Pincode / ZIP</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="577101"
+                        value={addressForm.pincode}
+                        onChange={(e) =>
+                          setAddressForm({ ...addressForm, pincode: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <button type="submit" className="btn-primary" disabled={savingAddress}>
+                    {savingAddress ? 'SAVING...' : 'SAVE ADDRESS'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {activeTab === 'subscriptions' && (
+              <div className="tab-content fade-in">
+                <h2 className="tab-header">Coffee Subscriptions</h2>
+
+                <div className="subscription-card">
+                  <h3>Coffee On Autopilot</h3>
+                  <p>
+                    Never run out of freshly roasted single-origin coffee again. Get your favorite
+                    blend delivered right to your door every 2 or 4 weeks.
+                  </p>
+
+                  <div className="subscription-features">
+                    <span className="feature-badge">
+                      <CheckCircle2 size={16} /> 15% Off Every Order
+                    </span>
+                    <span className="feature-badge">
+                      <CheckCircle2 size={16} /> Free Shipping
+                    </span>
+                    <span className="feature-badge">
+                      <CheckCircle2 size={16} /> Pause or Cancel Anytime
+                    </span>
+                  </div>
+
+                  <button
+                    className="subscribe-btn"
+                    onClick={() => alert('Subscription Engine coming soon!')}
+                  >
+                    Explore Plans
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+    </main>
+  );
+}

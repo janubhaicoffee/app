@@ -1,1 +1,436 @@
-﻿"use client";import React, { useState, useEffect, useCallback } from "react";import { supabase } from "@/lib/supabase";import {  FileText, Calendar, Printer, RefreshCw, Download,  Sun, DollarSign, ShoppingCart, Users} from "lucide-react";export default function DailyReport() {  const [loading, setLoading] = useState(true);  const [error, setError] = useState(null);  const [outletId, setOutletId] = useState(null);  const [outletName, setOutletName] = useState("");  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);  const [report, setReport] = useState(null);  const [staff, setStaff] = useState([]);  const [attendance, setAttendance] = useState([]);  const [notes, setNotes] = useState("");  const fetchReport = useCallback(async () => {    setLoading(true);    setError(null);    try {      const { data: { session } } = await supabase.auth.getSession();      if (!session) return;      let oid = sessionStorage.getItem("selected_outlet_id");      let oName = "";      const { data: staffRec } = await supabase        .from("outlet_staff")        .select("outlet_id, outlet:outlets(name)")        .eq("user_id", session.user.id)        .maybeSingle();      if (staffRec) {        if (!oid) oid = staffRec.outlet_id;        oName = staffRec.outlet?.name || "";      }      if (oid) {        if (!oName) {          try {            const { data: outlet } = await supabase.from("outlets").select("name").eq("id", oid).maybeSingle();            if (outlet) oName = outlet.name;          } catch (_) {}        }        setOutletId(oid);        setOutletName(oName);      } else {        return;      }      const [ordersRes, expensesRes, dailyRes, staffRes, attRes] = await Promise.allSettled([        fetch(`/api/pos/orders?outletId=${oid}&date=${date}&limit=500`),        fetch(`/api/outlet/expenses?outletId=${oid}`),        fetch(`/api/outlet/financials/daily-sales?outletId=${oid}&startDate=${date}&endDate=${date}`),        fetch(`/api/outlet/staff?outletId=${oid}`),        fetch(`/api/outlet/staff/attendance?outletId=${oid}&date=${date}`),      ]);      let orders = [], expenses = [], dailySales = [];      if (ordersRes.status === "fulfilled" && ordersRes.value.ok) {        const { data } = await ordersRes.value.json();        orders = Array.isArray(data) ? data : [];      }      if (expensesRes.status === "fulfilled" && expensesRes.value.ok) {        const { data } = await expensesRes.value.json();        expenses = Array.isArray(data) ? data.filter(e => {          const eDate = (e.date || e.created_at)?.split("T")[0];          return eDate === date;        }) : [];      }      if (dailyRes.status === "fulfilled" && dailyRes.value.ok) {        const { data } = await dailyRes.value.json();        dailySales = Array.isArray(data) ? data : [];      }      if (staffRes.status === "fulfilled" && staffRes.value.ok) {        const { data } = await staffRes.value.json();        setStaff(Array.isArray(data) ? data : []);      }      if (attRes.status === "fulfilled" && attRes.value.ok) {        const { data } = await attRes.value.json();        setAttendance(Array.isArray(data) ? data : []);      }      const paidOrders = orders.filter(o => o.payment_status === "paid");      const totalRevenue = paidOrders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);      const totalTax = paidOrders.reduce((s, o) => s + parseFloat(o.tax_amount || 0), 0);      const paymentBreakdown = { cash: 0, card: 0, upi: 0, other: 0 };      orders.forEach(o => {        const method = (o.payment_method || "other").toLowerCase();        if (paymentBreakdown[method] !== undefined) paymentBreakdown[method] += parseFloat(o.total_amount || 0);        else paymentBreakdown.other += parseFloat(o.total_amount || 0);      });      const dailyRecord = dailySales[0] || {};      const totalExpenses = expenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0);      setReport({        date,        totalOrders: orders.length,        paidOrders: paidOrders.length,        totalRevenue,        totalTax,        totalCogs: parseFloat(dailyRecord.total_cogs || 0),        totalLabor: parseFloat(dailyRecord.total_labor || 0),        totalExpenses,        netProfit: totalRevenue - parseFloat(dailyRecord.total_cogs || 0) - parseFloat(dailyRecord.total_labor || 0) - totalExpenses,        paymentBreakdown,        expenses,        dailyRecord,      });    } catch (err) {      setError(err.message);    } finally {      setLoading(false);    }  }, [date]);  useEffect(() => { fetchReport(); }, [fetchReport]);  const handlePrint = () => { window.print(); };  const formatCurrency = (n) => "â‚¹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });  if (loading) return <div className="outlet-loading"><div className="outlet-loading-spinner" /><p>Generating report...</p></div>;  return (    <div>      <div className="outlet-page-header outlet-print-hide">        <div>          <h1>Daily Business Report</h1>          <p className="outlet-page-subtitle">Printable end-of-day summary</p>        </div>        <div style={{ display: "flex", gap: 8 }}>          <button className="outlet-btn primary sm" onClick={handlePrint}><Printer size={14} /> Print</button>          <button className="outlet-btn outline sm" onClick={fetchReport}><RefreshCw size={14} /></button>        </div>      </div>      {error && <div className="outlet-error-banner outlet-print-hide">{error}</div>}      <div className="outlet-filter-bar outlet-print-hide">        <Calendar size={16} />        <input type="date" className="form-control" style={{ width: 200 }} value={date} onChange={e => setDate(e.target.value)} />      </div>      <div className="outlet-card" style={{ marginBottom: 20 }}>        <div style={{ textAlign: "center", marginBottom: 20 }}>          <h1 style={{ fontSize: 22, margin: 0, color: "var(--accent-gold)" }}>{outletName || "Janu Bhai Coffee"}</h1>          <h2 style={{ fontSize: 18, margin: "4px 0", color: "var(--text-warm-white)" }}>Daily Business Report</h2>          <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: 0 }}>            {new Date(date).toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}          </p>        </div>        <div className="outlet-stats-grid">          <div className="outlet-stat-card">            <div className="outlet-stat-icon green"><DollarSign size={24} /></div>            <div className="outlet-stat-info"><h3>{formatCurrency(report?.totalRevenue || 0)}</h3><p>Total Revenue</p></div>          </div>          <div className="outlet-stat-card">            <div className="outlet-stat-icon blue"><ShoppingCart size={24} /></div>            <div className="outlet-stat-info"><h3>{report?.totalOrders || 0}</h3><p>Total Orders</p></div>          </div>          <div className="outlet-stat-card">            <div className="outlet-stat-icon purple"><Users size={24} /></div>            <div className="outlet-stat-info"><h3>{attendance.filter(a => a.status === "present").length || 0}</h3><p>Staff Present</p></div>          </div>          <div className="outlet-stat-card">            <div className="outlet-stat-icon orange"><Sun size={24} /></div>            <div className="outlet-stat-info">              <h3 style={{ color: (report?.netProfit || 0) >= 0 ? "var(--accent-gold)" : "#e53e3e" }}>                {formatCurrency(report?.netProfit || 0)}              </h3>              <p>Net Profit</p>            </div>          </div>        </div>        <div className="outlet-grid-2">          <div>            <h3 className="outlet-subsection-title">Sales Summary</h3>            <table className="outlet-table" style={{ fontSize: 13 }}>              <tbody>                <tr><td>Total Orders</td><td style={{ fontWeight: 600, textAlign: "right" }}>{report?.totalOrders || 0}</td></tr>                <tr><td>Paid Orders</td><td style={{ fontWeight: 600, textAlign: "right" }}>{report?.paidOrders || 0}</td></tr>                <tr><td>Total Revenue</td><td style={{ fontWeight: 600, textAlign: "right" }}>{formatCurrency(report?.totalRevenue || 0)}</td></tr>                <tr><td>Tax Collected</td><td style={{ fontWeight: 600, textAlign: "right" }}>{formatCurrency(report?.totalTax || 0)}</td></tr>              </tbody>            </table>          </div>          <div>            <h3 className="outlet-subsection-title">Payment Breakdown</h3>            <table className="outlet-table" style={{ fontSize: 13 }}>              <tbody>                <tr><td>Cash</td><td style={{ fontWeight: 600, textAlign: "right" }}>{formatCurrency(report?.paymentBreakdown?.cash || 0)}</td></tr>                <tr><td>Card</td><td style={{ fontWeight: 600, textAlign: "right" }}>{formatCurrency(report?.paymentBreakdown?.card || 0)}</td></tr>                <tr><td>UPI</td><td style={{ fontWeight: 600, textAlign: "right" }}>{formatCurrency(report?.paymentBreakdown?.upi || 0)}</td></tr>                <tr><td>Other</td><td style={{ fontWeight: 600, textAlign: "right" }}>{formatCurrency(report?.paymentBreakdown?.other || 0)}</td></tr>              </tbody>            </table>          </div>        </div>        <div className="outlet-grid-2">          <div>            <h3 className="outlet-subsection-title">Cost Breakdown</h3>            <table className="outlet-table" style={{ fontSize: 13 }}>              <tbody>                <tr><td>COGS</td><td style={{ fontWeight: 600, textAlign: "right" }}>{formatCurrency(report?.totalCogs || 0)}</td></tr>                <tr><td>Labor Cost</td><td style={{ fontWeight: 600, textAlign: "right" }}>{formatCurrency(report?.totalLabor || 0)}</td></tr>                <tr><td>Other Expenses</td><td style={{ fontWeight: 600, textAlign: "right" }}>{formatCurrency(report?.totalExpenses || 0)}</td></tr>                <tr style={{ borderTop: "2px solid var(--accent-gold)" }}>                  <td style={{ fontWeight: 700, color: "var(--text-warm-white)" }}>Net Profit</td>                  <td style={{ fontWeight: 700, textAlign: "right", color: (report?.netProfit || 0) >= 0 ? "var(--accent-gold)" : "#e53e3e" }}>                    {formatCurrency(report?.netProfit || 0)}                  </td>                </tr>              </tbody>            </table>          </div>          <div>            <h3 className="outlet-subsection-title">Expenses Today</h3>            {report?.expenses?.length > 0 ? (              <table className="outlet-table" style={{ fontSize: 13 }}>                <tbody>                  {report.expenses.map(e => (                    <tr key={e.id}>                      <td>{e.category}</td>                      <td style={{ textAlign: "right" }}>{formatCurrency(e.amount)}</td>                    </tr>                  ))}                </tbody>              </table>            ) : (              <div className="outlet-empty"><p>No expenses recorded</p></div>            )}          </div>        </div>        <div>          <h3 className="outlet-subsection-title">Staff on Duty</h3>          {attendance.filter(a => a.status === "present").length > 0 ? (            <table className="outlet-table" style={{ fontSize: 13 }}>              <thead>                <tr><th>Name</th><th>Role</th><th>Clock In</th><th>Clock Out</th><th>Hours</th></tr>              </thead>              <tbody>                {attendance.filter(a => a.status === "present").map(a => (                  <tr key={a.id}>                    <td>{a.outlet_staff?.name || "Unknown"}</td>                    <td>{a.outlet_staff?.role || "-"}</td>                    <td>{a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : "-"}</td>                    <td>{a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : "Active"}</td>                    <td>{a.hours_worked ? `${a.hours_worked}h` : "-"}</td>                  </tr>                ))}              </tbody>            </table>          ) : (            <div className="outlet-empty"><p>No staff attendance recorded</p></div>          )}        </div>        <div style={{ marginTop: 24 }}>          <h3 className="outlet-subsection-title">Notes</h3>          <textarea            className="form-control"            rows={3}            placeholder="Add notes for this day..."            value={notes}            onChange={e => setNotes(e.target.value)}            style={{ marginTop: 8 }}          />        </div>        <div style={{ marginTop: 24, borderTop: "1px solid var(--border-color)", paddingTop: 16, textAlign: "center", fontSize: 12, color: "var(--text-secondary)" }}>          Report generated on {new Date().toLocaleString()} &middot; Janu Bhai Coffee        </div>      </div>    </div>  );}
+'use client';
+import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import {
+  FileText,
+  Calendar,
+  Printer,
+  RefreshCw,
+  Download,
+  Sun,
+  DollarSign,
+  ShoppingCart,
+  Users,
+} from 'lucide-react';
+
+export default function DailyReport() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [outletId, setOutletId] = useState(null);
+  const [outletName, setOutletName] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [report, setReport] = useState(null);
+  const [staff, setStaff] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [notes, setNotes] = useState('');
+
+  const fetchReport = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+
+      let oid = sessionStorage.getItem('selected_outlet_id');
+      let oName = '';
+
+      const { data: staffRec } = await supabase
+        .from('outlet_staff')
+        .select('outlet_id, outlet:outlets(name)')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      if (staffRec) {
+        if (!oid) oid = staffRec.outlet_id;
+        oName = staffRec.outlet?.name || '';
+      }
+
+      if (oid) {
+        if (!oName) {
+          try {
+            const { data: outlet } = await supabase
+              .from('outlets')
+              .select('name')
+              .eq('id', oid)
+              .maybeSingle();
+            if (outlet) oName = outlet.name;
+          } catch (_) {}
+        }
+        setOutletId(oid);
+        setOutletName(oName);
+      } else {
+        return;
+      }
+
+      const [ordersRes, expensesRes, dailyRes, staffRes, attRes] = await Promise.allSettled([
+        fetch(`/api/pos/orders?outletId=${oid}&date=${date}&limit=500`),
+        fetch(`/api/outlet/expenses?outletId=${oid}`),
+        fetch(
+          `/api/outlet/financials/daily-sales?outletId=${oid}&startDate=${date}&endDate=${date}`,
+        ),
+        fetch(`/api/outlet/staff?outletId=${oid}`),
+        fetch(`/api/outlet/staff/attendance?outletId=${oid}&date=${date}`),
+      ]);
+
+      let orders = [],
+        expenses = [],
+        dailySales = [];
+
+      if (ordersRes.status === 'fulfilled' && ordersRes.value.ok) {
+        const { data } = await ordersRes.value.json();
+        orders = Array.isArray(data) ? data : [];
+      }
+      if (expensesRes.status === 'fulfilled' && expensesRes.value.ok) {
+        const { data } = await expensesRes.value.json();
+        expenses = Array.isArray(data)
+          ? data.filter((e) => {
+              const eDate = (e.date || e.created_at)?.split('T')[0];
+              return eDate === date;
+            })
+          : [];
+      }
+      if (dailyRes.status === 'fulfilled' && dailyRes.value.ok) {
+        const { data } = await dailyRes.value.json();
+        dailySales = Array.isArray(data) ? data : [];
+      }
+      if (staffRes.status === 'fulfilled' && staffRes.value.ok) {
+        const { data } = await staffRes.value.json();
+        setStaff(Array.isArray(data) ? data : []);
+      }
+      if (attRes.status === 'fulfilled' && attRes.value.ok) {
+        const { data } = await attRes.value.json();
+        setAttendance(Array.isArray(data) ? data : []);
+      }
+
+      const paidOrders = orders.filter((o) => o.payment_status === 'paid');
+      const totalRevenue = paidOrders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+      const totalTax = paidOrders.reduce((s, o) => s + parseFloat(o.tax_amount || 0), 0);
+
+      const paymentBreakdown = { cash: 0, card: 0, upi: 0, other: 0 };
+      orders.forEach((o) => {
+        const method = (o.payment_method || 'other').toLowerCase();
+        if (paymentBreakdown[method] !== undefined)
+          paymentBreakdown[method] += parseFloat(o.total_amount || 0);
+        else paymentBreakdown.other += parseFloat(o.total_amount || 0);
+      });
+
+      const dailyRecord = dailySales[0] || {};
+      const totalExpenses = expenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+
+      setReport({
+        date,
+        totalOrders: orders.length,
+        paidOrders: paidOrders.length,
+        totalRevenue,
+        totalTax,
+        totalCogs: parseFloat(dailyRecord.total_cogs || 0),
+        totalLabor: parseFloat(dailyRecord.total_labor || 0),
+        totalExpenses,
+        netProfit:
+          totalRevenue -
+          parseFloat(dailyRecord.total_cogs || 0) -
+          parseFloat(dailyRecord.total_labor || 0) -
+          totalExpenses,
+        paymentBreakdown,
+        expenses,
+        dailyRecord,
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [date]);
+
+  useEffect(() => {
+    fetchReport();
+  }, [fetchReport]);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const formatCurrency = (n) =>
+    '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+  if (loading)
+    return (
+      <div className="outlet-loading">
+        <div className="outlet-loading-spinner" />
+        <p>Generating report...</p>
+      </div>
+    );
+
+  return (
+    <div>
+      <div className="outlet-page-header outlet-print-hide">
+        <div>
+          <h1>Daily Business Report</h1>
+          <p className="outlet-page-subtitle">Printable end-of-day summary</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="outlet-btn primary sm" onClick={handlePrint}>
+            <Printer size={14} /> Print
+          </button>
+          <button className="outlet-btn outline sm" onClick={fetchReport}>
+            <RefreshCw size={14} />
+          </button>
+        </div>
+      </div>
+
+      {error && <div className="outlet-error-banner outlet-print-hide">{error}</div>}
+
+      <div className="outlet-filter-bar outlet-print-hide">
+        <Calendar size={16} />
+        <input
+          type="date"
+          className="form-control"
+          style={{ width: 200 }}
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
+      </div>
+
+      <div className="outlet-card" style={{ marginBottom: 20 }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <h1 style={{ fontSize: 22, margin: 0, color: '#1a1a1a' }}>
+            {outletName || 'Janu Bhai Coffee'}
+          </h1>
+          <h2 style={{ fontSize: 18, margin: '4px 0', color: '#4a5568' }}>Daily Business Report</h2>
+          <p style={{ fontSize: 14, color: '#718096', margin: 0 }}>
+            {new Date(date).toLocaleDateString('en-IN', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </p>
+        </div>
+
+        <div className="outlet-stats-grid">
+          <div className="outlet-stat-card">
+            <div className="outlet-stat-icon green">
+              <DollarSign size={24} />
+            </div>
+            <div className="outlet-stat-info">
+              <h3>{formatCurrency(report?.totalRevenue || 0)}</h3>
+              <p>Total Revenue</p>
+            </div>
+          </div>
+          <div className="outlet-stat-card">
+            <div className="outlet-stat-icon blue">
+              <ShoppingCart size={24} />
+            </div>
+            <div className="outlet-stat-info">
+              <h3>{report?.totalOrders || 0}</h3>
+              <p>Total Orders</p>
+            </div>
+          </div>
+          <div className="outlet-stat-card">
+            <div className="outlet-stat-icon purple">
+              <Users size={24} />
+            </div>
+            <div className="outlet-stat-info">
+              <h3>{attendance.filter((a) => a.status === 'present').length || 0}</h3>
+              <p>Staff Present</p>
+            </div>
+          </div>
+          <div className="outlet-stat-card">
+            <div className="outlet-stat-icon orange">
+              <Sun size={24} />
+            </div>
+            <div className="outlet-stat-info">
+              <h3 style={{ color: (report?.netProfit || 0) >= 0 ? '#38a169' : '#e53e3e' }}>
+                {formatCurrency(report?.netProfit || 0)}
+              </h3>
+              <p>Net Profit</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="outlet-grid-2">
+          <div>
+            <h3 className="outlet-subsection-title">Sales Summary</h3>
+            <table className="outlet-table" style={{ fontSize: 13 }}>
+              <tbody>
+                <tr>
+                  <td>Total Orders</td>
+                  <td style={{ fontWeight: 600, textAlign: 'right' }}>
+                    {report?.totalOrders || 0}
+                  </td>
+                </tr>
+                <tr>
+                  <td>Paid Orders</td>
+                  <td style={{ fontWeight: 600, textAlign: 'right' }}>{report?.paidOrders || 0}</td>
+                </tr>
+                <tr>
+                  <td>Total Revenue</td>
+                  <td style={{ fontWeight: 600, textAlign: 'right' }}>
+                    {formatCurrency(report?.totalRevenue || 0)}
+                  </td>
+                </tr>
+                <tr>
+                  <td>Tax Collected</td>
+                  <td style={{ fontWeight: 600, textAlign: 'right' }}>
+                    {formatCurrency(report?.totalTax || 0)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h3 className="outlet-subsection-title">Payment Breakdown</h3>
+            <table className="outlet-table" style={{ fontSize: 13 }}>
+              <tbody>
+                <tr>
+                  <td>Cash</td>
+                  <td style={{ fontWeight: 600, textAlign: 'right' }}>
+                    {formatCurrency(report?.paymentBreakdown?.cash || 0)}
+                  </td>
+                </tr>
+                <tr>
+                  <td>Card</td>
+                  <td style={{ fontWeight: 600, textAlign: 'right' }}>
+                    {formatCurrency(report?.paymentBreakdown?.card || 0)}
+                  </td>
+                </tr>
+                <tr>
+                  <td>UPI</td>
+                  <td style={{ fontWeight: 600, textAlign: 'right' }}>
+                    {formatCurrency(report?.paymentBreakdown?.upi || 0)}
+                  </td>
+                </tr>
+                <tr>
+                  <td>Other</td>
+                  <td style={{ fontWeight: 600, textAlign: 'right' }}>
+                    {formatCurrency(report?.paymentBreakdown?.other || 0)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="outlet-grid-2">
+          <div>
+            <h3 className="outlet-subsection-title">Cost Breakdown</h3>
+            <table className="outlet-table" style={{ fontSize: 13 }}>
+              <tbody>
+                <tr>
+                  <td>COGS</td>
+                  <td style={{ fontWeight: 600, textAlign: 'right' }}>
+                    {formatCurrency(report?.totalCogs || 0)}
+                  </td>
+                </tr>
+                <tr>
+                  <td>Labor Cost</td>
+                  <td style={{ fontWeight: 600, textAlign: 'right' }}>
+                    {formatCurrency(report?.totalLabor || 0)}
+                  </td>
+                </tr>
+                <tr>
+                  <td>Other Expenses</td>
+                  <td style={{ fontWeight: 600, textAlign: 'right' }}>
+                    {formatCurrency(report?.totalExpenses || 0)}
+                  </td>
+                </tr>
+                <tr style={{ borderTop: '2px solid #e2e8f0' }}>
+                  <td style={{ fontWeight: 700 }}>Net Profit</td>
+                  <td
+                    style={{
+                      fontWeight: 700,
+                      textAlign: 'right',
+                      color: (report?.netProfit || 0) >= 0 ? '#38a169' : '#e53e3e',
+                    }}
+                  >
+                    {formatCurrency(report?.netProfit || 0)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h3 className="outlet-subsection-title">Expenses Today</h3>
+            {report?.expenses?.length > 0 ? (
+              <table className="outlet-table" style={{ fontSize: 13 }}>
+                <tbody>
+                  {report.expenses.map((e) => (
+                    <tr key={e.id}>
+                      <td>{e.category}</td>
+                      <td style={{ textAlign: 'right' }}>{formatCurrency(e.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="outlet-empty">
+                <p>No expenses recorded</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="outlet-subsection-title">Staff on Duty</h3>
+          {attendance.filter((a) => a.status === 'present').length > 0 ? (
+            <table className="outlet-table" style={{ fontSize: 13 }}>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Clock In</th>
+                  <th>Clock Out</th>
+                  <th>Hours</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendance
+                  .filter((a) => a.status === 'present')
+                  .map((a) => (
+                    <tr key={a.id}>
+                      <td>{a.outlet_staff?.name || 'Unknown'}</td>
+                      <td>{a.outlet_staff?.role || '-'}</td>
+                      <td>{a.clock_in ? new Date(a.clock_in).toLocaleTimeString() : '-'}</td>
+                      <td>{a.clock_out ? new Date(a.clock_out).toLocaleTimeString() : 'Active'}</td>
+                      <td>{a.hours_worked ? `${a.hours_worked}h` : '-'}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="outlet-empty">
+              <p>No staff attendance recorded</p>
+            </div>
+          )}
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          <h3 className="outlet-subsection-title">Notes</h3>
+          <textarea
+            className="form-control"
+            rows={3}
+            placeholder="Add notes for this day..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            style={{ marginTop: 8 }}
+          />
+        </div>
+
+        <div
+          style={{
+            marginTop: 24,
+            borderTop: '1px solid #e2e8f0',
+            paddingTop: 16,
+            textAlign: 'center',
+            fontSize: 12,
+            color: '#a0aec0',
+          }}
+        >
+          Report generated on {new Date().toLocaleString()} &middot; Janu Bhai Coffee
+        </div>
+      </div>
+    </div>
+  );
+}

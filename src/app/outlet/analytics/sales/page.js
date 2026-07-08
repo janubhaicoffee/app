@@ -1,1 +1,347 @@
-﻿"use client";import React, { useState, useEffect, useCallback } from "react";import { supabase } from "@/lib/supabase";import {  TrendingUp, RefreshCw, Calendar, Clock, Award} from "lucide-react";import {  ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie,  XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip, Legend, Cell} from "recharts";const PERIODS = ["daily", "weekly", "monthly"];const COLORS = ["#3182ce", "#38a169", "#dd6b20", "#e53e3e", "#805ad5", "#d69e2e", "#319795", "#e53e3e"];export default function SalesAnalytics() {  const [loading, setLoading] = useState(true);  const [error, setError] = useState(null);  const [period, setPeriod] = useState("daily");  const [revenueData, setRevenueData] = useState([]);  const [topProducts, setTopProducts] = useState([]);  const [categorySales, setCategorySales] = useState([]);  const [peakHours, setPeakHours] = useState([]);  const [summary, setSummary] = useState({ totalRevenue: 0, totalOrders: 0, avgOrder: 0 });  const fetchData = useCallback(async () => {    setLoading(true);    setError(null);    try {      const { data: { session } } = await supabase.auth.getSession();      if (!session) return;      let outletId = sessionStorage.getItem("selected_outlet_id");      if (!outletId) {        const { data: staff } = await supabase          .from("outlet_staff").select("outlet_id").eq("user_id", session.user.id).maybeSingle();        outletId = staff?.outlet_id;        if (outletId) sessionStorage.setItem("selected_outlet_id", outletId);      }      const endDate = new Date().toISOString().split("T")[0];      let startDate;      if (period === "daily") {        const d = new Date(); d.setDate(d.getDate() - 14);        startDate = d.toISOString().split("T")[0];      } else if (period === "weekly") {        const d = new Date(); d.setDate(d.getDate() - 84);        startDate = d.toISOString().split("T")[0];      } else {        const d = new Date(); d.setFullYear(d.getFullYear() - 1);        startDate = d.toISOString().split("T")[0];      }      const params = `?outletId=${outletId || ""}&startDate=${startDate}&endDate=${endDate}`;      const [ordersRes, dailyRes] = await Promise.allSettled([        fetch(`/api/pos/orders${params}&limit=500`),        fetch(`/api/outlet/financials/daily-sales${params}`),      ]);      let allOrders = [];      if (ordersRes.status === "fulfilled" && ordersRes.value.ok) {        const { data } = await ordersRes.value.json();        if (Array.isArray(data)) allOrders = data;      }      const paidOrders = allOrders.filter(o => o.payment_status === "paid");      const totalRev = paidOrders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);      setSummary({        totalRevenue: totalRev,        totalOrders: paidOrders.length,        avgOrder: paidOrders.length > 0 ? totalRev / paidOrders.length : 0,      });      const dateMap = {};      paidOrders.forEach(o => {        const d = o.created_at?.split("T")[0] || "unknown";        if (!dateMap[d]) dateMap[d] = { revenue: 0, orders: 0 };        dateMap[d].revenue += parseFloat(o.total_amount || 0);        dateMap[d].orders += 1;      });      let chart = Object.entries(dateMap)        .sort(([a], [b]) => a.localeCompare(b))        .map(([date, v]) => ({ date: new Date(date).toLocaleDateString("en-IN", { day: "numeric", month: "short" }), ...v }));      if (period === "weekly") {        const weeklyMap = {};        chart.forEach(d => {          const dObj = new Date(d.date);          const weekStart = new Date(dObj); weekStart.setDate(dObj.getDate() - dObj.getDay());          const key = weekStart.toLocaleDateString("en-IN", { day: "numeric", month: "short" });          if (!weeklyMap[key]) weeklyMap[key] = { revenue: 0, orders: 0, count: 0 };          weeklyMap[key].revenue += d.revenue;          weeklyMap[key].orders += d.orders;          weeklyMap[key].count += 1;        });        chart = Object.entries(weeklyMap).map(([date, v]) => ({ date, revenue: v.revenue, orders: v.orders }));      }      setRevenueData(chart);      const prodCount = {};      paidOrders.forEach(o => {        if (o.pos_order_items) {          (Array.isArray(o.pos_order_items) ? o.pos_order_items : []).forEach(item => {            const name = item.product_name || "Unknown";            if (!prodCount[name]) prodCount[name] = { qty: 0, rev: 0 };            prodCount[name].qty += item.quantity || 1;            prodCount[name].rev += parseFloat(item.total || item.price || 0);          });        }      });      setTopProducts(Object.entries(prodCount)        .sort(([, a], [, b]) => b.rev - a.rev)        .slice(0, 8)        .map(([name, v], i) => ({ name, ...v, color: COLORS[i % COLORS.length] })));      const catMap = {};      paidOrders.forEach(o => {        if (o.pos_order_items) {          (Array.isArray(o.pos_order_items) ? o.pos_order_items : []).forEach(item => {            const cat = item.category || "Uncategorized";            if (!catMap[cat]) catMap[cat] = 0;            catMap[cat] += parseFloat(item.total || item.price || 0);          });        }      });      setCategorySales(Object.entries(catMap)        .sort(([, a], [, b]) => b - a)        .map(([name, value], i) => ({ name, value, color: COLORS[i % COLORS.length] })));      const hourCount = {};      allOrders.forEach(o => {        const h = new Date(o.created_at).getHours();        const key = `${h}:00`;        if (!hourCount[key]) hourCount[key] = { orders: 0, revenue: 0 };        hourCount[key].orders += 1;        hourCount[key].revenue += parseFloat(o.total_amount || 0);      });      setPeakHours(Object.entries(hourCount)        .sort(([a], [b]) => a.localeCompare(b))        .map(([hour, v]) => ({ hour, ...v })));    } catch (err) {      setError(err.message);    } finally {      setLoading(false);    }  }, [period]);  useEffect(() => { fetchData(); }, [fetchData]);  const formatCurrency = (n) => "â‚¹" + Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });  if (loading) return <div className="outlet-loading"><div className="outlet-loading-spinner" /><p>Loading analytics...</p></div>;  if (error) return <div className="outlet-error-banner">{error}</div>;  return (    <div>      <div className="outlet-page-header">        <div>          <h1>Sales Analytics</h1>          <p className="outlet-page-subtitle">Track revenue, top products, and peak hours</p>        </div>        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>          <div className="outlet-tabs" style={{ margin: 0 }}>            {PERIODS.map((p) => (              <button key={p} className={`outlet-tab ${period === p ? "active" : ""}`} onClick={() => setPeriod(p)}>                {p.charAt(0).toUpperCase() + p.slice(1)}              </button>            ))}          </div>          <button className="outlet-btn outline sm" onClick={fetchData}><RefreshCw size={14} /></button>        </div>      </div>      <div className="outlet-stats-grid">        <div className="outlet-stat-card">          <div className="outlet-stat-icon green"><TrendingUp size={24} /></div>          <div className="outlet-stat-info"><h3>{formatCurrency(summary.totalRevenue)}</h3><p>Total Revenue</p></div>        </div>        <div className="outlet-stat-card">          <div className="outlet-stat-icon blue"><Calendar size={24} /></div>          <div className="outlet-stat-info"><h3>{summary.totalOrders}</h3><p>Total Orders</p></div>        </div>        <div className="outlet-stat-card">          <div className="outlet-stat-icon purple"><Award size={24} /></div>          <div className="outlet-stat-info"><h3>{formatCurrency(summary.avgOrder)}</h3><p>Avg Order Value</p></div>        </div>      </div>      <div className="outlet-chart-container">        <h2>Revenue Over Time</h2>        <div className="outlet-chart-body">          <ResponsiveContainer width="100%" height="100%">            <AreaChart data={revenueData}>              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />              <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--text-secondary)" }} />              <YAxis tick={{ fontSize: 11, fill: "var(--text-secondary)" }} tickFormatter={(v) => "â‚¹" + v} />              <ReTooltip formatter={(v) => formatCurrency(v)} contentStyle={{ background: "var(--bg-chocolate)", border: "1px solid var(--border-color)", borderRadius: 4 }} />              <Area type="monotone" dataKey="revenue" stroke="var(--accent-gold)" fill="var(--accent-gold-light)" strokeWidth={2} />            </AreaChart>          </ResponsiveContainer>        </div>      </div>      <div className="outlet-grid-2">        <div className="outlet-chart-container">          <h2>Top Selling Products</h2>          <div style={{ height: 300 }}>            <ResponsiveContainer width="100%" height="100%">              <BarChart data={topProducts} layout="vertical" margin={{ left: 80 }}>                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />                <XAxis type="number" tick={{ fontSize: 11, fill: "var(--text-secondary)" }} tickFormatter={(v) => "â‚¹" + v} />                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "var(--text-secondary)" }} width={75} />                <ReTooltip formatter={(v) => formatCurrency(v)} contentStyle={{ background: "var(--bg-chocolate)", border: "1px solid var(--border-color)", borderRadius: 4 }} />                <Bar dataKey="rev" radius={[0, 4, 4, 0]}>                  {topProducts.map((entry, i) => <Cell key={i} fill={entry.color} />)}                </Bar>              </BarChart>            </ResponsiveContainer>          </div>        </div>        <div className="outlet-chart-container">          <h2>Sales by Category</h2>          <div style={{ height: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>            {categorySales.length === 0 ? (              <div className="outlet-empty"><p>No data</p></div>            ) : (              <ResponsiveContainer width="100%" height="100%">                <PieChart>                  <Pie data={categorySales} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>                    {categorySales.map((e, i) => <Cell key={i} fill={e.color} />)}                  </Pie>                  <ReTooltip formatter={(v) => formatCurrency(v)} />                </PieChart>              </ResponsiveContainer>            )}          </div>        </div>      </div>      <div className="outlet-chart-container">        <h2>Peak Hours Analysis</h2>        <div className="outlet-chart-body">          <ResponsiveContainer width="100%" height="100%">            <BarChart data={peakHours}>              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />              <XAxis dataKey="hour" tick={{ fontSize: 11, fill: "var(--text-secondary)" }} />              <YAxis tick={{ fontSize: 11, fill: "var(--text-secondary)" }} />              <ReTooltip contentStyle={{ background: "var(--bg-chocolate)", border: "1px solid var(--border-color)", borderRadius: 4 }} />              <Bar dataKey="orders" fill="var(--accent-gold)" radius={[4, 4, 0, 0]} />            </BarChart>          </ResponsiveContainer>        </div>      </div>    </div>  );}
+'use client';
+import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import { TrendingUp, RefreshCw, Calendar, Clock, Award } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as ReTooltip,
+  Legend,
+  Cell,
+} from 'recharts';
+
+const PERIODS = ['daily', 'weekly', 'monthly'];
+const COLORS = [
+  '#3182ce',
+  '#38a169',
+  '#dd6b20',
+  '#e53e3e',
+  '#805ad5',
+  '#d69e2e',
+  '#319795',
+  '#e53e3e',
+];
+
+export default function SalesAnalytics() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [period, setPeriod] = useState('daily');
+  const [revenueData, setRevenueData] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [categorySales, setCategorySales] = useState([]);
+  const [peakHours, setPeakHours] = useState([]);
+  const [summary, setSummary] = useState({ totalRevenue: 0, totalOrders: 0, avgOrder: 0 });
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+
+      let outletId = sessionStorage.getItem('selected_outlet_id');
+      if (!outletId) {
+        const { data: staff } = await supabase
+          .from('outlet_staff')
+          .select('outlet_id')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        outletId = staff?.outlet_id;
+        if (outletId) sessionStorage.setItem('selected_outlet_id', outletId);
+      }
+
+      const endDate = new Date().toISOString().split('T')[0];
+      let startDate;
+      if (period === 'daily') {
+        const d = new Date();
+        d.setDate(d.getDate() - 14);
+        startDate = d.toISOString().split('T')[0];
+      } else if (period === 'weekly') {
+        const d = new Date();
+        d.setDate(d.getDate() - 84);
+        startDate = d.toISOString().split('T')[0];
+      } else {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() - 1);
+        startDate = d.toISOString().split('T')[0];
+      }
+
+      const params = `?outletId=${outletId || ''}&startDate=${startDate}&endDate=${endDate}`;
+      const [ordersRes, dailyRes] = await Promise.allSettled([
+        fetch(`/api/pos/orders${params}&limit=500`),
+        fetch(`/api/outlet/financials/daily-sales${params}`),
+      ]);
+
+      let allOrders = [];
+      if (ordersRes.status === 'fulfilled' && ordersRes.value.ok) {
+        const { data } = await ordersRes.value.json();
+        if (Array.isArray(data)) allOrders = data;
+      }
+
+      const paidOrders = allOrders.filter((o) => o.payment_status === 'paid');
+      const totalRev = paidOrders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0);
+      setSummary({
+        totalRevenue: totalRev,
+        totalOrders: paidOrders.length,
+        avgOrder: paidOrders.length > 0 ? totalRev / paidOrders.length : 0,
+      });
+
+      const dateMap = {};
+      paidOrders.forEach((o) => {
+        const d = o.created_at?.split('T')[0] || 'unknown';
+        if (!dateMap[d]) dateMap[d] = { revenue: 0, orders: 0 };
+        dateMap[d].revenue += parseFloat(o.total_amount || 0);
+        dateMap[d].orders += 1;
+      });
+      let chart = Object.entries(dateMap)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, v]) => ({
+          date: new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+          ...v,
+        }));
+      if (period === 'weekly') {
+        const weeklyMap = {};
+        chart.forEach((d) => {
+          const dObj = new Date(d.date);
+          const weekStart = new Date(dObj);
+          weekStart.setDate(dObj.getDate() - dObj.getDay());
+          const key = weekStart.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+          if (!weeklyMap[key]) weeklyMap[key] = { revenue: 0, orders: 0, count: 0 };
+          weeklyMap[key].revenue += d.revenue;
+          weeklyMap[key].orders += d.orders;
+          weeklyMap[key].count += 1;
+        });
+        chart = Object.entries(weeklyMap).map(([date, v]) => ({
+          date,
+          revenue: v.revenue,
+          orders: v.orders,
+        }));
+      }
+      setRevenueData(chart);
+
+      const prodCount = {};
+      paidOrders.forEach((o) => {
+        if (o.pos_order_items) {
+          (Array.isArray(o.pos_order_items) ? o.pos_order_items : []).forEach((item) => {
+            const name = item.product_name || 'Unknown';
+            if (!prodCount[name]) prodCount[name] = { qty: 0, rev: 0 };
+            prodCount[name].qty += item.quantity || 1;
+            prodCount[name].rev += parseFloat(item.total || item.price || 0);
+          });
+        }
+      });
+      setTopProducts(
+        Object.entries(prodCount)
+          .sort(([, a], [, b]) => b.rev - a.rev)
+          .slice(0, 8)
+          .map(([name, v], i) => ({ name, ...v, color: COLORS[i % COLORS.length] })),
+      );
+
+      const catMap = {};
+      paidOrders.forEach((o) => {
+        if (o.pos_order_items) {
+          (Array.isArray(o.pos_order_items) ? o.pos_order_items : []).forEach((item) => {
+            const cat = item.category || 'Uncategorized';
+            if (!catMap[cat]) catMap[cat] = 0;
+            catMap[cat] += parseFloat(item.total || item.price || 0);
+          });
+        }
+      });
+      setCategorySales(
+        Object.entries(catMap)
+          .sort(([, a], [, b]) => b - a)
+          .map(([name, value], i) => ({ name, value, color: COLORS[i % COLORS.length] })),
+      );
+
+      const hourCount = {};
+      allOrders.forEach((o) => {
+        const h = new Date(o.created_at).getHours();
+        const key = `${h}:00`;
+        if (!hourCount[key]) hourCount[key] = { orders: 0, revenue: 0 };
+        hourCount[key].orders += 1;
+        hourCount[key].revenue += parseFloat(o.total_amount || 0);
+      });
+      setPeakHours(
+        Object.entries(hourCount)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([hour, v]) => ({ hour, ...v })),
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [period]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const formatCurrency = (n) =>
+    '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+  if (loading)
+    return (
+      <div className="outlet-loading">
+        <div className="outlet-loading-spinner" />
+        <p>Loading analytics...</p>
+      </div>
+    );
+  if (error) return <div className="outlet-error-banner">{error}</div>;
+
+  return (
+    <div>
+      <div className="outlet-page-header">
+        <div>
+          <h1>Sales Analytics</h1>
+          <p className="outlet-page-subtitle">Track revenue, top products, and peak hours</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className="outlet-tabs" style={{ margin: 0 }}>
+            {PERIODS.map((p) => (
+              <button
+                key={p}
+                className={`outlet-tab ${period === p ? 'active' : ''}`}
+                onClick={() => setPeriod(p)}
+              >
+                {p.charAt(0).toUpperCase() + p.slice(1)}
+              </button>
+            ))}
+          </div>
+          <button className="outlet-btn outline sm" onClick={fetchData}>
+            <RefreshCw size={14} />
+          </button>
+        </div>
+      </div>
+
+      <div className="outlet-stats-grid">
+        <div className="outlet-stat-card">
+          <div className="outlet-stat-icon green">
+            <TrendingUp size={24} />
+          </div>
+          <div className="outlet-stat-info">
+            <h3>{formatCurrency(summary.totalRevenue)}</h3>
+            <p>Total Revenue</p>
+          </div>
+        </div>
+        <div className="outlet-stat-card">
+          <div className="outlet-stat-icon blue">
+            <Calendar size={24} />
+          </div>
+          <div className="outlet-stat-info">
+            <h3>{summary.totalOrders}</h3>
+            <p>Total Orders</p>
+          </div>
+        </div>
+        <div className="outlet-stat-card">
+          <div className="outlet-stat-icon purple">
+            <Award size={24} />
+          </div>
+          <div className="outlet-stat-info">
+            <h3>{formatCurrency(summary.avgOrder)}</h3>
+            <p>Avg Order Value</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="outlet-chart-container">
+        <h2>Revenue Over Time</h2>
+        <div className="outlet-chart-body">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={revenueData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => '₹' + v} />
+              <ReTooltip formatter={(v) => formatCurrency(v)} />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#3182ce"
+                fill="#ebf8ff"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="outlet-grid-2">
+        <div className="outlet-chart-container">
+          <h2>Top Selling Products</h2>
+          <div style={{ height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topProducts} layout="vertical" margin={{ left: 80 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => '₹' + v} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={75} />
+                <ReTooltip formatter={(v) => formatCurrency(v)} />
+                <Bar dataKey="rev" radius={[0, 4, 4, 0]}>
+                  {topProducts.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="outlet-chart-container">
+          <h2>Sales by Category</h2>
+          <div
+            style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            {categorySales.length === 0 ? (
+              <div className="outlet-empty">
+                <p>No data</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categorySales}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {categorySales.map((e, i) => (
+                      <Cell key={i} fill={e.color} />
+                    ))}
+                  </Pie>
+                  <ReTooltip formatter={(v) => formatCurrency(v)} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="outlet-chart-container">
+        <h2>Peak Hours Analysis</h2>
+        <div className="outlet-chart-body">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={peakHours}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="hour" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <ReTooltip />
+              <Bar dataKey="orders" fill="#dd6b20" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+}

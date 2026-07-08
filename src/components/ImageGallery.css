@@ -1,1 +1,115 @@
-﻿.gallery-container {  width: 100%;  position: relative;}/* Navigation Arrows */.gallery-arrow {  position: absolute;  top: 50%;  transform: translateY(-50%);  z-index: 10;  background: var(--bg-chocolate);  border: 1px solid var(--border-color);  border-radius: 50%;  width: 40px;  height: 40px;  display: flex;  align-items: center;  justify-content: center;  cursor: pointer;  transition: all 0.2s ease;  color: var(--text-primary);  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);}.gallery-arrow:hover {  background: var(--bg-chocolate);  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);  border-color: var(--text-secondary);}.gallery-arrow-left {  left: 10px;}.gallery-arrow-right {  right: 10px;}.swipe-gallery {  display: flex;  overflow-x: auto;  scroll-snap-type: x mandatory;  scroll-behavior: smooth;  scrollbar-width: none; /* Firefox */  -ms-overflow-style: none;  /* IE and Edge */}.swipe-gallery::-webkit-scrollbar {  display: none; /* Chrome, Safari and Opera */}.swipe-item {  min-width: 100%;  scroll-snap-align: center;  display: flex;  justify-content: center;  align-items: center;}.image-zoom-container {  width: 100%;  display: flex;  justify-content: center;  align-items: center;  overflow: hidden;  position: relative;  cursor: zoom-in;  border-radius: 4px;}.zoom-img {  transition: transform 0.2s ease-out;  object-fit: contain;}.zoom-img.mobile-zoomed {  transform: scale(2);}.gallery-indicators {  display: flex;  justify-content: center;  gap: 8px;  margin-top: 15px;}.indicator {  width: 8px;  height: 8px;  min-height: 8px !important;  border-radius: 50%;  background-color: var(--border-color);  border: none;  padding: 0;  cursor: pointer;  transition: all 0.2s ease;}.indicator:hover {  background-color: var(--text-secondary);}.indicator.active {  background-color: var(--accent-primary);  width: 20px;  border-radius: 4px;}/* Hide arrows on mobile (swipe is natural) */@media (max-width: 768px) {  .gallery-arrow {    display: none;  }}
+.gallery-container {
+  width: 100%;
+  position: relative;
+}
+
+/* Navigation Arrows */
+.gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.gallery-arrow:hover {
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-color: var(--text-secondary);
+}
+
+.gallery-arrow-left {
+  left: 10px;
+}
+
+.gallery-arrow-right {
+  right: 10px;
+}
+
+.swipe-gallery {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.swipe-gallery::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+.swipe-item {
+  min-width: 100%;
+  scroll-snap-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-zoom-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  cursor: zoom-in;
+  border-radius: 4px;
+}
+
+.zoom-img {
+  transition: transform 0.2s ease-out;
+  object-fit: contain;
+}
+
+.zoom-img.mobile-zoomed {
+  transform: scale(2);
+}
+
+.gallery-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  min-height: 8px !important;
+  border-radius: 50%;
+  background-color: var(--border-color);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.indicator:hover {
+  background-color: var(--text-secondary);
+}
+
+.indicator.active {
+  background-color: var(--accent-red);
+  width: 20px;
+  border-radius: 4px;
+}
+
+/* Hide arrows on mobile (swipe is natural) */
+@media (max-width: 768px) {
+  .gallery-arrow {
+    display: none;
+  }
+}

@@ -1,1 +1,43 @@
-﻿"use client";import "../legal.css";export default function PrivacyPage() {  return (    <main className="legal-page">      <div className="container legal-container">        <h1>Privacy Policy</h1>        <p>Last updated: {new Date().toLocaleDateString()}</p>        <h2>1. Information We Collect</h2>        <p>We collect personal information that you voluntarily provide to us when you register on the website, express an interest in obtaining information about us or our products, or otherwise contact us. The personal information that we collect depends on the context of your interactions with us and the website, the choices you make, and the products and features you use.</p>        <h2>2. How We Use Your Information</h2>        <p>We use personal information collected via our website for a variety of business purposes described below. We process your personal information for these purposes in reliance on our legitimate business interests, in order to enter into or perform a contract with you, with your consent, and/or for compliance with our legal obligations.</p>        <h2>3. Sharing Your Information</h2>        <p>We only share information with your consent, to comply with laws, to provide you with services (such as our payment gateway Razorpay for processing transactions), to protect your rights, or to fulfill business obligations.</p>        <h2>4. Security of Your Information</h2>        <p>We aim to protect your personal information through a system of organizational and technical security measures.</p>      </div>    </main>  );}
+'use client';
+import '../legal.css';
+
+export default function PrivacyPage() {
+  return (
+    <main className="legal-page">
+      <div className="container legal-container">
+        <h1>Privacy Policy</h1>
+        <p>Last updated: {new Date().toLocaleDateString()}</p>
+
+        <h2>1. Information We Collect</h2>
+        <p>
+          We collect personal information that you voluntarily provide to us when you register on
+          the website, express an interest in obtaining information about us or our products, or
+          otherwise contact us. The personal information that we collect depends on the context of
+          your interactions with us and the website, the choices you make, and the products and
+          features you use.
+        </p>
+
+        <h2>2. How We Use Your Information</h2>
+        <p>
+          We use personal information collected via our website for a variety of business purposes
+          described below. We process your personal information for these purposes in reliance on
+          our legitimate business interests, in order to enter into or perform a contract with you,
+          with your consent, and/or for compliance with our legal obligations.
+        </p>
+
+        <h2>3. Sharing Your Information</h2>
+        <p>
+          We only share information with your consent, to comply with laws, to provide you with
+          services (such as our payment gateway Razorpay for processing transactions), to protect
+          your rights, or to fulfill business obligations.
+        </p>
+
+        <h2>4. Security of Your Information</h2>
+        <p>
+          We aim to protect your personal information through a system of organizational and
+          technical security measures.
+        </p>
+      </div>
+    </main>
+  );
+}

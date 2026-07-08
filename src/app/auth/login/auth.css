@@ -1,1 +1,230 @@
-﻿/* ==========================================================================   AUTH PAGES â€” Dark Luxury Theme (Login, Signup, Confirm)   ========================================================================== */.auth-page {  padding: 120px 0 80px;  min-height: 80vh;  display: flex;  align-items: center;  justify-content: center;  background-color: var(--bg-espresso);}.auth-box {  background-color: var(--bg-chocolate);  padding: 40px;  max-width: 450px;  width: 100%;  margin: 0 auto;  border-radius: 16px;  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);  border: 1px solid var(--border-color);  position: relative;  backdrop-filter: blur(12px);}.auth-box::before {  display: none;}.auth-title {  font-size: 2.5rem;  color: var(--accent-gold);  margin-bottom: 5px;  text-align: center;}.auth-subtitle {  text-align: center;  color: var(--text-secondary);  margin-bottom: 30px;  font-weight: 600;}.auth-form {  display: flex;  flex-direction: column;  gap: 20px;  position: relative;  z-index: 2;}.auth-form label {  font-weight: 600;  color: var(--text-secondary);  margin-bottom: 5px;  display: block;  text-transform: uppercase;  letter-spacing: 0.5px;  font-size: 0.85rem;}.auth-form input {  width: 100%;  padding: 12px;  border: 1px solid var(--border-color);  border-radius: 8px;  font-family: var(--font-inter);  font-size: 1rem;  background-color: var(--bg-chocolate);  color: var(--text-warm-white);  transition: border-color 0.3s ease;}.auth-form input:focus {  outline: none;  border-color: var(--accent-gold);  box-shadow: 0 0 0 3px rgba(216, 154, 30, 0.15);}.auth-footer {  text-align: center;  margin-top: 25px;  font-weight: 600;  color: var(--text-secondary);}.auth-link {  color: var(--accent-gold);  text-decoration: underline;}.auth-link:hover {  color: var(--text-warm-white);}.error-box {  background-color: rgba(239, 83, 80, 0.12);  color: #ef5350;  padding: 10px 16px;  border: 1px solid rgba(239, 83, 80, 0.25);  border-radius: 8px;  margin-bottom: 20px;  font-size: 0.9rem;  text-align: center;}.success-box {  background-color: rgba(102, 187, 106, 0.12);  color: #66bb6a;  padding: 10px 16px;  border: 1px solid rgba(102, 187, 106, 0.25);  border-radius: 8px;  margin-bottom: 20px;  font-size: 0.9rem;  text-align: center;}/* Animations for Confirm Page */.spin {  animation: spin 1.5s linear infinite;}@keyframes spin {  100% {    transform: rotate(360deg);  }}.auth-divider {  display: flex;  align-items: center;  margin: 20px 0;  color: var(--text-secondary);  font-size: 0.85rem;}.auth-divider::before, .auth-divider::after {  content: '';  flex: 1;  height: 1px;  background: var(--border-color);}.auth-divider span {  padding: 0 15px;}.btn-google {  display: flex;  align-items: center;  justify-content: center;  gap: 10px;  width: 100%;  padding: 12px;  border: 1px solid var(--border-color);  border-radius: 8px;  background: var(--bg-chocolate);  color: var(--text-warm-white);  font-family: var(--font-inter);  font-size: 1rem;  font-weight: 600;  cursor: pointer;  transition: all 0.3s;}.btn-google:hover {  border-color: var(--accent-gold);  background: rgba(216, 154, 30, 0.08);}.btn-google:disabled {  opacity: 0.5;  cursor: not-allowed;}.link-btn {  background: none;  border: none;  color: var(--accent-gold);  font-family: var(--font-inter);  font-size: inherit;  cursor: pointer;  text-decoration: underline;  padding: 0;}.link-btn:hover {  color: var(--text-warm-white);}.link-btn:disabled {  opacity: 0.5;  cursor: not-allowed;}.fade-in {  animation: fadeIn 0.5s ease-in-out;}@keyframes fadeIn {  0% { opacity: 0; }  100% { opacity: 1; }}.pop-in {  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);}@keyframes popIn {  0% { transform: scale(0.8); opacity: 0; }  100% { transform: scale(1); opacity: 1; }}/* Mobile Responsiveness */@media (max-width: 768px) {  .auth-page {    padding: 100px 16px 120px;  }  .auth-box {    padding: 28px 20px;  }  .auth-title {    font-size: 2rem;  }}
+/* ==========================================================================
+   AUTH PAGES — Dark Luxury Theme (Login, Signup, Confirm)
+   ========================================================================== */
+
+.auth-page {
+  padding: 120px 0 80px;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-color);
+}
+
+.auth-box {
+  background-color: var(--bg-color-dark);
+  padding: 40px;
+  max-width: 450px;
+  width: 100%;
+  margin: 0 auto;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  position: relative;
+}
+
+.auth-box::before {
+  display: none;
+}
+
+.auth-title {
+  font-size: 2.5rem;
+  color: var(--accent-gold);
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+.auth-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+  font-weight: 600;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.auth-form label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.85rem;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-family: var(--font-inter);
+  font-size: 1rem;
+  background-color: rgba(0, 0, 0, 0.15);
+  color: var(--text-primary);
+  transition: border-color 0.3s ease;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(216, 154, 30, 0.15);
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 25px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.auth-link {
+  color: var(--accent-gold);
+  text-decoration: underline;
+}
+
+.auth-link:hover {
+  color: var(--text-primary);
+}
+
+.error-box {
+  background-color: rgba(239, 83, 80, 0.12);
+  color: #ef5350;
+  padding: 10px 16px;
+  border: 1px solid rgba(239, 83, 80, 0.25);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.success-box {
+  background-color: rgba(102, 187, 106, 0.12);
+  color: #66bb6a;
+  padding: 10px 16px;
+  border: 1px solid rgba(102, 187, 106, 0.25);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Animations for Confirm Page */
+.spin {
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-color);
+}
+.auth-divider span {
+  padding: 0 15px;
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: rgba(245, 240, 234, 0.06);
+  color: var(--text-primary);
+  font-family: var(--font-inter);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-google:hover {
+  border-color: var(--accent-gold);
+  background: rgba(216, 154, 30, 0.08);
+}
+.btn-google:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--accent-gold);
+  font-family: var(--font-inter);
+  font-size: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.link-btn:hover {
+  color: var(--text-primary);
+}
+.link-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.pop-in {
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .auth-page {
+    padding: 100px 16px 120px;
+  }
+  .auth-box {
+    padding: 28px 20px;
+  }
+  .auth-title {
+    font-size: 2rem;
+  }
+}

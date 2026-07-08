@@ -1,1 +1,45 @@
-﻿"use client";import { Suspense, useEffect, useState } from 'react';import { supabase } from '@/lib/supabase';import { useRouter, useSearchParams } from 'next/navigation';function CallbackContent() {  const router = useRouter();  const searchParams = useSearchParams();  const [error, setError] = useState(null);  useEffect(() => {    const handleCallback = async () => {      const { data, error } = await supabase.auth.getSession();      if (error) {        setError(error.message);        return;      }      if (data?.session) {        const provider = searchParams.get('provider');        // Fetch Facebook data if this is a Facebook login        if (provider === 'facebook') {          try {            // Get the Facebook access token from the session            const fbToken = data.session.provider_token;            if (fbToken) {              await fetch('/api/auth/facebook', {                method: 'POST',                headers: { 'Content-Type': 'application/json' },                body: JSON.stringify({                  accessToken: fbToken,                  userId: data.session.user.id,                }),              });            }          } catch (fbErr) {            console.error('Facebook data fetch failed:', fbErr);            // Don't block login even if Facebook data fetch fails          }        }        const redirectTo = searchParams.get('redirect') || '/account';        router.push(redirectTo);      }    };    handleCallback();  }, [router, searchParams]);  if (error) return <div className="auth-page"><p>Error: {error}</p></div>;  return <div className="auth-page"><p>Completing sign in...</p></div>;}export default function AuthCallbackPage() {  return <Suspense><CallbackContent /></Suspense>;}
+'use client';
+import { Suspense, useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+function CallbackContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const handleCallback = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      if (data?.session) {
+        const redirectTo = searchParams.get('redirect') || '/account';
+        router.push(redirectTo);
+      }
+    };
+    handleCallback();
+  }, [router, searchParams]);
+
+  if (error)
+    return (
+      <div className="auth-page">
+        <p>Error: {error}</p>
+      </div>
+    );
+  return (
+    <div className="auth-page">
+      <p>Completing sign in...</p>
+    </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense>
+      <CallbackContent />
+    </Suspense>
+  );
+}

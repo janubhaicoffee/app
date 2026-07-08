@@ -1,1 +1,40 @@
-﻿"use client";import { useEffect } from "react";export default function RegisterSW() {  useEffect(() => {    if ("serviceWorker" in navigator) {      const hostname = window.location.hostname;      const pathname = window.location.pathname;      const isPos = hostname.startsWith("pos.") || pathname.startsWith("/pos");      const isOutlet = hostname.startsWith("outlet.") || pathname.startsWith("/outlet");      const isAdmin = hostname.startsWith("admin.") || pathname.startsWith("/admin");      if (isPos) {        navigator.serviceWorker.register("/sw.js", { scope: "/pos", updateViaCache: "none" }).catch(() => {});      } else if (isOutlet) {        navigator.serviceWorker.register("/sw.js", { scope: "/outlet", updateViaCache: "none" }).catch(() => {});      } else if (isAdmin) {        navigator.serviceWorker.register("/sw.js", { scope: "/admin", updateViaCache: "none" }).catch(() => {});      } else {        // Unregister service workers on the main website to prevent any conflict or blank pages        navigator.serviceWorker.getRegistrations().then((registrations) => {          for (const registration of registrations) {            registration.unregister();          }        }).catch(() => {});      }    }  }, []);  return null;}
+'use client';
+import { useEffect } from 'react';
+
+export default function RegisterSW() {
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      const hostname = window.location.hostname;
+      const pathname = window.location.pathname;
+
+      const isPos = hostname.startsWith('pos.') || pathname.startsWith('/pos');
+      const isOutlet = hostname.startsWith('outlet.') || pathname.startsWith('/outlet');
+      const isAdmin = hostname.startsWith('admin.') || pathname.startsWith('/admin');
+
+      if (isPos) {
+        navigator.serviceWorker
+          .register('/sw.js', { scope: '/pos', updateViaCache: 'none' })
+          .catch(() => {});
+      } else if (isOutlet) {
+        navigator.serviceWorker
+          .register('/sw.js', { scope: '/outlet', updateViaCache: 'none' })
+          .catch(() => {});
+      } else if (isAdmin) {
+        navigator.serviceWorker
+          .register('/sw.js', { scope: '/admin', updateViaCache: 'none' })
+          .catch(() => {});
+      } else {
+        // Unregister service workers on the main website to prevent any conflict or blank pages
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((registrations) => {
+            for (const registration of registrations) {
+              registration.unregister();
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, []);
+  return null;
+}

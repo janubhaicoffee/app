@@ -1,1 +1,193 @@
-﻿import { supabaseAdmin } from "@/lib/supabaseAdmin";import { NextResponse } from "next/server";export async function GET(request) {  try {    const authHeader = request.headers.get("Authorization");    if (!authHeader || !authHeader.startsWith("Bearer ")) {      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });    }    const token = authHeader.split(" ")[1];    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);    if (authError || !user) return NextResponse.json({ error: "Invalid token" }, { status: 401 });    const adminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());    if (!adminEmails.includes(user.email?.toLowerCase())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });    const { searchParams } = new URL(request.url);    const outletId = searchParams.get("outlet_id");    const type = searchParams.get("type");    if (type === "outlet_stock") {      const { data: products, error } = await supabaseAdmin        .from("pos_products")        .select("id, name, sku, current_stock, min_stock, price, is_available, outlet_id, outlet:outlets(name)")        .order("name");      if (outletId) {        return NextResponse.json({          data: (products || []).filter(p => p.outlet_id === outletId)        });      }      return NextResponse.json({ data: products || [] });    }    if (type === "main_stock") {      const { data: products, error } = await supabaseAdmin        .from("products")        .select("id, name, sku, stock, price, status, image_url, track_inventory")        .eq("status", "active")        .order("name");      if (error) throw error;      return NextResponse.json({ data: products || [] });    }    return NextResponse.json({ error: "Invalid type" }, { status: 400 });  } catch (error) {    console.error("Admin inventory GET error:", error);    return NextResponse.json({ error: error.message }, { status: 500 });  }}export async function POST(request) {  try {    const authHeader = request.headers.get("Authorization");    if (!authHeader || !authHeader.startsWith("Bearer ")) {      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });    }    const token = authHeader.split(" ")[1];    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);    if (authError || !user) return NextResponse.json({ error: "Invalid token" }, { status: 401 });    const adminEmails = (process.env.SUPERADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());    if (!adminEmails.includes(user.email?.toLowerCase())) return NextResponse.json({ error: "Forbidden" }, { status: 403 });    const body = await request.json();    const { action } = body;    if (action === "transfer_to_outlet") {      const { product_id, outlet_id, quantity, notes } = body;      if (!product_id || !outlet_id || !quantity) {        return NextResponse.json({ error: "Missing required fields" }, { status: 400 });      }      const qty = parseInt(quantity);      if (qty <= 0) return NextResponse.json({ error: "Quantity must be positive" }, { status: 400 });      const { data: product } = await supabaseAdmin        .from("pos_products")        .select("current_stock, name, source_product_id")        .eq("id", product_id)        .single();      if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });      const newStock = (product.current_stock || 0) + qty;      const { error: updateError } = await supabaseAdmin        .from("pos_products")        .update({ current_stock: newStock, updated_at: new Date().toISOString() })        .eq("id", product_id);      if (updateError) throw updateError;      if (product.source_product_id) {        const { data: mainProduct } = await supabaseAdmin          .from("products")          .select("stock")          .eq("id", product.source_product_id)          .single();        if (mainProduct) {          const mainNewStock = Math.max(0, (mainProduct.stock || 0) - qty);          await supabaseAdmin            .from("products")            .update({ stock: mainNewStock, updated_at: new Date().toISOString() })            .eq("id", product.source_product_id);        }      }      await supabaseAdmin.from("audit_log").insert([{        admin_email: user.email,        action: "transfer_to_outlet",        entity_type: "pos_product",        entity_id: product_id,        details: { outlet_id, quantity: qty, new_stock: newStock, notes: notes || "Warehouse transfer" }      }]);      return NextResponse.json({        success: true,        data: { new_stock: newStock }      });    }    if (action === "adjust_stock") {      const { product_id, new_stock, notes } = body;      if (!product_id || new_stock === undefined) {        return NextResponse.json({ error: "Missing required fields" }, { status: 400 });      }      const { data: product } = await supabaseAdmin        .from("pos_products")        .select("current_stock, name, outlet_id")        .eq("id", product_id)        .single();      if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });      const changeAmount = parseInt(new_stock) - (product.current_stock || 0);      const { error: updateError } = await supabaseAdmin        .from("pos_products")        .update({ current_stock: parseInt(new_stock), updated_at: new Date().toISOString() })        .eq("id", product_id);      if (updateError) throw updateError;      await supabaseAdmin.from("audit_log").insert([{        admin_email: user.email,        action: "adjust_outlet_stock",        entity_type: "pos_product",        entity_id: product_id,        details: { outlet_id: product.outlet_id, previous_stock: product.current_stock, new_stock: parseInt(new_stock), notes: notes || "Manual adjustment" }      }]);      return NextResponse.json({ success: true });    }    return NextResponse.json({ error: "Invalid action" }, { status: 400 });  } catch (error) {    console.error("Admin inventory POST error:", error);    return NextResponse.json({ error: error.message }, { status: 500 });  }}
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { NextResponse } from 'next/server';
+
+export async function GET(request) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const token = authHeader.split(' ')[1];
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+
+    const adminEmails = (process.env.SUPERADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase());
+    if (!adminEmails.includes(user.email?.toLowerCase()))
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const { searchParams } = new URL(request.url);
+    const outletId = searchParams.get('outlet_id');
+    const type = searchParams.get('type');
+
+    if (type === 'outlet_stock') {
+      const { data: products, error } = await supabaseAdmin
+        .from('pos_products')
+        .select(
+          'id, name, sku, current_stock, min_stock, price, is_available, outlet_id, outlet:outlets(name)',
+        )
+        .order('name');
+
+      if (outletId) {
+        return NextResponse.json({
+          data: (products || []).filter((p) => p.outlet_id === outletId),
+        });
+      }
+      return NextResponse.json({ data: products || [] });
+    }
+
+    if (type === 'main_stock') {
+      const { data: products, error } = await supabaseAdmin
+        .from('products')
+        .select('id, name, sku, stock, price, status, image_url, track_inventory')
+        .eq('status', 'active')
+        .order('name');
+
+      if (error) throw error;
+      return NextResponse.json({ data: products || [] });
+    }
+
+    return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+  } catch (error) {
+    console.error('Admin inventory GET error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const token = authHeader.split(' ')[1];
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+
+    const adminEmails = (process.env.SUPERADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase());
+    if (!adminEmails.includes(user.email?.toLowerCase()))
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+    const body = await request.json();
+    const { action } = body;
+
+    if (action === 'transfer_to_outlet') {
+      const { product_id, outlet_id, quantity, notes } = body;
+      if (!product_id || !outlet_id || !quantity) {
+        return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      }
+
+      const qty = parseInt(quantity);
+      if (qty <= 0)
+        return NextResponse.json({ error: 'Quantity must be positive' }, { status: 400 });
+
+      const { data: product } = await supabaseAdmin
+        .from('pos_products')
+        .select('current_stock, name, source_product_id')
+        .eq('id', product_id)
+        .single();
+
+      if (!product) return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+
+      const newStock = (product.current_stock || 0) + qty;
+
+      const { error: updateError } = await supabaseAdmin
+        .from('pos_products')
+        .update({ current_stock: newStock, updated_at: new Date().toISOString() })
+        .eq('id', product_id);
+
+      if (updateError) throw updateError;
+
+      if (product.source_product_id) {
+        const { data: mainProduct } = await supabaseAdmin
+          .from('products')
+          .select('stock')
+          .eq('id', product.source_product_id)
+          .single();
+
+        if (mainProduct) {
+          const mainNewStock = Math.max(0, (mainProduct.stock || 0) - qty);
+          await supabaseAdmin
+            .from('products')
+            .update({ stock: mainNewStock, updated_at: new Date().toISOString() })
+            .eq('id', product.source_product_id);
+        }
+      }
+
+      await supabaseAdmin.from('audit_log').insert([
+        {
+          admin_email: user.email,
+          action: 'transfer_to_outlet',
+          entity_type: 'pos_product',
+          entity_id: product_id,
+          details: {
+            outlet_id,
+            quantity: qty,
+            new_stock: newStock,
+            notes: notes || 'Warehouse transfer',
+          },
+        },
+      ]);
+
+      return NextResponse.json({
+        success: true,
+        data: { new_stock: newStock },
+      });
+    }
+
+    if (action === 'adjust_stock') {
+      const { product_id, new_stock, notes } = body;
+      if (!product_id || new_stock === undefined) {
+        return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      }
+
+      const { data: product } = await supabaseAdmin
+        .from('pos_products')
+        .select('current_stock, name, outlet_id')
+        .eq('id', product_id)
+        .single();
+
+      if (!product) return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+
+      const changeAmount = parseInt(new_stock) - (product.current_stock || 0);
+
+      const { error: updateError } = await supabaseAdmin
+        .from('pos_products')
+        .update({ current_stock: parseInt(new_stock), updated_at: new Date().toISOString() })
+        .eq('id', product_id);
+
+      if (updateError) throw updateError;
+
+      await supabaseAdmin.from('audit_log').insert([
+        {
+          admin_email: user.email,
+          action: 'adjust_outlet_stock',
+          entity_type: 'pos_product',
+          entity_id: product_id,
+          details: {
+            outlet_id: product.outlet_id,
+            previous_stock: product.current_stock,
+            new_stock: parseInt(new_stock),
+            notes: notes || 'Manual adjustment',
+          },
+        },
+      ]);
+
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+  } catch (error) {
+    console.error('Admin inventory POST error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

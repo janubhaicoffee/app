@@ -1,1 +1,97 @@
-﻿import { NextResponse } from 'next/server'const oldAuthPaths = ['/auth/login', '/auth/signup']const mainSitePaths = [  '/product', '/process', '/auth', '/cart', '/checkout', '/account',  '/privacy', '/terms', '/shipping', '/refunds', '/contact',  '/articles', '/menu', '/claim', '/track'];const BLOCKED_REFERRERS = [  'spam-site',  'buy-traffic',];export async function proxy(request) {  const { pathname, searchParams } = request.nextUrl  const hostname = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''  const host = hostname.split(':')[0]  // Check if target is a known main site path  const isMainSitePage = mainSitePaths.some(p => pathname === p || pathname.startsWith(p + '/'));  if (!isMainSitePage) {    if (host.startsWith('pos.')) {      if (pathname.startsWith('/pos')) {        return NextResponse.next()      }      return NextResponse.rewrite(        new URL(`/pos${pathname}${request.nextUrl.search}`, request.url)      )    }    if (host.startsWith('outlet.')) {      if (pathname.startsWith('/outlet')) {        return NextResponse.next()      }      return NextResponse.rewrite(        new URL(`/outlet${pathname}${request.nextUrl.search}`, request.url)      )    }    if (host.startsWith('admin.')) {      if (pathname.startsWith('/admin')) {        return NextResponse.next()      }      return NextResponse.rewrite(        new URL(`/admin${pathname}${request.nextUrl.search}`, request.url)      )    }  }  // Security: block malicious referrers  const referer = request.headers.get('referer') || '';  if (BLOCKED_REFERRERS.some((r) => referer.includes(r))) {    return new NextResponse(null, { status: 403 });  }  // Security: CSRF protection for non-GET API requests  if (pathname.startsWith('/api/') && request.method !== 'GET') {    const origin = request.headers.get('origin');    const host = request.headers.get('host');    if (origin && host && !origin.includes(host)) {      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });    }  }  // Redirect old auth pages to unified, EXCEPT for administrative redirects  if (oldAuthPaths.some(p => pathname.startsWith(p))) {    const redirect = request.nextUrl.searchParams.get('redirect') || '';    if (!host.startsWith('outlet.') && !redirect.startsWith('/outlet') && !redirect.startsWith('/pos') && !redirect.startsWith('/admin')) {      const url = new URL('/auth/unified', request.url)      if (redirect) url.searchParams.set('redirect', redirect)      return NextResponse.redirect(url)    }  }  return NextResponse.next()}export const config = {  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.json|.*\\.png$|.*\\.svg$).*)']}
+import { NextResponse } from 'next/server';
+
+const oldAuthPaths = ['/auth/login', '/auth/signup'];
+
+const mainSitePaths = [
+  '/product',
+  '/process',
+  '/auth',
+  '/cart',
+  '/checkout',
+  '/account',
+  '/privacy',
+  '/terms',
+  '/shipping',
+  '/refunds',
+  '/contact',
+  '/articles',
+  '/menu',
+  '/claim',
+  '/track',
+];
+
+const BLOCKED_REFERRERS = ['spam-site', 'buy-traffic'];
+
+export async function proxy(request) {
+  const { pathname, searchParams } = request.nextUrl;
+  const hostname = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  const host = hostname.split(':')[0];
+
+  // Check if target is a known main site path
+  const isMainSitePage = mainSitePaths.some((p) => pathname === p || pathname.startsWith(p + '/'));
+
+  if (!isMainSitePage) {
+    if (host.startsWith('pos.')) {
+      if (pathname.startsWith('/pos')) {
+        return NextResponse.next();
+      }
+      return NextResponse.rewrite(new URL(`/pos${pathname}${request.nextUrl.search}`, request.url));
+    }
+
+    if (host.startsWith('outlet.')) {
+      if (pathname.startsWith('/outlet')) {
+        return NextResponse.next();
+      }
+      return NextResponse.rewrite(
+        new URL(`/outlet${pathname}${request.nextUrl.search}`, request.url),
+      );
+    }
+
+    if (host.startsWith('admin.')) {
+      if (pathname.startsWith('/admin')) {
+        return NextResponse.next();
+      }
+      return NextResponse.rewrite(
+        new URL(`/admin${pathname}${request.nextUrl.search}`, request.url),
+      );
+    }
+  }
+
+  // Security: block malicious referrers
+  const referer = request.headers.get('referer') || '';
+  if (BLOCKED_REFERRERS.some((r) => referer.includes(r))) {
+    return new NextResponse(null, { status: 403 });
+  }
+
+  // Security: CSRF protection for non-GET API requests
+  if (pathname.startsWith('/api/') && request.method !== 'GET') {
+    const origin = request.headers.get('origin');
+    const host = request.headers.get('host');
+    if (origin && host && !origin.includes(host)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+
+  // Redirect old auth pages to unified, EXCEPT for administrative redirects
+  if (oldAuthPaths.some((p) => pathname.startsWith(p))) {
+    const redirect = request.nextUrl.searchParams.get('redirect') || '';
+    if (
+      !host.startsWith('outlet.') &&
+      !redirect.startsWith('/outlet') &&
+      !redirect.startsWith('/pos') &&
+      !redirect.startsWith('/admin')
+    ) {
+      const url = new URL('/auth/unified', request.url);
+      if (redirect) url.searchParams.set('redirect', redirect);
+      return NextResponse.redirect(url);
+    }
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.json|.*\\.png$|.*\\.svg$).*)',
+  ],
+};

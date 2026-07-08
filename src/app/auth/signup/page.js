@@ -1,1 +1,11 @@
-﻿"use client";import { useEffect } from "react";import { useRouter } from "next/navigation";export default function SignupPage() {  const router = useRouter();  useEffect(() => { router.replace("/auth/unified"); }, [router]);  return null;}
+'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function SignupPage() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/auth/unified');
+  }, [router]);
+  return null;
+}

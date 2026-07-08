@@ -1,1 +1,17 @@
-﻿import { supabaseAdmin } from "@/lib/supabaseAdmin";import { NextResponse } from "next/server";export async function GET(request) {  try {    const { data, error } = await supabaseAdmin      .from("outlet_customers")      .select("*")      .order("created_at", { ascending: false });    if (error) throw error;    return NextResponse.json({ success: true, data: data || [] });  } catch (error) {    console.error("Customers GET error:", error);    return NextResponse.json({ error: error.message }, { status: 500 });  }}
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { NextResponse } from 'next/server';
+
+export async function GET(request) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('outlet_customers')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return NextResponse.json({ success: true, data: data || [] });
+  } catch (error) {
+    console.error('Customers GET error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
