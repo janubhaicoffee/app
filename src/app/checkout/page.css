@@ -8,7 +8,7 @@
   text-align: center;
   font-family: var(--font-playfair);
   font-size: 3rem;
-  color: var(--primary-color);
+  color: var(--text-primary);
   margin-bottom: 40px;
 }
 
@@ -31,7 +31,7 @@
 .section-label {
   font-size: 1.5rem;
   font-family: var(--font-playfair);
-  color: var(--primary-color);
+  color: var(--text-primary);
   margin-bottom: 30px;
   border-bottom: 2px solid var(--border-color);
   padding-bottom: 10px;
@@ -62,18 +62,6 @@
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-
-.checkout-form input,
-.checkout-form textarea {
-  padding: 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-family: var(--font-inter);
-  font-size: 1rem;
-  background-color: #f9f6f0;
-  transition: all 0.3s ease;
-  min-height: var(--touch-min);
 }
 
 .checkout-form input,
@@ -155,7 +143,7 @@
 .summary-row.total {
   font-size: 1.3rem;
   font-weight: bold;
-  color: var(--primary-color);
+  color: var(--accent-gold);
   margin-top: 15px;
 }
 
@@ -234,7 +222,7 @@
 .typewriter-text {
   font-family: var(--font-playfair);
   font-style: italic;
-  color: var(--primary-color);
+  color: var(--text-secondary);
   font-size: 1.1rem;
 }
 

@@ -8,7 +8,7 @@
   text-align: center;
   font-family: var(--font-playfair);
   font-size: 3rem;
-  color: var(--primary-color);
+  color: var(--text-primary);
   margin-bottom: 40px;
 }
 
@@ -78,7 +78,7 @@
   font-size: 1.2rem;
   margin-bottom: 5px;
   font-family: var(--font-playfair);
-  color: var(--primary-color);
+  color: var(--text-primary);
 }
 
 .item-price {
@@ -149,7 +149,7 @@
   font-family: var(--font-playfair);
   font-size: 1.3rem;
   font-weight: bold;
-  color: var(--primary-color);
+  color: var(--text-primary);
   width: 100px;
   text-align: right;
 }
@@ -167,7 +167,7 @@
 .cart-summary-section h2 {
   font-size: 1.5rem;
   font-family: var(--font-playfair);
-  color: var(--primary-color);
+  color: var(--text-primary);
   margin-bottom: 30px;
   border-bottom: 2px solid var(--border-color);
   padding-bottom: 10px;
@@ -186,7 +186,7 @@
   font-weight: bold;
   font-family: var(--font-playfair);
   margin-top: 15px;
-  color: var(--primary-color);
+  color: var(--accent-gold);
 }
 
 hr {

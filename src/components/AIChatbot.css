@@ -78,7 +78,7 @@
   line-height: 1.4;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border-color);
-  color: var(--text-primary);
+  color: var(--primary-color);
   white-space: pre-wrap;
 }
 

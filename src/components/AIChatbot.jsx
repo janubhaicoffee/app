@@ -100,7 +100,7 @@ export default function AIChatbot() {
         <Bot size={24} />
         <div>
           <h3>Janu Bhai Support</h3>
-          <p>Powered by NVIDIA AI</p>
+          <p>Online</p>
         </div>
       </div>
 

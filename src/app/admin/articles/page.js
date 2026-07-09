@@ -251,7 +251,7 @@ export default function AdminArticles() {
         className="admin-card"
         style={{ background: 'rgba(183, 28, 28, 0.05)', borderColor: 'var(--accent-red)' }}
       >
-        <h3 style={{ color: 'var(--accent-red)', marginTop: 0 }}>NVIDIA MiniMax-M3 AI Generator</h3>
+        <h3 style={{ color: 'var(--accent-red)', marginTop: 0 }}>AI Article Generator</h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1rem' }}>
           Enter a topic related to coffee, wholesale, or Chikmagalur. The AI will write a complete,
           SEO-optimized markdown article tailored to the Janu Bhai Coffee brand.

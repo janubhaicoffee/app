@@ -490,70 +490,7 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              <div
-                className="payment-method-section mt-20 mb-20"
-                style={{ marginTop: '20px', marginBottom: '20px' }}
-              >
-                <label className="section-label" style={{ display: 'block', marginBottom: '10px' }}>
-                  Payment Method
-                </label>
-                <div className="payment-methods-grid" style={{ display: 'flex', gap: '15px' }}>
-                  <label
-                    className={`payment-option ${paymentMethod === 'online' ? 'active' : ''}`}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      border:
-                        paymentMethod === 'online'
-                          ? '2px solid var(--primary-color)'
-                          : '1px solid #ccc',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="online"
-                      checked={paymentMethod === 'online'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      style={{ accentColor: 'var(--primary-color)' }}
-                    />
-                    <span>Pay Online</span>
-                  </label>
-                  {checkoutMode !== 'subscription' && (
-                    <label
-                      className={`payment-option ${paymentMethod === 'cod' ? 'active' : ''}`}
-                      style={{
-                        flex: 1,
-                        padding: '12px',
-                        border:
-                          paymentMethod === 'cod'
-                            ? '2px solid var(--primary-color)'
-                            : '1px solid #ccc',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="cod"
-                        checked={paymentMethod === 'cod'}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        style={{ accentColor: 'var(--primary-color)' }}
-                      />
-                      <span>Cash on Delivery</span>
-                    </label>
-                  )}
-                </div>
-              </div>
+              {/* Payment Method is Online (Razorpay) by default */}
 
               <button
                 type="submit"

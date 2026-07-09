@@ -47,7 +47,12 @@ export default function TopBar() {
     };
   }, []);
   // Return null for admin/outlet/pos subdomains/paths
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return null;
+  if (
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/outlet') ||
+    pathname?.startsWith('/pos')
+  )
+    return null;
   const cartCount = getCartCount();
   const isHome = pathname === '/';
   const getPageTitle = () => {
@@ -97,23 +102,27 @@ export default function TopBar() {
             {' '}
             Contact
           </Link>{' '}
-          <Link href={outletHref} className={`nav-link outlet-btn ${pathname.startsWith('/outlet') ? 'active' : ''}`}>
+          <Link
+            href={outletHref}
+            className={`nav-link outlet-btn ${pathname.startsWith('/outlet') ? 'active' : ''}`}
+          >
             Outlet Management
           </Link>
         </nav>
         <div className="desktop-action-group">
           <Link href={user ? '/account' : '/auth/login'} className="desktop-account-link-text">
-            {' '}
             {user ? 'Account' : 'Login'}
           </Link>
-          <Link
-            href="/cart"
-            className="desktop-cart-icon relative-badge"
-            aria-label="Shopping Cart"
-          >
-            <ShoppingBag size={20} />{' '}
-            {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-          </Link>
+          <div style={{ display: 'inline-flex', alignItems: 'center', height: '100%' }}>
+            <Link
+              href="/cart"
+              className="desktop-cart-icon relative-badge"
+              aria-label="Shopping Cart"
+            >
+              <ShoppingBag size={20} />
+              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+            </Link>
+          </div>
         </div>
       </div>{' '}
       {/* 2. MOBILE VIEWPORT LAYOUT */}{' '}

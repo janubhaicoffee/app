@@ -122,7 +122,7 @@
 .tab-header {
   font-family: var(--font-playfair), serif;
   font-size: 2.2rem;
-  color: var(--primary-color);
+  color: var(--text-primary);
   margin-bottom: 30px;
   padding-bottom: 15px;
   border-bottom: 2px solid var(--border-color);
@@ -183,7 +183,7 @@
   display: block;
   font-weight: 600;
   margin-bottom: 8px;
-  color: var(--primary-color);
+  color: var(--text-secondary);
 }
 
 .address-form input,

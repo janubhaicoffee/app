@@ -141,20 +141,20 @@ export default function ContactPage() {
                 <strong>Phone:</strong> +91 8527976791 (Mon-Fri, 9am - 6pm IST)
               </li>
             </ul>
+          </div>
+
+          <div>
+            <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Ask our AI Assistant</h2>
+            <AIChatbot />
 
             <h2 style={{ marginTop: '2rem' }}>Operating Address</h2>
-            <p>
+            <p style={{ marginTop: '1rem', lineHeight: '1.6' }}>
               Ground Floor, Shop 16, Building A1,
               <br />
               Gafoor Nagar Dhalan, Jamia Nagar, 110025,
               <br />
               South East Delhi, Delhi, India
             </p>
-          </div>
-
-          <div>
-            <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Ask our AI Assistant</h2>
-            <AIChatbot />
           </div>
         </div>
       </div>

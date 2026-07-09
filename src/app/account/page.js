@@ -321,7 +321,7 @@ export default function AccountPage() {
                 </div>
 
                 <div className="profile-details">
-                  <h3 style={{ marginBottom: '15px', color: 'var(--primary-color)' }}>
+                  <h3 style={{ marginBottom: '15px', color: 'var(--text-primary)' }}>
                     Account Details
                   </h3>
                   <p>
@@ -439,7 +439,7 @@ export default function AccountPage() {
             {/* Feature 8: Next.js Server-Side Scheduling Optimization Panel */}
             {activeTab === 'optimizer' && (
               <div className="tab-content fade-in">
-                <h2 className="tab-header">Next.js Delivery Agenda Optimizer</h2>
+                <h2 className="tab-header">Smart Delivery Agenda Optimizer</h2>
                 <p
                   style={{
                     marginBottom: '25px',
