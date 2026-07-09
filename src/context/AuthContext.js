@@ -91,6 +91,29 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const signInWithFacebook = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) throw error;
+    return data;
+  };
+
+  const signInWithPasskey = async () => {
+    const { data, error } = await supabase.auth.signInWithPasskey();
+    if (error) throw error;
+    return data;
+  };
+
+  const registerPasskey = async () => {
+    const { data, error } = await supabase.auth.registerPasskey();
+    if (error) throw error;
+    return data;
+  };
+
   const signInWithEmail = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -133,6 +156,9 @@ export function AuthProvider({ children }) {
         signInWithOtp,
         verifyOtp,
         signInWithGoogle,
+        signInWithFacebook,
+        signInWithPasskey,
+        registerPasskey,
         signInWithEmail,
         signUpWithEmail,
         signOut,

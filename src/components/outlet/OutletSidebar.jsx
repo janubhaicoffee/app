@@ -27,7 +27,10 @@ import { supabase } from '@/lib/supabase';
 const navItems = [
   {
     section: 'Main',
-    items: [{ href: '/outlet/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
+    items: [
+      { href: '/outlet/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/outlet/outlets', label: 'Manage Outlets', icon: Store }
+    ],
   },
   {
     section: 'Analytics',
@@ -115,6 +118,22 @@ export default function OutletSidebar() {
         setUserName(session.user.email?.split('@')[0] || 'User');
 
         try {
+          const roleRes = await fetch('/api/auth/check-role', {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          if (roleRes.ok) {
+            const roleData = await roleRes.json();
+            if (!sessionStorage.getItem('impersonated_role')) {
+              const realRole = roleData.role === 'superadmin' ? 'superuser' : (roleData.staffRole || 'staff');
+              setActiveRole(realRole);
+              sessionStorage.setItem('impersonated_role', realRole);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch role in sidebar:', err);
+        }
+
+        try {
           const res = await fetch(`/api/pos/outlets?userId=${session.user.id}`);
           if (res.ok) {
             const body = await res.json();
@@ -187,8 +206,7 @@ export default function OutletSidebar() {
   const handleOutletChange = (e) => {
     const newId = e.target.value;
     if (newId === 'create-new') {
-      const urls = getSiteUrls();
-      window.location.href = `${urls.admin}/outlets`;
+      router.push('/outlet/outlets');
       return;
     }
     sessionStorage.setItem('selected_outlet_id', newId);
@@ -218,7 +236,7 @@ export default function OutletSidebar() {
   };
 
   const getFilteredNavItems = (role) => {
-    if (!role || role === 'superuser' || role === 'manager' || role === 'superadmin') {
+    if (!role || ['superuser', 'manager', 'superadmin', 'owner', 'partner'].includes(role)) {
       return navItems;
     }
     const restrictedSections = ['Analytics', 'Operations', 'Financials', 'Settings'];
@@ -265,7 +283,7 @@ export default function OutletSidebar() {
             )}
           </div>
 
-          {isSuperAdmin && (
+          {(isSuperAdmin || activeRole === 'owner' || activeRole === 'partner') && (
             /* Site Switcher */
             <select
               value={getSiteUrls().outlet}
@@ -285,7 +303,7 @@ export default function OutletSidebar() {
               }}
             >
               <option value={getSiteUrls().outlet}>OUTLET</option>
-              <option value={getSiteUrls().admin}>ADMIN</option>
+              {isSuperAdmin && <option value={getSiteUrls().admin}>ADMIN</option>}
               <option value={getSiteUrls().pos}>POS</option>
             </select>
           )}

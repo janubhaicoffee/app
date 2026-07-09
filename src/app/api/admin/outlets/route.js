@@ -195,6 +195,59 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'Missing outlet id' }, { status: 400 });
     }
 
+    // 1. Nullify references in main tables
+    try {
+      await supabaseAdmin.from('orders').update({ pickup_outlet_id: null }).eq('pickup_outlet_id', id);
+    } catch (e) {
+      console.error('Error nullifying pickup_outlet_id in orders:', e);
+    }
+
+    try {
+      await supabaseAdmin.from('customers').update({ outlet_id: null }).eq('outlet_id', id);
+    } catch (e) {
+      console.error('Error nullifying outlet_id in customers:', e);
+    }
+
+    // 2. Cascade delete from all dependent tables referencing the outlet
+    const childTables = [
+      'outlet_staff',
+      'outlet_transactions',
+      'outlet_cameras',
+      'outlet_alerts',
+      'outlet_inventory',
+      'outlet_staff_schedules',
+      'outlet_delivery_keys',
+      'outlet_delivery_orders',
+      'outlet_customers',
+      'pos_categories',
+      'pos_products',
+      'pos_tables',
+      'outlet_expenses',
+      'outlet_vendors',
+      'pos_orders',
+      'pos_order_items',
+      'pos_payments',
+      'pos_shifts',
+      'outlet_purchase_orders',
+      'inventory_transactions',
+      'waste_log',
+      'staff_attendance',
+      'staff_payroll',
+      'daily_sales',
+      'outlet_settings',
+      'commission_transactions',
+      'pickup_requests',
+    ];
+
+    for (const table of childTables) {
+      try {
+        await supabaseAdmin.from(table).delete().eq('outlet_id', id);
+      } catch (e) {
+        console.error(`Error deleting from ${table}:`, e.message);
+      }
+    }
+
+    // 3. Delete the outlet itself
     const { error } = await supabaseAdmin.from('outlets').delete().eq('id', id);
 
     if (error) throw error;

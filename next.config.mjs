@@ -25,7 +25,8 @@ const nextConfig = {
     ];
   },
   async headers() {
-    return [
+    const isProd = process.env.NODE_ENV === 'production';
+    const headersList = [
       {
         source: '/(.*)',
         headers: [
@@ -52,25 +53,26 @@ const nextConfig = {
           { key: 'Content-Type', value: 'application/manifest+json' },
         ],
       },
-      {
+      isProd ? {
         source: '/:all*(svg|png|jpg|jpeg|gif|webp|avif|ico)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
-      },
-      {
+      } : null,
+      isProd ? {
         source: '/_next/static/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
-      },
-      {
+      } : null,
+      isProd ? {
         source: '/fonts/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
-      },
+      } : null,
     ];
+    return headersList.filter(Boolean);
   },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',

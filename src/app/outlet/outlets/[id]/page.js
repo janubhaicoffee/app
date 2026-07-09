@@ -25,10 +25,10 @@ import {
   Link2,
   Unlink,
   Search,
+  X,
+  Trash2,
 } from 'lucide-react';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -37,6 +37,8 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
+import '@/app/admin/admin.css';
+import '@/components/outlet/outlet.css';
 
 const roleBadgeColors = {
   superadmin: { bg: '#cce5ff', color: '#004085' },
@@ -48,7 +50,7 @@ const roleBadgeColors = {
   staff: { bg: '#e2e3e5', color: '#383d41' },
 };
 
-export default function OutletDetail() {
+export default function OutletDetailPortal() {
   const params = useParams();
   const router = useRouter();
   const [outlet, setOutlet] = useState(null);
@@ -57,6 +59,35 @@ export default function OutletDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Edit Modal State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [form, setForm] = useState({
+    name: '',
+    code: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    phone: '',
+    email: '',
+    gstin: '',
+    manager_name: '',
+    manager_phone: '',
+    manager_email: '',
+    rent: '',
+    electricity: '',
+    water: '',
+    internet: '',
+    cogs: '',
+  });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     if (params.id) loadOutletData();
@@ -110,6 +141,114 @@ export default function OutletDetail() {
     }
   }
 
+  function openEditModal() {
+    if (!outlet) return;
+    const settings = outlet.settings || {};
+    setForm({
+      name: outlet.name || '',
+      code: outlet.code || '',
+      address: outlet.address || '',
+      city: outlet.city || '',
+      state: outlet.state || '',
+      pincode: outlet.pincode || '',
+      phone: outlet.phone || '',
+      email: outlet.email || '',
+      gstin: settings.gstin || '',
+      manager_name: settings.manager_name || '',
+      manager_phone: settings.manager_phone || '',
+      manager_email: settings.manager_email || '',
+      rent: settings.rent || '',
+      electricity: settings.electricity || '',
+      water: settings.water || '',
+      internet: settings.internet || '',
+      cogs: settings.cogs || '',
+    });
+    setShowEditModal(true);
+  }
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const settings = {
+        gstin: form.gstin,
+        manager_name: form.manager_name,
+        manager_phone: form.manager_phone,
+        manager_email: form.manager_email,
+        rent: form.rent ? parseFloat(form.rent) : 0,
+        electricity: form.electricity ? parseFloat(form.electricity) : 0,
+        water: form.water ? parseFloat(form.water) : 0,
+        internet: form.internet ? parseFloat(form.internet) : 0,
+        cogs: form.cogs ? parseFloat(form.cogs) : 35,
+      };
+
+      const body = {
+        name: form.name,
+        code: form.code,
+        address: form.address,
+        city: form.city,
+        state: form.state,
+        pincode: form.pincode,
+        phone: form.phone,
+        email: form.email,
+        settings,
+      };
+
+      const res = await fetch('/api/admin/outlets', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ id: outlet.id, ...body }),
+      });
+
+      if (res.ok) {
+        showToast('Outlet updated successfully');
+        setShowEditModal(false);
+        loadOutletData();
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Failed to save outlet', 'error');
+      }
+    } catch (err) {
+      showToast('Failed to save outlet', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteOutlet() {
+    if (!confirm('Are you sure you want to delete this outlet? All associated staff, schedules, transactions, and POS data will be deleted.')) {
+      return;
+    }
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const res = await fetch(`/api/admin/outlets?id=${outlet.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (res.ok) {
+        router.push('/outlet/outlets');
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Failed to delete outlet', 'error');
+      }
+    } catch (err) {
+      showToast('Failed to delete outlet', 'error');
+    }
+  }
+
   if (loading) {
     return (
       <div className="admin-loading">
@@ -124,7 +263,7 @@ export default function OutletDetail() {
         <Store size={48} />
         <h3>{error || 'Outlet not found'}</h3>
         <p>The outlet you're looking for doesn't exist or has been removed.</p>
-        <Link href="/admin/outlets" className="admin-btn-outline">
+        <Link href="/outlet/outlets" className="admin-btn-outline">
           Back to Outlets
         </Link>
       </div>
@@ -178,15 +317,21 @@ export default function OutletDetail() {
     (parseFloat(settings.internet || 0) || 0);
 
   return (
-    <div>
+    <div style={{ padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
+      {toast && (
+        <div className={`admin-toast ${toast.type === 'error' ? 'admin-toast-error' : ''}`}>
+          {toast.message}
+        </div>
+      )}
+
       <div className="admin-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <Link href="/admin/outlets" style={{ color: 'var(--text-secondary)', display: 'flex' }}>
+          <Link href="/outlet/outlets" style={{ color: 'var(--text-secondary, #5D4037)', display: 'flex' }}>
             <ArrowLeft size={20} />
           </Link>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <h1 style={{ margin: 0 }}>{outlet.name}</h1>
+              <h1 style={{ margin: 0, color: 'var(--primary-color, #3E2723)' }}>{outlet.name}</h1>
               <span
                 className="status-badge"
                 style={{
@@ -200,7 +345,7 @@ export default function OutletDetail() {
             <p
               style={{
                 margin: '0.25rem 0 0',
-                color: 'var(--text-secondary)',
+                color: 'var(--text-secondary, #5D4037)',
                 fontSize: '0.85rem',
                 display: 'flex',
                 alignItems: 'center',
@@ -213,13 +358,12 @@ export default function OutletDetail() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <a 
-            href={typeof window !== 'undefined' && (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1')) ? `http://outlet.localhost:${window.location.port}/outlets/${params.id}` : `https://outlet.janubhai.com/outlets/${params.id}`} 
-            className="admin-btn-outline admin-btn-sm"
-            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
-          >
-            <Edit3 size={14} /> Edit in Outlet Portal
-          </a>
+          <button onClick={openEditModal} className="admin-btn-outline admin-btn-sm">
+            <Edit3 size={14} /> Edit
+          </button>
+          <button onClick={handleDeleteOutlet} className="admin-btn admin-btn-sm" style={{ background: '#c62828', color: '#fff' }}>
+            <Trash2 size={14} /> Delete
+          </button>
         </div>
       </div>
 
@@ -337,7 +481,7 @@ export default function OutletDetail() {
                       justifyContent: 'space-between',
                       fontSize: '0.85rem',
                       padding: '0.35rem 0',
-                      borderBottom: '1px solid var(--border-color)',
+                      borderBottom: '1px solid var(--border-color, #e0d5c1)',
                     }}
                   >
                     <span style={{ color: 'var(--text-secondary)' }}>{item.label}</span>
@@ -402,20 +546,26 @@ export default function OutletDetail() {
                 <Activity size={18} color="var(--text-secondary)" />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <Link
-                  href={`/`}
+                <button
                   className="admin-btn-outline"
                   style={{ justifyContent: 'center', width: '100%' }}
+                  onClick={() => router.push('/outlet/dashboard')}
                 >
                   <Store size={16} /> View Outlet Dashboard
-                </Link>
-                <Link
-                  href={`/`}
+                </button>
+                <button
                   className="admin-btn-outline"
                   style={{ justifyContent: 'center', width: '100%' }}
+                  onClick={() => {
+                    const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
+                    const targetUrl = isLocal 
+                      ? `${window.location.protocol}//pos.localhost:${window.location.port}`
+                      : `${window.location.protocol}//pos.janubhai.com`;
+                    window.location.href = targetUrl;
+                  }}
                 >
                   <CreditCard size={16} /> View POS
-                </Link>
+                </button>
                 <button
                   className="admin-btn-outline"
                   style={{ justifyContent: 'center', width: '100%' }}
@@ -524,9 +674,9 @@ export default function OutletDetail() {
               <Users size={40} />
               <h3>No staff assigned</h3>
               <p>Add staff members to this outlet to get started.</p>
-              <Link href="/admin/staff" className="admin-btn-outline">
+              <button onClick={() => router.push('/outlet/operations/staff')} className="admin-btn-outline">
                 <UserPlus size={14} /> Manage Staff
-              </Link>
+              </button>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -542,7 +692,7 @@ export default function OutletDetail() {
                       padding: '0.75rem 1rem',
                       background: '#fafafa',
                       borderRadius: 8,
-                      border: '1px solid var(--border-color)',
+                      border: '1px solid var(--border-color, #e0d5c1)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -669,6 +819,222 @@ export default function OutletDetail() {
             </table>
           </div>
         </>
+      )}
+
+      {showEditModal && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Outlet</h2>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSave}>
+              <div className="modal-body">
+                <h3
+                  style={{
+                    margin: '0 0 0.75rem',
+                    fontSize: '0.9rem',
+                    color: 'var(--text-secondary)',
+                  }}
+                >
+                  Basic Information
+                </h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Outlet Name *</label>
+                    <input
+                      required
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="Janu Bhai Coffee - Indira Nagar"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Outlet Code *</label>
+                    <input
+                      required
+                      value={form.code}
+                      onChange={(e) => setForm({ ...form, code: e.target.value })}
+                      placeholder="JBC-IND"
+                      style={{ textTransform: 'uppercase' }}
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Address</label>
+                  <input
+                    value={form.address}
+                    onChange={(e) => setForm({ ...form, address: e.target.value })}
+                    placeholder="123, Main Road"
+                  />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>City</label>
+                    <input
+                      value={form.city}
+                      onChange={(e) => setForm({ ...form, city: e.target.value })}
+                      placeholder="Bengaluru"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>State</label>
+                    <input
+                      value={form.state}
+                      onChange={(e) => setForm({ ...form, state: e.target.value })}
+                      placeholder="Karnataka"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Pincode</label>
+                    <input
+                      value={form.pincode}
+                      onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                      placeholder="560001"
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Phone</label>
+                    <input
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      placeholder="+91 9876543210"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="outlet@janubhaicoffee.com"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>GSTIN</label>
+                    <input
+                      value={form.gstin}
+                      onChange={(e) => setForm({ ...form, gstin: e.target.value })}
+                      placeholder="29ABCDE1234F1Z5"
+                    />
+                  </div>
+                </div>
+
+                <h3
+                  style={{
+                    margin: '1rem 0 0.75rem',
+                    fontSize: '0.9rem',
+                    color: 'var(--text-secondary)',
+                  }}
+                >
+                  Manager Details
+                </h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Manager Name</label>
+                    <input
+                      value={form.manager_name}
+                      onChange={(e) => setForm({ ...form, manager_name: e.target.value })}
+                      placeholder="Rahul Sharma"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Manager Phone</label>
+                    <input
+                      value={form.manager_phone}
+                      onChange={(e) => setForm({ ...form, manager_phone: e.target.value })}
+                      placeholder="+91 9876543210"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Manager Email</label>
+                    <input
+                      type="email"
+                      value={form.manager_email}
+                      onChange={(e) => setForm({ ...form, manager_email: e.target.value })}
+                      placeholder="manager@example.com"
+                    />
+                  </div>
+                </div>
+
+                <h3
+                  style={{
+                    margin: '1rem 0 0.75rem',
+                    fontSize: '0.9rem',
+                    color: 'var(--text-secondary)',
+                  }}
+                >
+                  Financial Settings
+                </h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Monthly Rent (₹)</label>
+                    <input
+                      type="number"
+                      value={form.rent}
+                      onChange={(e) => setForm({ ...form, rent: e.target.value })}
+                      placeholder="50000"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Monthly Electricity (₹)</label>
+                    <input
+                      type="number"
+                      value={form.electricity}
+                      onChange={(e) => setForm({ ...form, electricity: e.target.value })}
+                      placeholder="8000"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Monthly Water (₹)</label>
+                    <input
+                      type="number"
+                      value={form.water}
+                      onChange={(e) => setForm({ ...form, water: e.target.value })}
+                      placeholder="2000"
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Monthly Internet (₹)</label>
+                    <input
+                      type="number"
+                      value={form.internet}
+                      onChange={(e) => setForm({ ...form, internet: e.target.value })}
+                      placeholder="1500"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>COGS %</label>
+                    <input
+                      type="number"
+                      value={form.cogs}
+                      onChange={(e) => setForm({ ...form, cogs: e.target.value })}
+                      placeholder="35"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="admin-btn-outline"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="admin-btn" disabled={saving}>
+                  {saving ? 'Saving...' : 'Update Details'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -801,8 +1167,7 @@ function OutletSourcesTab({ outletId }) {
         <div className="admin-card-header">
           <h2>Outlet Menu Products</h2>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            {posProducts.filter((p) => p.source_product_id).length} of {posProducts.length} linked
-            to Janu Bhai catalog
+            {posProducts.filter((p) => p.source_product_id).length} of {posProducts.length} linked to Janu Bhai catalog
           </span>
         </div>
 
@@ -967,7 +1332,6 @@ function SourceLinkForm({ sourceProducts, searchQuery, setSearchQuery, onLink, o
 function OutletCommissionsTab({ outletId }) {
   const [loading, setLoading] = useState(true);
   const [commissions, setCommissions] = useState([]);
-  const [summary, setSummary] = useState(null);
   const [filterStatus, setFilterStatus] = useState('');
 
   const statusColors = {

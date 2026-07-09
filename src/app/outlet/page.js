@@ -44,12 +44,12 @@ export default function OutletPortalPage() {
         } = await supabase.auth.getSession();
         if (session) {
           setIsAuthenticated(true);
-          const response = await fetch('/api/admin/data?type=check', {
+          const response = await fetch('/api/auth/check-role', {
             headers: { Authorization: `Bearer ${session.access_token}` },
           });
           if (response.ok) {
             const data = await response.json();
-            if (data.isAdmin) {
+            if (['superadmin', 'partner', 'staff'].includes(data.role)) {
               setIsAuthorizedAdmin(true);
               redirectAdmin();
             } else {
@@ -250,13 +250,13 @@ export default function OutletPortalPage() {
         return;
       }
 
-      const response = await fetch('/api/admin/data?type=check', {
+      const response = await fetch('/api/auth/check-role', {
         headers: { Authorization: `Bearer ${data.session.access_token}` },
       });
 
       if (response.ok) {
         const checkData = await response.json();
-        if (checkData.isAdmin) {
+        if (['superadmin', 'partner', 'staff'].includes(checkData.role)) {
           localStorage.removeItem('outlet_login_attempts');
           localStorage.removeItem('outlet_login_lockout');
           setIsAuthenticated(true);

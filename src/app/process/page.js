@@ -22,6 +22,14 @@ function AnimatedCounter({ value, suffix = '', duration = 1.5 }) {
   const [hasTriggered, setHasTriggered] = useState(false);
 
   useEffect(() => {
+    // Fallback: trigger counting animation 300ms after mount if viewport trigger didn't fire
+    const timer = setTimeout(() => {
+      setHasTriggered(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     if (!hasTriggered) return;
 
     const target = parseInt(value.replace(/,/g, ''), 10);
@@ -36,9 +44,9 @@ function AnimatedCounter({ value, suffix = '', duration = 1.5 }) {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / (duration * 1000), 1);
       const current = Math.floor(progress * target);
-
+      
       setCount(current);
-
+      
       if (progress < 1) {
         window.requestAnimationFrame(animate);
       } else {
@@ -72,23 +80,15 @@ function BeforeAfterCards() {
         <ul className="sorting-list">
           <li className="sorting-list-item">
             <X size={16} color="#ff4d4d" style={{ marginTop: '4px' }} />
-            <span>
-              <strong>Broken & Chipped:</strong> Causes uneven roasting, leading to bitter and
-              astringent flavors.
-            </span>
+            <span><strong>Broken & Chipped:</strong> Causes uneven roasting, leading to bitter and astringent flavors.</span>
           </li>
           <li className="sorting-list-item">
             <X size={16} color="#ff4d4d" style={{ marginTop: '4px' }} />
-            <span>
-              <strong>Insect Damaged:</strong> Contaminates the brew, creating flat, moldy
-              off-notes.
-            </span>
+            <span><strong>Insect Damaged:</strong> Contaminates the brew, creating flat, moldy off-notes.</span>
           </li>
           <li className="sorting-list-item">
             <X size={16} color="#ff4d4d" style={{ marginTop: '4px' }} />
-            <span>
-              <strong>Black/Deformed:</strong> Results in harsh chemical tastes and stale aromas.
-            </span>
+            <span><strong>Black/Deformed:</strong> Results in harsh chemical tastes and stale aromas.</span>
           </li>
         </ul>
       </div>
@@ -101,24 +101,15 @@ function BeforeAfterCards() {
         <ul className="sorting-list">
           <li className="sorting-list-item">
             <Check size={16} color="#00e676" style={{ marginTop: '4px' }} />
-            <span>
-              <strong>Uniform Density:</strong> Yields a perfectly balanced roast and consistent cup
-              profiles.
-            </span>
+            <span><strong>Uniform Density:</strong> Yields a perfectly balanced roast and consistent cup profiles.</span>
           </li>
           <li className="sorting-list-item">
             <Check size={16} color="#00e676" style={{ marginTop: '4px' }} />
-            <span>
-              <strong>Symmetrical Sizing:</strong> Bold, high-density beans that capture complex
-              aromatic oils.
-            </span>
+            <span><strong>Symmetrical Sizing:</strong> Bold, high-density beans that capture complex aromatic oils.</span>
           </li>
           <li className="sorting-list-item">
             <Check size={16} color="#00e676" style={{ marginTop: '4px' }} />
-            <span>
-              <strong>Perfect Moisture (11%):</strong> Locks in the natural berry and chocolate
-              undertones.
-            </span>
+            <span><strong>Perfect Moisture (11%):</strong> Locks in the natural berry and chocolate undertones.</span>
           </li>
         </ul>
       </div>
@@ -132,77 +123,72 @@ const steps = [
     tagline: 'Harvesting',
     title: 'Handpicked',
     desc: 'Only the ripest, deep red coffee cherries are selected by hand. Sourcing only at peak maturity ensures a naturally sweet, clean cup with none of the sourness of underripe fruit.',
-    videoUrl:
-      'https://player.vimeo.com/external/477169493.sd.mp4?s=d0db2d326f1dc7de99c5625ff11cc28f7311b5e2&profile_id=165&oauth2_token_id=57447761',
-    icon: <Leaf size={24} />,
+    imageUrl: '/handpicked.png',
+    icon: <Leaf size={24} />
   },
   {
     phase: '02',
     tagline: 'Quality Control',
     title: 'Sorted by Hand',
     desc: 'Sorting is where quality is won or lost. Every single batch is manually sorted to remove broken, insect-damaged, or discolored beans. This meticulous process ensures a pure, premium taste in every brew.',
-    videoUrl:
-      'https://player.vimeo.com/external/416041071.sd.mp4?s=254641c8f1d5336e76cf08db5b94f061f2fde1c8&profile_id=165&oauth2_token_id=57447761',
+    imageUrl: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&q=80&w=1200',
     icon: <Filter size={24} />,
-    isSorting: true,
+    isSorting: true
   },
   {
     phase: '03',
     tagline: 'Dehydration',
     title: 'Sun Dried',
     desc: 'Our beans are spread evenly across elevated drying beds, basking under the natural heat of the sun. Hand-raked hourly for slow, uniform dehydration, this locks in the complex sugars and full-bodied fruitiness.',
-    videoUrl:
-      'https://player.vimeo.com/external/517616641.sd.mp4?s=1df0efb8b20ff44e83c7138b3f12440938b812b1&profile_id=165&oauth2_token_id=57447761',
-    icon: <Sun size={24} />,
+    imageUrl: '/sun_dried.png',
+    icon: <Sun size={24} />
   },
   {
     phase: '04',
     tagline: 'Flavor Development',
     title: 'Expertly Roasted',
     desc: 'Roasted in state-of-the-art small-batch roasters. Our master roasters monitor temperature curves to caramelize coffee sugars perfectly, bringing out intense notes of cocoa, nuts, and sweet spices.',
-    videoUrl:
-      'https://player.vimeo.com/external/435674703.sd.mp4?s=74b6ff9bc0bf476f5712e529deec0b666a4bc27a&profile_id=165&oauth2_token_id=57447761',
+    imageUrl: '/expertly_roasted.png',
     icon: <Flame size={24} />,
-    isRoasting: true,
+    isRoasting: true
   },
   {
     phase: '05',
     tagline: 'Preservation',
     title: 'Freeze Dried',
     desc: 'Freshly brewed coffee is concentrated and instantly frozen to -40°C. In an absolute vacuum, water is sublimated, locking the aromatic coffee oils and delicate flavor compounds into rigid crystals.',
-    videoUrl:
-      'https://player.vimeo.com/external/554988719.sd.mp4?s=9108b3a0cc30fa392cc632279184518cdbc87f17&profile_id=165&oauth2_token_id=57447761',
+    imageUrl: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&q=80&w=1200',
     icon: <Snowflake size={24} />,
-    isFreezeDry: true,
+    isFreezeDry: true
   },
   {
     phase: '06',
     tagline: 'Delivery',
     title: 'Served Fresh',
     desc: 'Airtight packaging ensures zero oxidation. From our estate roasting facility in Chikmagalur to your doorstep, we preserve every nuance of flavor so you experience coffee at its peak.',
-    videoUrl:
-      'https://player.vimeo.com/external/391586552.sd.mp4?s=33045860d5bfa780d68a9ad059fb27cf5c0cb4eb&profile_id=165&oauth2_token_id=57447761',
-    icon: <Coffee size={24} />,
-  },
+    imageUrl: '/served_fresh.png',
+    icon: <Coffee size={24} />
+  }
 ];
 
 function TimelineStep({ step, index }) {
   const containerRef = useRef(null);
-
+  
   // Track scroll progress of this section
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ['start end', 'end start'],
+    offset: ['start end', 'end start']
   });
 
-  // Scale the video/media gently while scrolling
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.05, 1.01]);
+  // Scale the image gently while scrolling
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.08, 1.02]);
   // Subtle text vertical parallax shift
   const yText = useTransform(scrollYProgress, [0, 0.5, 1], [30, 0, -30]);
-
+  
   return (
     <div ref={containerRef} className="story-phase-block" id={`phase-${step.phase}`}>
       <div className="story-phase-container">
+        
         {/* Typographic Phase Divider */}
         <div className="story-divider">
           <div className="story-divider-line"></div>
@@ -212,14 +198,12 @@ function TimelineStep({ step, index }) {
 
         {/* Large Media Stage */}
         <div className="phase-visual-stage">
-          <motion.video
+          <motion.img
             style={{ scale }}
-            src={step.videoUrl}
-            autoPlay
-            muted
-            loop
-            playsInline
+            src={step.imageUrl}
+            alt={step.title}
             className="phase-visual-media"
+            loading="lazy"
           />
           <div className="phase-scrim-layer" />
         </div>
@@ -229,7 +213,9 @@ function TimelineStep({ step, index }) {
           <div className="phase-header-left">
             <span className="phase-tagline">{step.tagline}</span>
             <h2 className="phase-main-heading">{step.title}</h2>
-            <div className="phase-icon-badge">{step.icon}</div>
+            <div className="phase-icon-badge">
+              {step.icon}
+            </div>
           </div>
 
           <div className="phase-content-right">
@@ -254,6 +240,7 @@ function TimelineStep({ step, index }) {
             {step.isSorting && <BeforeAfterCards />}
           </div>
         </motion.div>
+
       </div>
     </div>
   );
@@ -278,7 +265,7 @@ export default function ProcessPage() {
       {/* Background visual overlays */}
       <div className="process-overlay-noise" />
       <div className="process-overlay-vignette" />
-
+      
       {/* Floating dust particles */}
       <div className="process-dust-container">
         {particles.map((p) => (
@@ -296,12 +283,9 @@ export default function ProcessPage() {
 
       {/* Hero Section */}
       <section className="process-hero-container">
-        <video
-          src="https://player.vimeo.com/external/384761655.sd.mp4?s=38217cf2d4c0634a4135e98587d60920b784cf18&profile_id=165&oauth2_token_id=57447761"
-          autoPlay
-          muted
-          loop
-          playsInline
+        <img
+          src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=1600"
+          alt="Chikmagalur Coffee Estate"
           className="hero-video-bg"
         />
         <div className="hero-scrim" />
@@ -315,7 +299,7 @@ export default function ProcessPage() {
           >
             From the hills of
           </motion.p>
-
+          
           <motion.h1
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -340,9 +324,7 @@ export default function ProcessPage() {
           animate={{ opacity: 0.8 }}
           transition={{ delay: 1, duration: 1 }}
           onClick={() => {
-            document
-              .querySelector('.sourcing-intro-section')
-              ?.scrollIntoView({ behavior: 'smooth' });
+            document.querySelector('.sourcing-intro-section')?.scrollIntoView({ behavior: 'smooth' });
           }}
           className="scroll-indicator-wrap"
         >
@@ -359,10 +341,7 @@ export default function ProcessPage() {
               Every cup begins <span>3,400 feet</span> above sea level.
             </h2>
             <p className="intro-description">
-              Nestled in the Western Ghats of India, Chikmagaluru is the birthplace of Indian
-              coffee. The combination of rich volcanic soil, heavy canopy shade, and perfect
-              microclimates results in beans that mature slowly, developing incredibly complex, deep
-              profiles.
+              Nestled in the Western Ghats of India, Chikmagaluru is the birthplace of Indian coffee. The combination of rich volcanic soil, heavy canopy shade, and perfect microclimates results in beans that mature slowly, developing incredibly complex, deep profiles.
             </p>
             <a href="#phase-01" className="btn-follow-journey">
               Follow the Journey <ChevronDown size={16} />
@@ -385,17 +364,23 @@ export default function ProcessPage() {
             </div>
 
             <div className="stat-counter-card">
-              <div className="stat-number-wrapper">AAA</div>
+              <div className="stat-number-wrapper">
+                AAA
+              </div>
               <div className="stat-label-text">Quality Grade</div>
             </div>
 
             <div className="stat-counter-card">
-              <div className="stat-number-wrapper">Single</div>
+              <div className="stat-number-wrapper">
+                Single
+              </div>
               <div className="stat-label-text">Estate Origin</div>
             </div>
-
+            
             <div className="stat-counter-card" style={{ gridColumn: 'span 2' }}>
-              <div className="stat-number-wrapper">Small Batch</div>
+              <div className="stat-number-wrapper">
+                Small Batch
+              </div>
               <div className="stat-label-text">Fresh Roasting Style</div>
             </div>
           </div>

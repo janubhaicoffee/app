@@ -34,7 +34,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { outlet_id, auth_user_id, name, email, phone, role, pin } = body;
+    const { outlet_id, auth_user_id, name, email, phone, role, pin, password } = body;
 
     if (!outlet_id || !name) {
       return NextResponse.json(
@@ -50,9 +50,23 @@ export async function POST(request) {
         const { data: userData } = await supabaseAdmin.auth.admin.getUserByEmail(email);
         if (userData?.user) {
           resolvedAuthUserId = userData.user.id;
+        } else {
+          // Create new user in Supabase Auth
+          const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+            email,
+            password: password || 'JanuBhaiPartner123!',
+            email_confirm: true,
+            user_metadata: { full_name: name },
+          });
+          if (createError) throw createError;
+          resolvedAuthUserId = newUser.user.id;
         }
       } catch (err) {
-        console.error('Error getting user by email:', err);
+        console.error('Error getting or creating user by email:', err);
+        return NextResponse.json(
+          { error: err.message || 'Failed to provision auth user account' },
+          { status: 500 },
+        );
       }
     }
 

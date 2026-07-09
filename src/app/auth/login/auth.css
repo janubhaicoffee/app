@@ -228,3 +228,50 @@
     font-size: 2rem;
   }
 }
+
+/* Alternative Social Grid */
+.alternative-auth-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-social-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: rgba(245, 240, 234, 0.04);
+  color: var(--text-primary);
+  font-family: var(--font-inter);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-social-icon:hover:not(:disabled) {
+  border-color: var(--accent-gold);
+  background: rgba(216, 154, 30, 0.08);
+  transform: translateY(-2px);
+}
+
+.btn-social-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-social-icon svg {
+  transition: transform 0.3s;
+}
+
+.btn-social-icon:hover svg {
+  transform: scale(1.1);
+}

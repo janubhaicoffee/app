@@ -15,8 +15,9 @@ import {
   Calendar,
   Zap,
   AlertTriangle,
+  Key,
 } from 'lucide-react';
-import { getUserProgression } from '@/actions/progression';
+import { getUserProgression, awardPoints } from '@/actions/progression';
 import { getTierInfo } from '@/lib/progressionUtils';
 import { optimizeDeliverySchedule } from '@/actions/schedule';
 import { motion } from 'framer-motion';
@@ -52,6 +53,51 @@ export default function AccountPage() {
     pincode: '',
   });
   const [savingAddress, setSavingAddress] = useState(false);
+
+  // Phone Verification State
+  const [phoneToVerify, setPhoneToVerify] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [phoneStep, setPhoneStep] = useState('input'); // input | otp
+  const [phoneVerifying, setPhoneVerifying] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+  const [phoneMessage, setPhoneMessage] = useState('');
+
+  // Auto-award points for linked identities on load
+  useEffect(() => {
+    if (user && progressionData && sessionToken) {
+      const checkAndAwardIdentityPoints = async () => {
+        const hasGoogle = user.identities?.some(id => id.provider === 'google');
+        const hasFacebook = user.identities?.some(id => id.provider === 'facebook');
+        const hasPhone = !!user.phone;
+        
+        const ledger = progressionData.ledger || [];
+        let shouldReload = false;
+        
+        if (hasGoogle && !ledger.some(l => l.action_type === 'Link Google Account')) {
+          await awardPoints(sessionToken, 50, 'Link Google Account');
+          shouldReload = true;
+        }
+        
+        if (hasFacebook && !ledger.some(l => l.action_type === 'Link Facebook Account')) {
+          await awardPoints(sessionToken, 50, 'Link Facebook Account');
+          shouldReload = true;
+        }
+
+        if (hasPhone && !ledger.some(l => l.action_type === 'Verify Phone')) {
+          await awardPoints(sessionToken, 100, 'Verify Phone');
+          shouldReload = true;
+        }
+
+        if (shouldReload) {
+          const progRes = await getUserProgression(sessionToken);
+          if (progRes.success) {
+            setProgressionData({ profile: progRes.profile, ledger: progRes.ledger });
+          }
+        }
+      };
+      checkAndAwardIdentityPoints();
+    }
+  }, [user, progressionData, sessionToken]);
 
   const router = useRouter();
 
@@ -161,6 +207,93 @@ export default function AccountPage() {
       clearTimeout(timeout);
     };
   }, [router]);
+
+  const handleSendPhoneOtp = async () => {
+    setPhoneVerifying(true);
+    setPhoneError('');
+    setPhoneMessage('');
+    try {
+      let formattedPhone = phoneToVerify.replace(/[\s()-]/g, '');
+      if (/^\d{10}$/.test(formattedPhone)) {
+        formattedPhone = `+91${formattedPhone}`;
+      } else if (/^\d+$/.test(formattedPhone) && !formattedPhone.startsWith('+')) {
+        formattedPhone = `+${formattedPhone}`;
+      }
+      
+      const { error } = await supabase.auth.updateUser({ phone: formattedPhone });
+      if (error) throw error;
+      setPhoneStep('otp');
+      setPhoneMessage('OTP code sent successfully!');
+    } catch (err) {
+      setPhoneError(err.message || 'Failed to send OTP code.');
+    } finally {
+      setPhoneVerifying(false);
+    }
+  };
+
+  const handleVerifyPhoneOtp = async () => {
+    setPhoneVerifying(true);
+    setPhoneError('');
+    setPhoneMessage('');
+    try {
+      let formattedPhone = phoneToVerify.replace(/[\s()-]/g, '');
+      if (/^\d{10}$/.test(formattedPhone)) {
+        formattedPhone = `+91${formattedPhone}`;
+      } else if (/^\d+$/.test(formattedPhone) && !formattedPhone.startsWith('+')) {
+        formattedPhone = `+${formattedPhone}`;
+      }
+
+      const { error } = await supabase.auth.verifyOtp({
+        phone: formattedPhone,
+        token: otpCode,
+        type: 'phone_change'
+      });
+      if (error) throw error;
+
+      // Reload auth session to update local user object
+      const { data: { user: updatedUser } } = await supabase.auth.getUser();
+      setUser(updatedUser);
+      setPhoneStep('input');
+      setPhoneToVerify('');
+      setOtpCode('');
+      setPhoneMessage('Phone successfully verified!');
+
+      // Award points
+      if (sessionToken) {
+        const res = await awardPoints(sessionToken, 100, 'Verify Phone');
+        if (res.success) {
+          const progRes = await getUserProgression(sessionToken);
+          if (progRes.success) {
+            setProgressionData({ profile: progRes.profile, ledger: progRes.ledger });
+          }
+        }
+      }
+    } catch (err) {
+      setPhoneError(err.message || 'OTP verification failed.');
+    } finally {
+      setPhoneVerifying(false);
+    }
+  };
+
+  const handleRegisterPasskey = async () => {
+    try {
+      const { data, error } = await supabase.auth.registerPasskey();
+      if (error) throw error;
+      alert('Passkey successfully registered on this device!');
+      
+      if (sessionToken) {
+        const res = await awardPoints(sessionToken, 150, 'Register Passkey');
+        if (res.success) {
+          const progRes = await getUserProgression(sessionToken);
+          if (progRes.success) {
+            setProgressionData({ profile: progRes.profile, ledger: progRes.ledger });
+          }
+        }
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to register passkey. Ensure your browser/device supports WebAuthn.');
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -303,6 +436,38 @@ export default function AccountPage() {
                   Welcome back, {user.user_metadata?.full_name?.split(' ')[0] || 'Coffee Lover'}!
                 </h2>
 
+                {/* Gamified Setup Banner */}
+                {(() => {
+                  const hasPhone = !!user.phone;
+                  const hasGoogle = user.identities?.some(id => id.provider === 'google');
+                  const hasFacebook = user.identities?.some(id => id.provider === 'facebook');
+                  const milestonesCount = (hasPhone ? 1 : 0) + (hasGoogle ? 1 : 0) + (hasFacebook ? 1 : 0);
+                  
+                  if (milestonesCount < 3) {
+                    return (
+                      <div style={{
+                        padding: '16px',
+                        background: 'rgba(216, 154, 30, 0.08)',
+                        border: '1.5px dashed var(--accent-gold)',
+                        borderRadius: '12px',
+                        marginBottom: '20px',
+                        color: 'var(--text-primary)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px'
+                      }}>
+                        <div style={{ fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          🛡️ Level Up Your Account Security & Get Free Coffee Points!
+                        </div>
+                        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.4' }}>
+                          We recommend linking multiple login methods (Google, Facebook, or Phone). Link them below to secure your identity and instantly earn up to <strong>350 loyalty points</strong> + unlock <strong>biometric Passkeys</strong>!
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
                 <div className="overview-cards">
                   <div className="stat-card">
                     <h3>Total Orders</h3>
@@ -330,6 +495,225 @@ export default function AccountPage() {
                   <p>
                     <strong>Email:</strong> {user.email}
                   </p>
+                </div>
+
+                <div className="profile-details" style={{ marginTop: '20px' }}>
+                  <h3 style={{ marginBottom: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Key size={18} /> 🛡️ Security Milestones & Trust Score
+                  </h3>
+                  
+                  {/* Trust Score Progress */}
+                  {(() => {
+                    const hasPhone = !!user.phone;
+                    const hasGoogle = user.identities?.some(id => id.provider === 'google');
+                    const hasFacebook = user.identities?.some(id => id.provider === 'facebook');
+                    const hasPasskey = progressionData.ledger?.some(l => l.action_type === 'Register Passkey');
+                    
+                    let milestonesCount = 0;
+                    if (hasPhone) milestonesCount++;
+                    if (hasGoogle) milestonesCount++;
+                    if (hasFacebook) milestonesCount++;
+                    if (hasPasskey) milestonesCount++;
+                    
+                    const ranks = [
+                      "🥚 Coffee Seedling (Low Trust)",
+                      "🌱 Sprouting Espresso (Basic Trust)",
+                      "🌿 Roasted Bean (Medium Trust)",
+                      "☕ Secure Barista (High Trust)",
+                      "🔏 Coffee Cryptographer (Maximum Trust!)"
+                    ];
+                    const currentRank = ranks[milestonesCount];
+                    const progressPercent = (milestonesCount / 4) * 100;
+                    
+                    return (
+                      <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '8px' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>Security Level:</span>
+                          <strong style={{ color: 'var(--accent-gold)' }}>{currentRank}</strong>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden', marginBottom: '6px' }}>
+                          <div style={{ width: `${progressPercent}%`, height: '100%', background: 'var(--accent-gold)', transition: 'width 0.5s ease-in-out' }} />
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          Completed {milestonesCount} of 4 security achievements
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '15px', lineHeight: '1.4' }}>
+                    Complete these verification tasks to lock down your account and unlock the ultimate passwordless coffee convenience (biometric Passkeys). You earn instant Loyalty Points for each step!
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    
+                    {/* Milestone 1: Phone Verification */}
+                    {(() => {
+                      const hasPhone = !!user.phone;
+                      
+                      return (
+                        <div style={{ padding: '12px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                              📱 Phone Verification <span style={{ color: 'var(--accent-gold)', marginLeft: '6px' }}>+100 Points</span>
+                            </div>
+                            <span style={{ fontSize: '0.8rem', color: hasPhone ? '#66bb6a' : 'var(--text-secondary)', fontWeight: 600 }}>
+                              {hasPhone ? '✅ Verified (+100 XP)' : '❌ Not Verified'}
+                            </span>
+                          </div>
+                          
+                          {!hasPhone && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+                              {phoneError && <span style={{ fontSize: '0.75rem', color: '#ef5350' }}>{phoneError}</span>}
+                              {phoneMessage && <span style={{ fontSize: '0.75rem', color: '#66bb6a' }}>{phoneMessage}</span>}
+                              
+                              {phoneStep === 'input' ? (
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <input
+                                    type="tel"
+                                    placeholder="+91 98765 43210"
+                                    value={phoneToVerify}
+                                    onChange={(e) => setPhoneToVerify(e.target.value)}
+                                    style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: '#fff' }}
+                                  />
+                                  <button
+                                    type="button"
+                                    disabled={phoneVerifying}
+                                    onClick={handleSendPhoneOtp}
+                                    style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', background: 'var(--accent-gold)', border: 'none', color: '#fff', borderRadius: '4px' }}
+                                  >
+                                    {phoneVerifying ? 'Sending...' : 'Send OTP'}
+                                  </button>
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <input
+                                    type="text"
+                                    placeholder="Enter OTP"
+                                    value={otpCode}
+                                    onChange={(e) => setOtpCode(e.target.value)}
+                                    style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: '#fff' }}
+                                  />
+                                  <button
+                                    type="button"
+                                    disabled={phoneVerifying}
+                                    onClick={handleVerifyPhoneOtp}
+                                    style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', background: 'var(--accent-gold)', border: 'none', color: '#fff', borderRadius: '4px' }}
+                                  >
+                                    {phoneVerifying ? 'Verifying...' : 'Verify'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setPhoneStep('input'); setPhoneError(''); setPhoneMessage(''); }}
+                                    style={{ padding: '6px 8px', fontSize: '0.8rem', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '4px' }}
+                                  >
+                                    Back
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Milestone 2: Social Account Google */}
+                    {(() => {
+                      const hasGoogle = user.identities?.some(id => id.provider === 'google');
+                      return (
+                        <div style={{ padding: '12px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                              🌐 Link Google Account <span style={{ color: 'var(--accent-gold)', marginLeft: '6px' }}>+50 Points</span>
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                              Sign in faster with your Google identity
+                            </div>
+                          </div>
+                          {hasGoogle ? (
+                            <span style={{ fontSize: '0.8rem', color: '#66bb6a', fontWeight: 600 }}>
+                              ✅ Linked (+50 XP)
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => supabase.auth.linkIdentity({ provider: 'google', options: { redirectTo: window.location.href } })}
+                              style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '4px' }}
+                            >
+                              Link Google
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Milestone 3: Social Account Facebook */}
+                    {(() => {
+                      const hasFacebook = user.identities?.some(id => id.provider === 'facebook');
+                      return (
+                        <div style={{ padding: '12px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                              🌐 Link Facebook Account <span style={{ color: 'var(--accent-gold)', marginLeft: '6px' }}>+50 Points</span>
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                              Sign in faster with your Facebook identity
+                            </div>
+                          </div>
+                          {hasFacebook ? (
+                            <span style={{ fontSize: '0.8rem', color: '#66bb6a', fontWeight: 600 }}>
+                              ✅ Linked (+50 XP)
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => supabase.auth.linkIdentity({ provider: 'facebook', options: { redirectTo: window.location.href } })}
+                              style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '4px' }}
+                            >
+                              Link Facebook
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Milestone 4: biometric Passkey */}
+                    {(() => {
+                      const hasPhone = !!user.phone;
+                      const hasPasskey = progressionData.ledger?.some(l => l.action_type === 'Register Passkey');
+                      
+                      return (
+                        <div style={{ padding: '12px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: hasPhone ? 1 : 0.6 }}>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              🔑 Enable Passkey Login <span style={{ color: 'var(--accent-gold)' }}>+150 Points</span>
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                              Use Touch ID / Face ID for passwordless logins
+                            </div>
+                          </div>
+                          
+                          {hasPasskey ? (
+                            <span style={{ fontSize: '0.8rem', color: '#66bb6a', fontWeight: 600 }}>
+                              ✅ Enrolled (+150 XP)
+                            </span>
+                          ) : !hasPhone ? (
+                            <span style={{ fontSize: '0.78rem', color: '#ef5350', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                              🔒 Verify Phone First
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleRegisterPasskey}
+                              style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', background: 'var(--accent-gold)', border: 'none', color: '#fff', borderRadius: '4px', fontWeight: 600 }}
+                            >
+                              Enroll Passkey
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
             )}

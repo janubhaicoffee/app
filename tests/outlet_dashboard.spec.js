@@ -70,6 +70,27 @@ test.beforeEach(async ({ page }) => {
       await route.continue();
     }
   });
+
+  // 4. Intercept check-role API endpoint
+  await page.route('**/api/auth/check-role*', async (route) => {
+    const headers = route.request().headers();
+    const authHeader = headers['authorization'] || '';
+    const token = authHeader.replace('Bearer ', '').trim();
+    
+    if (token === 'dummy-token-jwt-superadmin') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ role: 'superadmin' })
+      });
+    } else {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ role: 'customer' })
+      });
+    }
+  });
 });
 
 
@@ -118,6 +139,12 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
             role: 'authenticated',
           })
         });
+      } else if (url.includes('/api/auth/check-role')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ role: 'superadmin' })
+        });
       } else if (url.includes('/api/admin/data') && url.includes('type=check')) {
         await route.fulfill({
           status: 200,
@@ -152,6 +179,12 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
             aud: 'authenticated',
             role: 'authenticated',
           })
+        });
+      } else if (url.includes('/api/auth/check-role')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ role: 'superadmin' })
         });
       } else if (url.includes('/api/admin/data') && url.includes('type=check')) {
         await route.fulfill({
@@ -221,13 +254,13 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
   });
 
   test('9. Verify loading state is shown ("Checking Admin Credentials...") while authenticating.', async ({ page }) => {
-    await page.route('**/api/admin/data*', async (route) => {
+    await page.route('**/api/auth/check-role*', async (route) => {
       // delay the auth verification to check loading state
       await new Promise(resolve => setTimeout(resolve, 500));
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ isAdmin: true })
+        body: JSON.stringify({ role: 'superadmin' })
       });
     });
     await page.goto('/outlet');
@@ -488,6 +521,12 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
             role: 'authenticated',
           })
         });
+      } else if (url.includes('/api/auth/check-role')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ role: 'superadmin' })
+        });
       } else if (url.includes('/api/admin/data') && url.includes('type=check')) {
         await route.fulfill({
           status: 200,
@@ -546,6 +585,12 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
             role: 'authenticated',
           })
         });
+      } else if (url.includes('/api/auth/check-role')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ role: 'superadmin' })
+        });
       } else if (url.includes('/api/admin/data') && url.includes('type=check')) {
         await route.fulfill({
           status: 200,
@@ -589,7 +634,7 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
   });
 
   test('43. Verify auth API failure (500 Internal Server Error on /api/admin/data) redirects to home / or shows a clear error message.', async ({ page }) => {
-    await page.route('**/api/admin/data*', async (route) => {
+    await page.route('**/api/auth/check-role*', async (route) => {
       await route.fulfill({
         status: 500,
         contentType: 'application/json',
@@ -1156,6 +1201,12 @@ test.describe('Outlet Dashboard E2E Test Suite', () => {
             aud: 'authenticated',
             role: 'authenticated',
           })
+        });
+      } else if (url.includes('/api/auth/check-role')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ role: 'superadmin' })
         });
       } else if (url.includes('/api/admin/data') && url.includes('type=check')) {
         await route.fulfill({

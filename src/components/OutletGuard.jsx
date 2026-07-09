@@ -57,7 +57,7 @@ export default function OutletGuard({ children }) {
       }
 
       try {
-        const response = await fetch('/api/admin/data?type=check', {
+        const response = await fetch('/api/auth/check-role', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -80,14 +80,14 @@ export default function OutletGuard({ children }) {
         }
 
         if (!response.ok) {
-          setErrorBanner('Failed to verify admin credentials.');
+          setErrorBanner('Failed to verify credentials.');
           return;
         }
 
         const data = await response.json();
         if (!active) return;
 
-        if (data.isAdmin) {
+        if (['superadmin', 'partner', 'staff'].includes(data.role)) {
           verifiedTokenRef.current = token;
           setIsAuthorized(true);
         } else {

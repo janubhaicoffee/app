@@ -29,6 +29,7 @@ export default function AdminPartners() {
     outlet_id: '',
     role: 'owner',
     stake: '',
+    password: '',
   });
 
   const showToast = (message, type = 'success') => {
@@ -95,6 +96,7 @@ export default function AdminPartners() {
           email: form.email,
           name: form.name,
           role: form.role,
+          password: form.password,
           notes: form.stake ? JSON.stringify({ stake_percentage: parseFloat(form.stake) }) : null,
         }),
       });
@@ -103,7 +105,7 @@ export default function AdminPartners() {
         showToast('Partner added successfully');
         setShowModal(false);
         loadData();
-        setForm({ email: '', name: '', outlet_id: '', role: 'owner', stake: '' });
+        setForm({ email: '', name: '', outlet_id: '', role: 'owner', stake: '', password: '' });
       } else {
         const err = await res.json();
         showToast(err.error || 'Failed to add partner', 'error');
@@ -359,7 +361,18 @@ export default function AdminPartners() {
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="partner@example.com"
                   />
-                  <span className="form-hint">Must exist in auth system</span>
+                  <span className="form-hint">A new user account is created if it does not exist</span>
+                </div>
+                <div className="form-group">
+                  <label>Password *</label>
+                  <input
+                    required
+                    type="password"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    placeholder="••••••••"
+                    minLength={6}
+                  />
                 </div>
                 <div className="form-group">
                   <label>Full Name *</label>

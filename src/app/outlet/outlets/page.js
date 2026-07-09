@@ -9,12 +9,15 @@ import {
   Edit3,
   Power,
   PowerOff,
+  Trash2,
   MapPin,
   Users,
   DollarSign,
   X,
   Building2,
 } from 'lucide-react';
+import '@/app/admin/admin.css';
+import '@/components/outlet/outlet.css';
 
 const statusColors = {
   active: { bg: '#d4edda', color: '#155724' },
@@ -22,7 +25,7 @@ const statusColors = {
   closed: { bg: '#f8d7da', color: '#721c24' },
 };
 
-export default function AdminOutlets() {
+export default function OutletManagementPortal() {
   const [outlets, setOutlets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -69,14 +72,9 @@ export default function AdminOutlets() {
       } = await supabase.auth.getSession();
       if (!session) return;
 
-      const [outletsRes, staffRes] = await Promise.all([
-        fetch('/api/admin/outlets', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        }),
-        fetch('/api/admin/staff', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        }),
-      ]);
+      const outletsRes = await fetch('/api/admin/outlets', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
 
       if (outletsRes.ok) {
         const json = await outletsRes.json();
@@ -161,7 +159,7 @@ export default function AdminOutlets() {
         electricity: form.electricity ? parseFloat(form.electricity) : 0,
         water: form.water ? parseFloat(form.water) : 0,
         internet: form.internet ? parseFloat(form.internet) : 0,
-        cogs: form.cogs ? parseFloat(form.cogs) : 0,
+        cogs: form.cogs ? parseFloat(form.cogs) : 35,
       };
 
       const body = {
@@ -238,6 +236,33 @@ export default function AdminOutlets() {
     }
   }
 
+  async function handleDeleteOutlet(id) {
+    if (!confirm('Are you sure you want to delete this outlet? All associated staff, schedules, transactions, and POS data will be deleted.')) {
+      return;
+    }
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const res = await fetch(`/api/admin/outlets?id=${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (res.ok) {
+        showToast('Outlet deleted successfully');
+        loadOutlets();
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Failed to delete outlet', 'error');
+      }
+    } catch (err) {
+      showToast('Failed to delete outlet', 'error');
+    }
+  }
+
   const filtered = outlets.filter(
     (o) =>
       !search ||
@@ -255,7 +280,7 @@ export default function AdminOutlets() {
   }
 
   return (
-    <div>
+    <div style={{ padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
       {toast && (
         <div className={`admin-toast ${toast.type === 'error' ? 'admin-toast-error' : ''}`}>
           {toast.message}
@@ -264,21 +289,17 @@ export default function AdminOutlets() {
 
       <div className="admin-header">
         <div>
-          <h1>Outlet Management <span style={{ fontSize: '0.8rem', color: '#c62828', background: '#ffebee', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>READ-ONLY</span></h1>
-          <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-            View all {stats.total} outlets ({stats.active} active)
+          <h1 style={{ color: 'var(--primary-color, #3E2723)' }}>Outlet Management</h1>
+          <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary, #5D4037)', fontSize: '0.85rem' }}>
+            Manage all {stats.total} outlets ({stats.active} active)
           </p>
         </div>
-        <a 
-          href={typeof window !== 'undefined' && (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1')) ? `http://outlet.localhost:${window.location.port}/outlets` : 'https://outlet.janubhai.com/outlets'}
-          className="admin-btn"
-          style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-        >
-          <Plus size={16} /> Manage Outlets
-        </a>
+        <button className="admin-btn" onClick={openCreateModal} style={{ background: 'var(--primary-color, #3E2723)', color: '#fff' }}>
+          <Plus size={16} /> Create Outlet
+        </button>
       </div>
 
-      <div className="admin-toolbar">
+      <div className="admin-toolbar" style={{ marginBottom: '1.5rem' }}>
         <div className="admin-search">
           <Search size={16} color="var(--text-secondary)" />
           <input
@@ -287,19 +308,6 @@ export default function AdminOutlets() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-      </div>
-
-      <div style={{
-        padding: '1rem',
-        background: '#fff3cd',
-        border: '1px solid #ffeeba',
-        color: '#856404',
-        borderRadius: '8px',
-        marginBottom: '1.5rem',
-        fontSize: '0.9rem',
-        fontWeight: 500
-      }}>
-        💡 Outlets can only be created, edited, or deleted on the <a href={typeof window !== 'undefined' && (window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1')) ? `http://outlet.localhost:${window.location.port}/outlets` : 'https://outlet.janubhai.com/outlets'} style={{ fontWeight: 700, color: 'var(--primary-color)', textDecoration: 'underline' }}>Outlet Management Portal</a>.
       </div>
 
       {filtered.length === 0 ? (
@@ -327,96 +335,103 @@ export default function AdminOutlets() {
             const s = outlet.settings || {};
             const staffCount = 0;
             return (
-              <Link
-                href={`/admin/outlets/${outlet.id}`}
+              <div
                 key={outlet.id}
                 className="admin-card"
                 style={{
                   display: 'block',
                   textDecoration: 'none',
                   color: 'inherit',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
                   position: 'relative',
+                  padding: '1.25rem',
+                  borderRadius: 12,
+                  border: '1px solid var(--border-color, #e0d5c1)',
+                  background: '#fff',
                 }}
               >
+                <Link
+                  href={`/outlet/outlets/${outlet.id}`}
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '0.75rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 8,
+                          background: 'var(--primary-color, #3E2723)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Building2 size={20} color="#fff" />
+                      </div>
+                      <div>
+                        <div
+                          style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--primary-color, #3E2723)' }}
+                        >
+                          {outlet.name}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: '0.75rem',
+                            color: 'var(--text-secondary, #5D4037)',
+                            fontFamily: 'monospace',
+                          }}
+                        >
+                          {outlet.code}
+                        </div>
+                      </div>
+                    </div>
+                    <span
+                      className="status-badge"
+                      style={{
+                        background: (statusColors[outlet.status] || statusColors.inactive).bg,
+                        color: (statusColors[outlet.status] || statusColors.inactive).color,
+                      }}
+                    >
+                      {outlet.status}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.35rem',
+                      fontSize: '0.85rem',
+                      color: 'var(--text-secondary, #5D4037)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <MapPin size={14} /> {outlet.city || outlet.address || 'No address'}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <DollarSign size={14} /> Rent: ₹{Number(s.rent || 0).toLocaleString('en-IN')}
+                      <span style={{ marginLeft: '0.5rem' }}>
+                        Electricity: ₹{Number(s.electricity || 0).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+
                 <div
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                    <div
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 8,
-                        background: 'var(--primary-color)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Building2 size={20} color="#fff" />
-                    </div>
-                    <div>
-                      <div
-                        style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--primary-color)' }}
-                      >
-                        {outlet.name}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: '0.75rem',
-                          color: 'var(--text-secondary)',
-                          fontFamily: 'monospace',
-                        }}
-                      >
-                        {outlet.code}
-                      </div>
-                    </div>
-                  </div>
-                  <span
-                    className="status-badge"
-                    style={{
-                      background: (statusColors[outlet.status] || statusColors.inactive).bg,
-                      color: (statusColors[outlet.status] || statusColors.inactive).color,
-                    }}
-                  >
-                    {outlet.status}
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.35rem',
-                    fontSize: '0.85rem',
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <MapPin size={14} /> {outlet.city || outlet.address || 'No address'}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <DollarSign size={14} /> Rent: ₹{Number(s.rent || 0).toLocaleString('en-IN')}
-                    <span style={{ marginLeft: '0.5rem' }}>
-                      Electricity: ₹{Number(s.electricity || 0).toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '1rem',
+                    alignItems: 'center',
                     marginTop: '0.75rem',
                     paddingTop: '0.75rem',
-                    borderTop: '1px solid var(--border-color)',
+                    borderTop: '1px solid var(--border-color, #e0d5c1)',
                   }}
                 >
                   <div
@@ -425,15 +440,76 @@ export default function AdminOutlets() {
                       alignItems: 'center',
                       gap: '0.3rem',
                       fontSize: '0.8rem',
-                      color: 'var(--text-secondary)',
+                      color: 'var(--text-secondary, #5D4037)',
                     }}
                   >
                     <Users size={14} /> {staffCount} staff
                   </div>
-                </div>
 
-                {/* Controls Hidden - Read Only */}
-              </Link>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '0.25rem',
+                    }}
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openEditModal(outlet);
+                      }}
+                      style={{
+                        padding: '0.3rem',
+                        background: 'none',
+                        border: '1px solid var(--border-color, #e0d5c1)',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                      }}
+                      title="Edit Outlet"
+                    >
+                      <Edit3 size={14} color="var(--text-secondary)" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleStatus(outlet);
+                      }}
+                      style={{
+                        padding: '0.3rem',
+                        background: 'none',
+                        border: '1px solid var(--border-color, #e0d5c1)',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                      }}
+                      title={outlet.status === 'active' ? 'Deactivate' : 'Activate'}
+                    >
+                      {outlet.status === 'active' ? (
+                        <PowerOff size={14} color="#c62828" />
+                      ) : (
+                        <Power size={14} color="#2e7d32" />
+                      )}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDeleteOutlet(outlet.id);
+                      }}
+                      style={{
+                        padding: '0.3rem',
+                        background: 'none',
+                        border: '1px solid var(--border-color, #e0d5c1)',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                      }}
+                      title="Delete Outlet"
+                    >
+                      <Trash2 size={14} color="#c62828" />
+                    </button>
+                  </div>
+                </div>
+              </div>
             );
           })}
         </div>
