@@ -223,6 +223,11 @@ export default function Home() {
             <div className="app-welcome-section">
               <h2>Select your brew.</h2>
               <p>Curated recipes made with premium Janu Bhai coffee.</p>
+              <div style={{ marginTop: '12px' }}>
+                <Link href="/product/instantcoffee" className="btn-shop-coffee" style={{ display: 'inline-block', color: 'var(--app-accent)', fontWeight: 'bold', textDecoration: 'underline' }}>
+                  Shop Coffee →
+                </Link>
+              </div>
             </div>
 
             {/* Search Bar */}

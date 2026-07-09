@@ -272,6 +272,14 @@ export default function ProductClient({ initialProduct }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedRoast, setSelectedRoast] = useState('Thoda Hard');
   const [selectedWeight, setSelectedWeight] = useState(100);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    setIsMobileDevice(window.innerWidth <= 768);
+    const handleResize = () => setIsMobileDevice(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const product = (() => {
     if (!rawProduct) return null;
@@ -760,7 +768,7 @@ export default function ProductClient({ initialProduct }) {
       </main>
 
       <AnimatePresence>
-        {showMobileBar && (
+        {isMobileDevice && showMobileBar && (
           <motion.div
             className="mobile-sticky-bar"
             initial={{ y: 80 }}

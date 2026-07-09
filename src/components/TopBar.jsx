@@ -46,7 +46,8 @@ export default function TopBar() {
       subscription.unsubscribe();
     };
   }, []);
-  // Return null for admin/outlet/pos subdomains/paths  if (pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return null;
+  // Return null for admin/outlet/pos subdomains/paths
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/outlet') || pathname?.startsWith('/pos')) return null;
   const cartCount = getCartCount();
   const isHome = pathname === '/';
   const getPageTitle = () => {
@@ -96,12 +97,9 @@ export default function TopBar() {
             {' '}
             Contact
           </Link>{' '}
-          {user && (
-            <Link href={outletHref} className="nav-link">
-              {' '}
-              Outlet
-            </Link>
-          )}
+          <Link href={outletHref} className={`nav-link outlet-btn ${pathname.startsWith('/outlet') ? 'active' : ''}`}>
+            Outlet Management
+          </Link>
         </nav>
         <div className="desktop-action-group">
           <Link href={user ? '/account' : '/auth/login'} className="desktop-account-link-text">
@@ -215,6 +213,14 @@ export default function TopBar() {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <span>Track Order</span>
+                  <ChevronRight size={16} />
+                </Link>
+                <Link
+                  href={outletHref}
+                  className="sidebar-link-item-global outlet-btn"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span>Outlet Management</span>
                   <ChevronRight size={16} />
                 </Link>
               </div>

@@ -44,7 +44,7 @@ const timelineSteps = [
       'https://player.vimeo.com/external/435674703.sd.mp4?s=74b6ff9bc0bf476f5712e529deec0b666a4bc27a&profile_id=165&oauth2_token_id=57447761',
   },
   {
-    title: 'Flavor Captured',
+    title: 'Freeze Dried',
     desc: 'Beans are instantly captured at peak freshness, locking in the natural essential oils and fresh aromas.',
     icon: <Snowflake size={28} />,
     videoUrl:
