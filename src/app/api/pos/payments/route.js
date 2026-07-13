@@ -23,7 +23,7 @@ export async function POST(request) {
 
     const { data: order, error: orderError } = await supabaseAdmin
       .from('pos_orders')
-      .select('id, total_amount, payment_status, outlet_id')
+      .select('id, total, payment_status, outlet_id')
       .eq('id', order_id)
       .single();
 
@@ -43,10 +43,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
     }
 
-    if (Math.abs(parsedAmount - parseFloat(order.total_amount)) > 0.01) {
+    if (Math.abs(parsedAmount - parseFloat(order.total)) > 0.01) {
       return NextResponse.json(
         {
-          error: `Payment amount ${parsedAmount} does not match order total ${order.total_amount}`,
+          error: `Payment amount ${parsedAmount} does not match order total ${order.total}`,
         },
         { status: 400 },
       );

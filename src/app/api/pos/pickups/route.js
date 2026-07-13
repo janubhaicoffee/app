@@ -11,7 +11,7 @@ export async function GET(request) {
     let query = supabaseAdmin
       .from('pickup_requests')
       .select(
-        '*, orders(id, order_number, total_amount, customer_name, customer_email, customer_phone, created_at, shipping_address)',
+        '*, orders(id, order_number, total_amount, customer_email, customer_phone, created_at, shipping_address)',
       )
       .order('created_at', { ascending: false });
 

@@ -9,7 +9,7 @@ export async function GET(request) {
 
     let query = supabaseAdmin
       .from('pos_orders')
-      .select('*, pos_order_items(*), pos_tables!inner(number)')
+      .select('*, pos_order_items(*), pos_tables!inner(name)')
       .in('status', ['pending', 'preparing'])
       .order('created_at', { ascending: true });
 
@@ -31,7 +31,14 @@ export async function GET(request) {
 
       return {
         ...order,
-        pos_order_items: filteredItems,
+        total_amount: order.total,
+        tax_amount: order.tax_total,
+        pos_tables: order.pos_tables ? { ...order.pos_tables, number: order.pos_tables.name } : null,
+        pos_order_items: filteredItems.map((item) => ({
+          ...item,
+          price: item.unit_price,
+          total: item.total_price
+        })),
         time_elapsed_minutes: elapsedMinutes,
         time_elapsed_display:
           elapsedMinutes < 60

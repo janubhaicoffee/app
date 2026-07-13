@@ -38,18 +38,18 @@ export async function POST(request) {
 
     const { data: orders } = await supabaseAdmin
       .from('pos_orders')
-      .select('id, total_amount, subtotal, tax_amount')
+      .select('id, total, subtotal, tax_total')
       .eq('outlet_id', outlet_id)
       .eq('payment_status', 'paid')
       .gte('created_at', since)
       .lte('created_at', until);
 
-    const totalOrders = orders ? orders.filter((o) => o.payment_status === 'paid').length : 0;
+    const totalOrders = orders ? orders.length : 0;
     const totalRevenue = (orders || []).reduce(
-      (sum, o) => sum + parseFloat(o.total_amount || 0),
+      (sum, o) => sum + parseFloat(o.total || 0),
       0,
     );
-    const totalTax = (orders || []).reduce((sum, o) => sum + parseFloat(o.tax_amount || 0), 0);
+    const totalTax = (orders || []).reduce((sum, o) => sum + parseFloat(o.tax_total || 0), 0);
 
     const { data: expenses } = await supabaseAdmin
       .from('outlet_expenses')
@@ -62,7 +62,7 @@ export async function POST(request) {
     const totalExpenses = (expenses || []).reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
 
     const { data: inventoryTx } = await supabaseAdmin
-      .from('outlet_inventory_transactions')
+      .from('inventory_transactions')
       .select('quantity, unit_cost, type')
       .eq('outlet_id', outlet_id)
       .eq('type', 'purchase')
@@ -74,14 +74,32 @@ export async function POST(request) {
     }, 0);
 
     const { data: attendance } = await supabaseAdmin
-      .from('outlet_staff_attendance')
-      .select('staff_id, hours_worked, hourly_rate')
+      .from('staff_attendance')
+      .select('staff_id, total_hours')
       .eq('outlet_id', outlet_id)
       .eq('date', targetDate);
 
-    const totalLabor = (attendance || []).reduce((sum, a) => {
-      return sum + parseFloat(a.hours_worked || 0) * parseFloat(a.hourly_rate || 0);
-    }, 0);
+    let totalLabor = 0;
+    if (attendance && attendance.length > 0) {
+      const [yearStr, monthStr] = targetDate.split('-');
+      const yearNum = parseInt(yearStr);
+      const monthNum = parseInt(monthStr);
+
+      for (const a of attendance) {
+        let rate = 150; // default hourly rate fallback
+        const { data: payroll } = await supabaseAdmin
+          .from('staff_payroll')
+          .select('hourly_rate')
+          .eq('staff_id', a.staff_id)
+          .eq('month', monthNum)
+          .eq('year', yearNum)
+          .maybeSingle();
+        if (payroll && payroll.hourly_rate) {
+          rate = parseFloat(payroll.hourly_rate);
+        }
+        totalLabor += parseFloat(a.total_hours || 0) * rate;
+      }
+    }
 
     const snapshot = {
       outlet_id,

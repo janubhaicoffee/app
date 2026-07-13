@@ -28,7 +28,17 @@ export async function GET(request) {
 
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json({ success: true, data });
+    const mapped = (data || []).map((o) => ({
+      ...o,
+      total_amount: o.total,
+      tax_amount: o.tax_total,
+      pos_order_items: (o.pos_order_items || []).map((item) => ({
+        ...item,
+        price: item.unit_price,
+        total: item.total_price
+      }))
+    }));
+    return NextResponse.json({ success: true, data: mapped });
   } catch (error) {
     console.error('POS Orders GET error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -62,8 +72,8 @@ export async function POST(request) {
         product_id: item.product_id,
         product_name: item.product_name || 'Unknown',
         quantity: qty,
-        price,
-        total,
+        unit_price: price,
+        total_price: total,
         modifiers: item.modifiers || null,
         status: 'pending',
       };

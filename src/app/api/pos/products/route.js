@@ -65,7 +65,6 @@ export async function POST(request) {
           category_id: category_id || null,
           name,
           price: parsedPrice,
-          cost: cost !== undefined ? parseFloat(cost) : null,
           current_stock: current_stock !== undefined ? parseInt(current_stock) : 0,
           sku: sku || null,
           barcode: barcode || null,
@@ -120,7 +119,6 @@ export async function PATCH(request) {
       if (isNaN(p) || p < 0) return NextResponse.json({ error: 'Invalid price' }, { status: 400 });
       updates.price = p;
     }
-    if (cost !== undefined) updates.cost = parseFloat(cost);
     if (current_stock !== undefined) updates.current_stock = parseInt(current_stock);
     if (sku !== undefined) updates.sku = sku;
     if (barcode !== undefined) updates.barcode = barcode;

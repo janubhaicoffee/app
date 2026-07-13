@@ -21,7 +21,7 @@ export async function GET(request) {
     const [{ data: orders }, { data: expenses }, { data: dailySales }] = await Promise.all([
       supabaseAdmin
         .from('pos_orders')
-        .select('total_amount, subtotal, tax_amount, created_at')
+        .select('total, subtotal, tax_total, created_at')
         .eq('outlet_id', outletId)
         .eq('payment_status', 'paid')
         .gte('created_at', since)
@@ -42,10 +42,10 @@ export async function GET(request) {
     ]);
 
     const totalRevenue = (orders || []).reduce(
-      (sum, o) => sum + parseFloat(o.total_amount || 0),
+      (sum, o) => sum + parseFloat(o.total || 0),
       0,
     );
-    const totalTax = (orders || []).reduce((sum, o) => sum + parseFloat(o.tax_amount || 0), 0);
+    const totalTax = (orders || []).reduce((sum, o) => sum + parseFloat(o.tax_total || 0), 0);
 
     let cogs = 0;
     let laborCost = 0;
@@ -61,9 +61,9 @@ export async function GET(request) {
 
     const totalExpenses = (expenses || []).reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
     const totalOpEx = totalExpenses + laborCost + rentAllocated;
-    const grossProfit = parseFloat((totalRevenue - cogs - dailyTotalExpenses).toFixed(2));
+    const grossProfit = parseFloat((totalRevenue - cogs).toFixed(2));
     const netProfit = parseFloat(
-      (grossProfit - laborCost - rentAllocated - totalExpenses).toFixed(2),
+      (grossProfit - totalOpEx).toFixed(2),
     );
 
     return NextResponse.json({

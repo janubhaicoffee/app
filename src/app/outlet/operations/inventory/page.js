@@ -96,7 +96,7 @@ export default function InventoryPage() {
       })
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'outlet_inventory_transactions' },
+        { event: 'INSERT', schema: 'public', table: 'inventory_transactions' },
         () => {
           fetchData();
         },

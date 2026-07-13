@@ -304,7 +304,12 @@ export default function DeliveryIntegrations({ outletId, refreshTrigger }) {
       ) : (
         <div className="delivery-order-feed" data-testid="delivery-order-feed" ref={feedRef}>
           {displayedOrders.map((order) => {
-            const items = Array.isArray(order.items) ? order.items : [];
+            let items = [];
+            try {
+              items = typeof order.items === 'string' ? JSON.parse(order.items) : (Array.isArray(order.items) ? order.items : []);
+            } catch (_) {
+              items = [];
+            }
             let itemSummary = 'Empty Order';
             if (items.length > 0) {
               itemSummary = items

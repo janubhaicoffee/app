@@ -12,19 +12,28 @@ export async function GET(request) {
     let query = supabaseAdmin
       .from('outlet_expenses')
       .select('*')
-      .order('date', { ascending: false });
+      .order('bill_date', { ascending: false });
 
     if (outletId) query = query.eq('outlet_id', outletId);
     if (category) query = query.eq('category', category);
     if (status) query = query.eq('status', status);
     if (month) {
       const [year, mon] = month.split('-');
-      query = query.gte('date', `${year}-${mon}-01`).lte('date', `${year}-${mon}-31`);
+      const start = `${year}-${mon}-01`;
+      const lastDay = new Date(parseInt(year), parseInt(mon), 0).getDate();
+      const end = `${year}-${mon}-${String(lastDay).padStart(2, '0')}`;
+      query = query.gte('bill_date', start).lte('bill_date', end);
     }
 
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json({ success: true, data });
+
+    const mapped = (data || []).map((e) => ({
+      ...e,
+      date: e.bill_date,
+      recurring: e.is_recurring,
+    }));
+    return NextResponse.json({ success: true, data: mapped });
   } catch (error) {
     console.error('Expenses GET error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -34,7 +43,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { outlet_id, category, amount, description, date, vendor, payment_method, recurring } =
+    const { outlet_id, category, amount, description, date, vendor, recurring } =
       body;
 
     if (!outlet_id || !category || amount === undefined) {
@@ -57,10 +66,9 @@ export async function POST(request) {
           category,
           amount: parsedAmount,
           description: description || null,
-          date: date || new Date().toISOString().split('T')[0],
+          bill_date: date || new Date().toISOString().split('T')[0],
           vendor: vendor || null,
-          payment_method: payment_method || null,
-          recurring: !!recurring,
+          is_recurring: !!recurring,
           status: 'pending',
         },
       ])
@@ -68,7 +76,8 @@ export async function POST(request) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    const mapped = data ? { ...data, date: data.bill_date, recurring: data.is_recurring } : null;
+    return NextResponse.json({ success: true, data: mapped }, { status: 201 });
   } catch (error) {
     console.error('Expenses POST error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -78,7 +87,7 @@ export async function POST(request) {
 export async function PATCH(request) {
   try {
     const body = await request.json();
-    const { id, status, category, amount, description, date, vendor, payment_method } = body;
+    const { id, status, category, amount, description, date, vendor, recurring } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Missing expense id' }, { status: 400 });
@@ -92,7 +101,12 @@ export async function PATCH(request) {
     }
 
     const updates = {};
-    if (status !== undefined) updates.status = status;
+    if (status !== undefined) {
+      updates.status = status;
+      if (status === 'paid') {
+        updates.paid_date = new Date().toISOString().split('T')[0];
+      }
+    }
     if (category !== undefined) updates.category = category;
     if (amount !== undefined) {
       const p = parseFloat(amount);
@@ -101,9 +115,9 @@ export async function PATCH(request) {
       updates.amount = p;
     }
     if (description !== undefined) updates.description = description;
-    if (date !== undefined) updates.date = date;
+    if (date !== undefined) updates.bill_date = date;
     if (vendor !== undefined) updates.vendor = vendor;
-    if (payment_method !== undefined) updates.payment_method = payment_method;
+    if (recurring !== undefined) updates.is_recurring = !!recurring;
 
     const { data, error } = await supabaseAdmin
       .from('outlet_expenses')
@@ -113,7 +127,8 @@ export async function PATCH(request) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ success: true, data });
+    const mapped = data ? { ...data, date: data.bill_date, recurring: data.is_recurring } : null;
+    return NextResponse.json({ success: true, data: mapped });
   } catch (error) {
     console.error('Expenses PATCH error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

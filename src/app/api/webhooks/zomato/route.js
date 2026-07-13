@@ -21,7 +21,7 @@ async function getZomatoCredentials() {
     .select('*')
     .eq('id', 'zomato')
     .eq('active', true)
-    .single();
+    .maybeSingle();
   return data;
 }
 

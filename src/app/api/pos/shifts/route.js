@@ -27,7 +27,7 @@ export async function GET(request) {
     let query = supabaseAdmin
       .from('pos_shifts')
       .select('*')
-      .order('opened_at', { ascending: false });
+      .order('started_at', { ascending: false });
 
     if (outletId) query = query.eq('outlet_id', outletId);
     if (staffId) query = query.eq('staff_id', staffId);
@@ -63,7 +63,7 @@ export async function POST(request) {
       .select('id')
       .eq('staff_id', staff_id)
       .eq('outlet_id', outlet_id)
-      .is('closed_at', null)
+      .is('ended_at', null)
       .maybeSingle();
 
     if (openShift) {
@@ -136,7 +136,7 @@ export async function PATCH(request) {
       closingCash !== null ? parseFloat((closingCash - expectedCash).toFixed(2)) : null;
 
     const updates = {
-      closed_at: new Date().toISOString(),
+      ended_at: new Date().toISOString(),
       status: 'closed',
       closing_cash: closingCash,
       expected_cash: parseFloat(expectedCash.toFixed(2)),

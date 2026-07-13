@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request) {
   try {
-    const searchParams = request.nextUrl.searchParams;
+    const { searchParams } = new URL(request.url);
     const outletId = searchParams.get('outletId');
     const status = searchParams.get('status');
     const periodYear = searchParams.get('periodYear');

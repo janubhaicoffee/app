@@ -6,13 +6,19 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const outletId = searchParams.get('outletId');
 
-    let query = supabaseAdmin.from('pos_tables').select('*').order('number', { ascending: true });
+    let query = supabaseAdmin.from('pos_tables').select('*').order('name', { ascending: true });
 
     if (outletId) query = query.eq('outlet_id', outletId);
 
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json({ success: true, data });
+
+    const mapped = (data || []).map((t) => ({
+      ...t,
+      number: isNaN(parseInt(t.name)) ? t.name : parseInt(t.name),
+      qr_code: t.qr_code_url
+    }));
+    return NextResponse.json({ success: true, data: mapped });
   } catch (error) {
     console.error('POS Tables GET error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -35,7 +41,7 @@ export async function POST(request) {
       .from('pos_tables')
       .select('id')
       .eq('outlet_id', outlet_id)
-      .eq('number', number)
+      .eq('name', String(number))
       .maybeSingle();
 
     if (existing) {
@@ -50,10 +56,10 @@ export async function POST(request) {
       .insert([
         {
           outlet_id,
-          number: parseInt(number),
+          name: String(number),
           capacity: capacity !== undefined ? parseInt(capacity) : 4,
           section: section || null,
-          qr_code: qr_code || null,
+          qr_code_url: qr_code || null,
           status: 'available',
         },
       ])
@@ -61,7 +67,12 @@ export async function POST(request) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    const mapped = data ? {
+      ...data,
+      number: isNaN(parseInt(data.name)) ? data.name : parseInt(data.name),
+      qr_code: data.qr_code_url
+    } : null;
+    return NextResponse.json({ success: true, data: mapped }, { status: 201 });
   } catch (error) {
     console.error('POS Tables POST error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -85,11 +96,11 @@ export async function PATCH(request) {
     }
 
     const updates = {};
-    if (number !== undefined) updates.number = parseInt(number);
+    if (number !== undefined) updates.name = String(number);
     if (capacity !== undefined) updates.capacity = parseInt(capacity);
     if (section !== undefined) updates.section = section;
     if (status !== undefined) updates.status = status;
-    if (qr_code !== undefined) updates.qr_code = qr_code;
+    if (qr_code !== undefined) updates.qr_code_url = qr_code;
 
     const { data, error } = await supabaseAdmin
       .from('pos_tables')
@@ -99,7 +110,12 @@ export async function PATCH(request) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ success: true, data });
+    const mapped = data ? {
+      ...data,
+      number: isNaN(parseInt(data.name)) ? data.name : parseInt(data.name),
+      qr_code: data.qr_code_url
+    } : null;
+    return NextResponse.json({ success: true, data: mapped });
   } catch (error) {
     console.error('POS Tables PATCH error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

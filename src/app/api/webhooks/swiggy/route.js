@@ -21,7 +21,7 @@ async function getSwiggyCredentials() {
     .select('*')
     .eq('id', 'swiggy')
     .eq('active', true)
-    .single();
+    .maybeSingle();
   return data;
 }
 

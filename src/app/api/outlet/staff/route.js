@@ -20,7 +20,9 @@ export async function GET(request) {
 
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json({ success: true, data });
+
+    const mapped = (data || []).map((s) => ({ ...s, name: s.display_name }));
+    return NextResponse.json({ success: true, data: mapped });
   } catch (error) {
     console.error('Staff GET error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -34,6 +36,7 @@ export async function POST(request) {
       outlet_id,
       user_id,
       role,
+      name,
       display_name,
       phone,
       email,
@@ -53,7 +56,7 @@ export async function POST(request) {
       outlet_id,
       user_id: user_id || null,
       role,
-      display_name: display_name || null,
+      display_name: name || display_name || null,
       phone: phone || null,
       email: email || null,
       pin_code: pin_code || null,
@@ -68,7 +71,8 @@ export async function POST(request) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    const mapped = data ? { ...data, name: data.display_name } : null;
+    return NextResponse.json({ success: true, data: mapped }, { status: 201 });
   } catch (error) {
     console.error('Staff POST error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -78,7 +82,7 @@ export async function POST(request) {
 export async function PATCH(request) {
   try {
     const body = await request.json();
-    const { id, role, display_name, phone, email, pin_code, permissions, is_active } = body;
+    const { id, role, name, display_name, phone, email, pin_code, permissions, is_active } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Missing staff id' }, { status: 400 });
@@ -86,6 +90,7 @@ export async function PATCH(request) {
 
     const updates = {};
     if (role !== undefined) updates.role = role;
+    if (name !== undefined) updates.display_name = name;
     if (display_name !== undefined) updates.display_name = display_name;
     if (phone !== undefined) updates.phone = phone;
     if (email !== undefined) updates.email = email;
@@ -101,7 +106,8 @@ export async function PATCH(request) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ success: true, data });
+    const mapped = data ? { ...data, name: data.display_name } : null;
+    return NextResponse.json({ success: true, data: mapped });
   } catch (error) {
     console.error('Staff PATCH error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

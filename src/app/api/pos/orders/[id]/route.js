@@ -6,7 +6,7 @@ export async function GET(request, { params }) {
     const { id } = params;
     const { data, error } = await supabaseAdmin
       .from('pos_orders')
-      .select('*, pos_order_items(*), pos_tables!inner(number)')
+      .select('*, pos_order_items(*), pos_tables!inner(name)')
       .eq('id', id)
       .single();
 
@@ -17,7 +17,19 @@ export async function GET(request, { params }) {
       throw error;
     }
 
-    return NextResponse.json({ success: true, data });
+    const mapped = data ? {
+      ...data,
+      total_amount: data.total,
+      tax_amount: data.tax_total,
+      pos_tables: data.pos_tables ? { ...data.pos_tables, number: data.pos_tables.name } : null,
+      pos_order_items: (data.pos_order_items || []).map((item) => ({
+        ...item,
+        price: item.unit_price,
+        total: item.total_price
+      }))
+    } : null;
+
+    return NextResponse.json({ success: true, data: mapped });
   } catch (error) {
     console.error('POS Order GET error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -42,7 +54,7 @@ export async function PATCH(request, { params }) {
         .from('pos_orders')
         .update(updates)
         .eq('id', id)
-        .select()
+        .select('*, pos_tables(name)')
         .single();
 
       if (orderError) {
@@ -70,7 +82,7 @@ export async function PATCH(request, { params }) {
     if (!order) {
       const { data: fetchedOrder } = await supabaseAdmin
         .from('pos_orders')
-        .select('*, pos_order_items(*)')
+        .select('*, pos_order_items(*), pos_tables(name)')
         .eq('id', id)
         .single();
       order = fetchedOrder;
@@ -81,9 +93,21 @@ export async function PATCH(request, { params }) {
       .select('*')
       .eq('order_id', id);
 
+    const mapped = order ? {
+      ...order,
+      total_amount: order.total,
+      tax_amount: order.tax_total,
+      pos_tables: order.pos_tables ? { ...order.pos_tables, number: order.pos_tables.name } : null,
+      pos_order_items: (orderItems || []).map((item) => ({
+        ...item,
+        price: item.unit_price,
+        total: item.total_price
+      }))
+    } : null;
+
     return NextResponse.json({
       success: true,
-      data: { ...order, pos_order_items: orderItems || [] },
+      data: mapped,
     });
   } catch (error) {
     console.error('POS Order PATCH error:', error);
