@@ -41,7 +41,10 @@ export default function StaffPage() {
     email: '',
     phone: '',
     role: 'staff',
-    hourly_rate: '',
+    monthly_salary: '',
+    commission_on_profit: false,
+    aadhaar_number: '',
+    pan_number: '',
     notes: '',
   });
   const [submitting, setSubmitting] = useState(false);
@@ -115,7 +118,7 @@ export default function StaffPage() {
         body: JSON.stringify({
           outlet_id: outletId,
           ...form,
-          hourly_rate: form.hourly_rate ? parseFloat(form.hourly_rate) : null,
+          monthly_salary: form.monthly_salary ? parseFloat(form.monthly_salary) : null,
         }),
       });
       if (!res.ok) {
@@ -123,7 +126,11 @@ export default function StaffPage() {
         throw new Error(b.error);
       }
       setSuccess(`Added "${form.name}"`);
-      setForm({ name: '', email: '', phone: '', role: 'staff', hourly_rate: '', notes: '' });
+      setForm({ 
+        name: '', email: '', phone: '', role: 'staff', 
+        monthly_salary: '', commission_on_profit: false, 
+        aadhaar_number: '', pan_number: '', notes: '' 
+      });
       setShowForm(false);
       fetchData();
       setTimeout(() => setSuccess(''), 3000);
@@ -253,8 +260,20 @@ export default function StaffPage() {
       </div>
 
       {showForm && (
-        <form className="outlet-form" onSubmit={handleAddStaff}>
-          <h3>Add Staff Member</h3>
+        <form 
+          className="outlet-form" 
+          onSubmit={handleAddStaff}
+          style={{
+            background: 'linear-gradient(145deg, #ffffff, #f8fafc)',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
+            borderRadius: '12px',
+            padding: '24px',
+            marginBottom: '30px',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          <h3 style={{ marginBottom: '20px', color: '#1a202c', fontSize: '1.25rem', fontWeight: 600 }}>Add Staff Member</h3>
           <div className="outlet-form-row">
             <div className="form-group">
               <label>Name *</label>
@@ -301,16 +320,53 @@ export default function StaffPage() {
           </div>
           <div className="outlet-form-row">
             <div className="form-group">
-              <label>Hourly Rate (₹)</label>
+              <label>Monthly Salary (₹)</label>
               <input
                 type="number"
                 step="0.01"
                 className="form-control"
-                value={form.hourly_rate}
-                onChange={(e) => setForm((p) => ({ ...p, hourly_rate: e.target.value }))}
+                value={form.monthly_salary}
+                onChange={(e) => setForm((p) => ({ ...p, monthly_salary: e.target.value }))}
+              />
+            </div>
+            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={form.commission_on_profit}
+                  onChange={(e) => setForm((p) => ({ ...p, commission_on_profit: e.target.checked }))}
+                  style={{ width: '16px', height: '16px', accentColor: 'var(--primary-color)' }}
+                />
+                Commission on Net Profit
+              </label>
+              <small style={{ color: '#718096', marginTop: '4px' }}>Enable only after trial period</small>
+            </div>
+          </div>
+          <div className="outlet-form-row">
+            <div className="form-group">
+              <label>Aadhaar Number *</label>
+              <input
+                className="form-control"
+                value={form.aadhaar_number}
+                onChange={(e) => setForm((p) => ({ ...p, aadhaar_number: e.target.value }))}
+                required
+                placeholder="12-digit Aadhaar"
+                maxLength={12}
               />
             </div>
             <div className="form-group">
+              <label>PAN Number (Optional)</label>
+              <input
+                className="form-control"
+                value={form.pan_number}
+                onChange={(e) => setForm((p) => ({ ...p, pan_number: e.target.value.toUpperCase() }))}
+                placeholder="10-character PAN"
+                maxLength={10}
+              />
+            </div>
+          </div>
+          <div className="outlet-form-row">
+            <div className="form-group" style={{ width: '100%' }}>
               <label>Notes</label>
               <input
                 className="form-control"
@@ -401,23 +457,41 @@ export default function StaffPage() {
                             {s.created_at ? new Date(s.created_at).toLocaleDateString() : '-'}
                           </td>
                           <td>
-                            <button
-                              className="outlet-btn sm"
-                              style={{
-                                background: isClockedIn ? '#e53e3e' : '#38a169',
-                                color: '#fff',
-                                border: 'none',
-                                padding: '4px 10px',
-                                borderRadius: 4,
-                                cursor: 'pointer',
-                              }}
-                              onClick={() =>
-                                handleClockAction(s.id, isClockedIn ? 'clock_out' : 'clock_in')
-                              }
-                              disabled={clockingIn === s.id}
-                            >
-                              <Clock size={12} /> {isClockedIn ? 'Clock Out' : 'Clock In'}
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <button
+                                className="outlet-btn sm"
+                                style={{
+                                  background: isClockedIn ? '#e53e3e' : '#38a169',
+                                  color: '#fff',
+                                  border: 'none',
+                                  padding: '4px 10px',
+                                  borderRadius: 4,
+                                  cursor: 'pointer',
+                                }}
+                                onClick={() =>
+                                  handleClockAction(s.id, isClockedIn ? 'clock_out' : 'clock_in')
+                                }
+                                disabled={clockingIn === s.id}
+                              >
+                                <Clock size={12} /> {isClockedIn ? 'Clock Out' : 'Clock In'}
+                              </button>
+                              <a
+                                href={`/outlet/operations/staff/document?id=${s.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="outlet-btn sm outline"
+                                style={{
+                                  textDecoration: 'none',
+                                  padding: '4px 10px',
+                                  borderRadius: 4,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}
+                              >
+                                <BadgeCheck size={12} /> Letter
+                              </a>
+                            </div>
                           </td>
                         </tr>
                       );

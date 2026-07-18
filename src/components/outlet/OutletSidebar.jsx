@@ -21,6 +21,7 @@ import {
   X,
   FileText,
   Store,
+  Clock,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -248,159 +249,124 @@ export default function OutletSidebar() {
   };
   const sidebarContent = (
     <>
-      <div
-        className="outlet-sidebar-header"
-        style={{ padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '10px' }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '8px',
-            width: '100%',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <img
-              src="/logo.png"
-              alt="Janu Bhai Logo"
-              style={{ width: '36px', height: '36px', objectFit: 'contain' }}
-            />
-            {!isSuperAdmin && (
-              <div className="outlet-sidebar-brand-text">
-                <span
-                  className="outlet-sidebar-title"
-                  style={{
-                    fontFamily: 'var(--font-playfair), serif',
-                    fontWeight: '800',
-                    fontSize: '16px',
-                  }}
-                >
-                  Janu Bhai
-                </span>
-              </div>
-            )}
+      <div className="outlet-sidebar-header" style={{ padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+          {/* LEFT PILL: Logo + Role text */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg, #2a1a17, #1f1210)', padding: '8px', borderRadius: '30px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <img src="/logo.png" alt="Janu Bhai Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.2' }}>
+              <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '600' }}>{isSuperAdmin ? 'ADMIN:' : 'ROLE:'}</span>
+              <span style={{ fontSize: '12px', color: '#F8F1E4', fontWeight: 'bold' }}>{isSuperAdmin ? 'SELF' : activeRole.toUpperCase()}</span>
+            </div>
+            {isSuperAdmin && <span style={{ marginLeft: 'auto', paddingRight: '4px' }}>👑</span>}
           </div>
 
-          {(isSuperAdmin || activeRole === 'owner' || activeRole === 'partner') && (
-            /* Site Switcher */
-            <select
-              value={getSiteUrls().outlet}
-              onChange={(e) => {
-                window.location.href = e.target.value;
-              }}
-              style={{
-                padding: '6px 10px',
-                fontSize: '11px',
-                fontWeight: '600',
-                borderRadius: '6px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                background: 'rgba(255, 255, 255, 0.05)',
-                color: '#F8F1E4',
-                outline: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <option value={getSiteUrls().outlet}>📍 OUTLET</option>
-              {isSuperAdmin && <option value={getSiteUrls().admin}>⚙️ ADMIN</option>}
-              <option value={getSiteUrls().pos}>🛒 POS</option>
-            </select>
-          )}
+          {/* RIGHT COLUMN: Time + Site Switcher */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', color: 'var(--accent-gold)', fontSize: '13px', fontWeight: 'bold' }}>
+              <Clock size={12} /> <span>{currentTime || '...'}</span>
+            </div>
+            {/* Site Switcher Select */}
+            {(isSuperAdmin || activeRole === 'owner' || activeRole === 'partner') && (
+              <select
+                value={getSiteUrls().outlet}
+                onChange={(e) => { window.location.href = e.target.value; }}
+                style={{
+                  padding: '6px 10px', fontSize: '11px', fontWeight: '600', borderRadius: '30px',
+                  border: '1px solid rgba(255, 215, 0, 0.3)', background: 'linear-gradient(135deg, #2a1a17, #1a0f0d)',
+                  color: '#F8F1E4', outline: 'none', cursor: 'pointer', appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffb300' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center'
+                }}
+              >
+                <option value={getSiteUrls().outlet}>OUTLET</option>
+                {isSuperAdmin && <option value={getSiteUrls().admin}>ADMIN</option>}
+                <option value={getSiteUrls().pos}>POS</option>
+              </select>
+            )}
+          </div>
         </div>
 
+        {/* BOTTOM ROW: Staff Switcher + Outlet Switcher */}
         {isSuperAdmin && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginTop: '4px' }}>
-            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-              {/* Outlet Switcher */}
+          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+            {/* Staff Switcher */}
+            <select
+              value={impersonatedStaffId}
+              onChange={handleStaffChange}
+              style={{
+                flex: 1, padding: '6px 10px', fontSize: '11px', fontWeight: '600', borderRadius: '30px',
+                border: '1px solid rgba(255, 215, 0, 0.3)', background: 'linear-gradient(135deg, #3a221f, #221411)',
+                color: '#F8F1E4', outline: 'none', cursor: 'pointer', appearance: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffb300' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
+                width: '50%', textOverflow: 'ellipsis', overflow: 'hidden'
+              }}
+            >
+              <option value="self">👑 SELF</option>
+              {staffList.map((s) => (
+                <option key={s.id} value={s.id}>
+                  👤 {s.display_name.toUpperCase()}
+                </option>
+              ))}
+            </select>
+
+            {/* Outlet Switcher / Create New */}
+            <select
+              value={selectedOutletId}
+              onChange={handleOutletChange}
+              style={{
+                flex: 1, padding: '6px 10px', fontSize: '11px', fontWeight: '600', borderRadius: '30px',
+                border: '1px solid rgba(255, 215, 0, 0.3)', background: 'linear-gradient(135deg, #3a221f, #221411)',
+                color: '#F8F1E4', outline: 'none', cursor: 'pointer', appearance: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffb300' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
+                width: '50%', textOverflow: 'ellipsis', overflow: 'hidden'
+              }}
+            >
+              <option value="create-new">＋ CREATE NEW</option>
+              {outletsList.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name.toUpperCase()}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {!isSuperAdmin && (
+          <div style={{ width: '100%', display: 'flex', gap: '8px' }}>
+            {outletsList.length > 1 ? (
               <select
                 value={selectedOutletId}
                 onChange={handleOutletChange}
                 style={{
-                  flex: 1,
-                  padding: '6px 8px',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  color: '#F8F1E4',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  width: '50%',
-                  textOverflow: 'ellipsis',
-                  overflow: 'hidden',
-                  transition: 'all 0.2s ease',
+                  flex: 1, padding: '6px 10px', fontSize: '11px', fontWeight: '600', borderRadius: '30px',
+                  border: '1px solid rgba(255, 215, 0, 0.3)', background: 'linear-gradient(135deg, #3a221f, #221411)',
+                  color: '#F8F1E4', outline: 'none', cursor: 'pointer', appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffb300' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
+                  width: '100%', textOverflow: 'ellipsis', overflow: 'hidden'
                 }}
               >
-                <option value="create-new">➕ CREATE NEW</option>
                 {outletsList.map((o) => (
                   <option key={o.id} value={o.id}>
                     {o.name.toUpperCase()}
                   </option>
                 ))}
               </select>
-
-              {/* Staff Switcher */}
-              <select
-                value={impersonatedStaffId}
-                onChange={handleStaffChange}
-                style={{
-                  flex: 1,
-                  padding: '6px 8px',
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  color: '#F8F1E4',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  width: '50%',
-                  textOverflow: 'ellipsis',
-                  overflow: 'hidden',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                <option value="self">👑 SELF</option>
-                {staffList.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    👤 {s.display_name.toUpperCase()} ({s.role.toUpperCase()})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-
-        {!isSuperAdmin && (
-          <div style={{ width: '100%' }}>
-            {outletsList.length > 1 ? (
-              <div className="outlet-sidebar-selector">
-                <Store size={14} />
-                <select
-                  value={selectedOutletId}
-                  onChange={handleOutletChange}
-                  className="outlet-select-dropdown"
-                >
-                  {outletsList.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
             ) : outletName ? (
-              <div className="outlet-sidebar-outlet-name">
-                <Store size={14} />
-                <span>{outletName}</span>
+              <div style={{ 
+                flex: 1, padding: '6px 10px', fontSize: '11px', fontWeight: '600', borderRadius: '30px', 
+                border: '1px solid rgba(255, 215, 0, 0.3)', background: 'linear-gradient(135deg, #3a221f, #221411)', 
+                color: '#F8F1E4', display: 'flex', alignItems: 'center', gap: '6px' 
+              }}>
+                <Store size={14} color="var(--accent-gold)" />
+                <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{outletName.toUpperCase()}</span>
               </div>
             ) : null}
           </div>
         )}
-
-        <div className="outlet-sidebar-time">{currentTime || '...'}</div>
       </div>
 
       <nav className="outlet-sidebar-nav">

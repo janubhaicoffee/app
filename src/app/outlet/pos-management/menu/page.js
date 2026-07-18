@@ -11,6 +11,8 @@ import {
   Edit3,
   Tag,
   X,
+  Wand2,
+  UploadCloud,
 } from 'lucide-react';
 
 export default function MenuPage() {
@@ -24,6 +26,9 @@ export default function MenuPage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [showProductForm, setShowProductForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiFile, setAiFile] = useState(null);
+  const [uploadingAI, setUploadingAI] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
   const [productForm, setProductForm] = useState({
@@ -214,6 +219,36 @@ export default function MenuPage() {
     }
   };
 
+  const handleAIUpload = async (e) => {
+    e.preventDefault();
+    if (!aiFile || !outletId) return;
+    setUploadingAI(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append('image', aiFile);
+      formData.append('outletId', outletId);
+
+      const res = await fetch('/api/pos/menu/ai-import', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || 'Failed to import menu via AI');
+
+      setSuccess(body.message || 'Menu imported successfully!');
+      setShowAIModal(false);
+      setAiFile(null);
+      fetchData();
+      setTimeout(() => setSuccess(''), 5000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploadingAI(false);
+    }
+  };
+
   const filteredProducts = products.filter((p) => {
     if (search && !p.name?.toLowerCase().includes(search.toLowerCase())) return false;
     if (categoryFilter && p.category_id?.toString() !== categoryFilter) return false;
@@ -260,6 +295,13 @@ export default function MenuPage() {
           </button>
           <button
             className="outlet-btn outline sm"
+            style={{ borderColor: '#8b5cf6', color: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)' }}
+            onClick={() => setShowAIModal(true)}
+          >
+            <Wand2 size={14} /> AI Import
+          </button>
+          <button
+            className="outlet-btn outline sm"
             onClick={() => setShowCategoryForm(!showCategoryForm)}
           >
             <Tag size={14} /> {showCategoryForm ? 'Cancel' : 'Add Category'}
@@ -272,6 +314,52 @@ export default function MenuPage() {
 
       {success && <div className="outlet-success-banner">{success}</div>}
       {error && <div className="outlet-error-banner">{error}</div>}
+
+      {showAIModal && (
+        <div className="outlet-modal-overlay">
+          <div className="outlet-modal" style={{ maxWidth: 500 }}>
+            <div className="outlet-modal-header">
+              <h3>AI Magic Menu Import</h3>
+              <button onClick={() => setShowAIModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="outlet-modal-body">
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20 }}>
+                Upload a picture or PDF of your physical menu. Our AI will automatically extract categories, products, and prices, and assign beautiful photorealistic images to each item!
+              </p>
+              <form onSubmit={handleAIUpload}>
+                <div className="form-group" style={{ marginBottom: 20 }}>
+                  <label>Menu Image / PDF</label>
+                  <div style={{ border: '2px dashed var(--border-color)', padding: '2rem', textAlign: 'center', borderRadius: 8, background: 'var(--card-bg)' }}>
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      onChange={(e) => setAiFile(e.target.files[0])}
+                      style={{ display: 'none' }}
+                      id="ai-upload"
+                    />
+                    <label htmlFor="ai-upload" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                      <UploadCloud size={32} color="var(--primary-color)" />
+                      <span style={{ color: 'var(--text-color)' }}>
+                        {aiFile ? aiFile.name : 'Click to browse or drag and drop'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                  <button type="button" className="outlet-btn outline" onClick={() => setShowAIModal(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="outlet-btn primary" disabled={uploadingAI || !aiFile}>
+                    <Wand2 size={16} /> {uploadingAI ? 'Extracting via AI...' : 'Import Menu'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showProductForm && (
         <form className="outlet-form" onSubmit={handleSaveProduct}>

@@ -595,11 +595,10 @@ export default function AdminOutlets() {
                         <input required value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="JBC-IND" style={{ textTransform: 'uppercase' }} />
                       </div>
                     </div>
-                  </div>
                   
-                  <h4 style={{ margin: '1rem 0 0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>FSSAI Details</h4>
-                  <div className="form-row">
-                    <div className="form-group">
+                    <h4 style={{ margin: '1rem 0 0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>FSSAI Details</h4>
+                    <div className="form-row">
+                      <div className="form-group">
                       <label>Upload FSSAI Certificate</label>
                       <input 
                         type="file" 
@@ -618,6 +617,8 @@ export default function AdminOutlets() {
                         onChange={(e) => setForm({ ...form, fssai_number: e.target.value })} 
                         placeholder="14-Digit Number" 
                       />
+                    </div>
+                      </div>
                     </div>
                   </div>
                 )}

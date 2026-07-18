@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Settings, Save, Store, Clock, DollarSign, Bell, Building } from 'lucide-react';
+import { Settings, Save, Clock, Bell, Printer } from 'lucide-react';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -11,16 +11,15 @@ export default function SettingsPage() {
   const [outletId, setOutletId] = useState(null);
 
   const [form, setForm] = useState({
-    name: '',
-    address: '',
-    phone: '',
-    email: '',
-    gstin: '',
     opening_time: '08:00',
     closing_time: '22:00',
-    rent_amount: '',
-    electricity_amount: '',
-    cogs_percentage: '35',
+    terminal_name: 'Main Register 1',
+    auto_print_receipt: true,
+    receipt_header: 'Welcome to Janu Bhai Cafe!',
+    receipt_footer: 'Thank you! Visit again.',
+    enable_tips: false,
+    kitchen_printer_enabled: true,
+    default_payment_method: 'CASH',
     notifications: { low_stock: true, daily_report: true, new_orders: true },
   });
 
@@ -33,48 +32,41 @@ export default function SettingsPage() {
         if (!session) return;
 
         let oid = sessionStorage.getItem('selected_outlet_id');
-        let outletData = null;
+        let finalOid = oid;
 
-        const { data: staff } = await supabase
-          .from('outlet_staff')
-          .select('outlet_id, outlet:outlets(*)')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
+        // If no outlet selected, try to find from staff record
+        if (!finalOid) {
+          const { data: staff } = await supabase
+            .from('outlet_staff')
+            .select('outlet_id')
+            .eq('user_id', session.user.id)
+            .maybeSingle();
 
-        if (staff) {
-          if (!oid) oid = staff.outlet_id;
-          outletData = staff.outlet;
-        }
-
-        if (oid) {
-          setOutletId(oid);
-          if (!outletData) {
-            try {
-              const { data: o } = await supabase
-                .from('outlets')
-                .select('*')
-                .eq('id', oid)
-                .maybeSingle();
-              outletData = o;
-            } catch (_) {}
+          if (staff) {
+            finalOid = staff.outlet_id;
           }
         }
 
-        if (outletData) {
-          const o = outletData;
-          setForm((prev) => ({
-            ...prev,
-            name: o.name || '',
-            address: o.address || '',
-            phone: o.phone || '',
-            email: o.email || '',
-            gstin: o.gstin || '',
-            opening_time: o.opening_time || '08:00',
-            closing_time: o.closing_time || '22:00',
-            rent_amount: o.rent_amount?.toString() || '',
-            electricity_amount: o.electricity_amount?.toString() || '',
-            cogs_percentage: o.cogs_percentage?.toString() || '35',
-          }));
+        if (finalOid) {
+          setOutletId(finalOid);
+          const res = await fetch(`/api/outlet/settings?outletId=${finalOid}`);
+          if (res.ok) {
+            const body = await res.json();
+            if (body.data) {
+              setForm({
+                opening_time: body.data.operating_hours.opening_time || '08:00',
+                closing_time: body.data.operating_hours.closing_time || '22:00',
+                terminal_name: body.data.pos_config?.terminal_name || 'Main Register 1',
+                auto_print_receipt: body.data.pos_config?.auto_print_receipt ?? true,
+                receipt_header: body.data.pos_config?.receipt_header || 'Welcome to Janu Bhai Cafe!',
+                receipt_footer: body.data.pos_config?.receipt_footer || 'Thank you! Visit again.',
+                enable_tips: body.data.pos_config?.enable_tips ?? false,
+                kitchen_printer_enabled: body.data.pos_config?.kitchen_printer_enabled ?? true,
+                default_payment_method: body.data.pos_config?.default_payment_method || 'CASH',
+                notifications: body.data.notifications || { low_stock: true, daily_report: true, new_orders: true },
+              });
+            }
+          }
         }
       } catch (err) {
         setError(err.message);
@@ -87,32 +79,41 @@ export default function SettingsPage() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!outletId) return;
+
     setSaving(true);
     setError(null);
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const updates = {
-        name: form.name,
-        address: form.address,
-        phone: form.phone,
-        email: form.email,
-        gstin: form.gstin,
-        opening_time: form.opening_time,
-        closing_time: form.closing_time,
-        rent_amount: form.rent_amount ? parseFloat(form.rent_amount) : null,
-        electricity_amount: form.electricity_amount ? parseFloat(form.electricity_amount) : null,
-        cogs_percentage: form.cogs_percentage ? parseFloat(form.cogs_percentage) : null,
+      const payload = {
+        outletId,
+        operating_hours: {
+          opening_time: form.opening_time,
+          closing_time: form.closing_time,
+        },
+        pos_config: {
+          terminal_name: form.terminal_name,
+          auto_print_receipt: form.auto_print_receipt,
+          receipt_header: form.receipt_header,
+          receipt_footer: form.receipt_footer,
+          enable_tips: form.enable_tips,
+          kitchen_printer_enabled: form.kitchen_printer_enabled,
+          default_payment_method: form.default_payment_method,
+        },
+        notifications: form.notifications,
       };
 
-      const { error: updateError } = await supabase
-        .from('outlets')
-        .update(updates)
-        .eq('id', outletId);
+      const res = await fetch('/api/outlet/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-      if (updateError) throw updateError;
-      setSuccess('Settings saved');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to save settings');
+      }
+
+      setSuccess('Settings saved successfully');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError(err.message);
@@ -134,7 +135,7 @@ export default function SettingsPage() {
       <div className="outlet-page-header">
         <div>
           <h1>Outlet Settings</h1>
-          <p className="outlet-page-subtitle">Manage your outlet configuration</p>
+          <p className="outlet-page-subtitle">Manage your local POS and operation preferences</p>
         </div>
       </div>
 
@@ -144,53 +145,82 @@ export default function SettingsPage() {
       <form onSubmit={handleSave}>
         <div className="outlet-card" style={{ marginBottom: 20 }}>
           <h2>
-            <Store size={16} /> Outlet Information
+            <Printer size={16} /> POS & Receipt Configuration
           </h2>
           <div className="outlet-form-row">
             <div className="form-group">
-              <label>Outlet Name</label>
+              <label>POS Terminal Name</label>
               <input
                 className="form-control"
-                value={form.name}
-                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                value={form.terminal_name}
+                onChange={(e) => setForm((p) => ({ ...p, terminal_name: e.target.value }))}
+                placeholder="e.g. Main Register 1"
               />
             </div>
-            <div className="form-group">
-              <label>Phone</label>
-              <input
-                className="form-control"
-                value={form.phone}
-                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-              />
+            <div className="form-group" style={{ display: 'flex', alignItems: 'center', marginTop: '1.8rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={form.auto_print_receipt}
+                  onChange={(e) => setForm((p) => ({ ...p, auto_print_receipt: e.target.checked }))}
+                />
+                <span style={{ fontSize: 14 }}>Print Receipt Automatically</span>
+              </label>
             </div>
           </div>
           <div className="outlet-form-row">
             <div className="form-group">
-              <label>Email</label>
-              <input
-                type="email"
+              <label>Default Payment Method</label>
+              <select
                 className="form-control"
-                value={form.email}
-                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                value={form.default_payment_method}
+                onChange={(e) => setForm((p) => ({ ...p, default_payment_method: e.target.value }))}
+              >
+                <option value="CASH">CASH</option>
+                <option value="CARD">CARD</option>
+                <option value="UPI">UPI</option>
+              </select>
+            </div>
+            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.8rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={form.enable_tips}
+                  onChange={(e) => setForm((p) => ({ ...p, enable_tips: e.target.checked }))}
+                />
+                <span style={{ fontSize: 14 }}>Enable Tipping on Checkout</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={form.kitchen_printer_enabled}
+                  onChange={(e) => setForm((p) => ({ ...p, kitchen_printer_enabled: e.target.checked }))}
+                />
+                <span style={{ fontSize: 14 }}>Send Orders to Kitchen Printer</span>
+              </label>
+            </div>
+          </div>
+          <div className="outlet-form-row">
+            <div className="form-group">
+              <label>Receipt Header Message</label>
+              <textarea
+                className="form-control"
+                rows={2}
+                value={form.receipt_header}
+                onChange={(e) => setForm((p) => ({ ...p, receipt_header: e.target.value }))}
+                placeholder="e.g. Welcome to Janu Bhai Cafe!"
               />
             </div>
             <div className="form-group">
-              <label>GSTIN</label>
-              <input
+              <label>Receipt Footer Message</label>
+              <textarea
                 className="form-control"
-                value={form.gstin}
-                onChange={(e) => setForm((p) => ({ ...p, gstin: e.target.value }))}
+                rows={2}
+                value={form.receipt_footer}
+                onChange={(e) => setForm((p) => ({ ...p, receipt_footer: e.target.value }))}
+                placeholder="e.g. Thank you! Visit again."
               />
             </div>
-          </div>
-          <div className="form-group">
-            <label>Address</label>
-            <textarea
-              className="form-control"
-              rows={2}
-              value={form.address}
-              onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
-            />
           </div>
         </div>
 
@@ -221,72 +251,34 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="outlet-card">
+          <div className="outlet-card" style={{ marginBottom: 20 }}>
             <h2>
-              <DollarSign size={16} /> Financial Settings
+              <Bell size={16} /> Notification Preferences
             </h2>
-            <div className="outlet-form-row">
-              <div className="form-group">
-                <label>Rent Amount (₹/month)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="form-control"
-                  value={form.rent_amount}
-                  onChange={(e) => setForm((p) => ({ ...p, rent_amount: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label>Electricity (₹/month)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="form-control"
-                  value={form.electricity_amount}
-                  onChange={(e) => setForm((p) => ({ ...p, electricity_amount: e.target.value }))}
-                />
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                { key: 'low_stock', label: 'Low Stock Alerts' },
+                { key: 'daily_report', label: 'Daily Report' },
+                { key: 'new_orders', label: 'New Orders' },
+              ].map((n) => (
+                <label
+                  key={n.key}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.notifications[n.key]}
+                    onChange={(e) =>
+                      setForm((p) => ({
+                        ...p,
+                        notifications: { ...p.notifications, [n.key]: e.target.checked },
+                      }))
+                    }
+                  />
+                  <span style={{ fontSize: 14 }}>{n.label}</span>
+                </label>
+              ))}
             </div>
-            <div className="form-group">
-              <label>COGS Percentage (%)</label>
-              <input
-                type="number"
-                step="0.1"
-                className="form-control"
-                value={form.cogs_percentage}
-                onChange={(e) => setForm((p) => ({ ...p, cogs_percentage: e.target.value }))}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="outlet-card" style={{ marginBottom: 20 }}>
-          <h2>
-            <Bell size={16} /> Notification Preferences
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[
-              { key: 'low_stock', label: 'Low Stock Alerts' },
-              { key: 'daily_report', label: 'Daily Report' },
-              { key: 'new_orders', label: 'New Orders' },
-            ].map((n) => (
-              <label
-                key={n.key}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
-              >
-                <input
-                  type="checkbox"
-                  checked={form.notifications[n.key]}
-                  onChange={(e) =>
-                    setForm((p) => ({
-                      ...p,
-                      notifications: { ...p.notifications, [n.key]: e.target.checked },
-                    }))
-                  }
-                />
-                <span style={{ fontSize: 14 }}>{n.label}</span>
-              </label>
-            ))}
           </div>
         </div>
 
@@ -294,7 +286,7 @@ export default function SettingsPage() {
           type="submit"
           className="outlet-btn primary"
           disabled={saving}
-          style={{ maxWidth: 200 }}
+          style={{ maxWidth: 200, marginTop: '1rem' }}
         >
           <Save size={16} /> {saving ? 'Saving...' : 'Save Settings'}
         </button>

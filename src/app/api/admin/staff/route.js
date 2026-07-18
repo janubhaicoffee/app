@@ -34,7 +34,10 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { outlet_id, auth_user_id, name, email, phone, role, pin, password } = body;
+    const { 
+      outlet_id, auth_user_id, name, email, phone, role, pin, password,
+      monthly_salary, commission_on_profit, aadhaar_number, pan_number, notes 
+    } = body;
 
     if (!outlet_id || !name) {
       return NextResponse.json(
@@ -97,6 +100,11 @@ export async function POST(request) {
           pin_code: pin || null,
           is_active: true,
           joined_at: new Date().toISOString(),
+          monthly_salary: monthly_salary !== undefined ? monthly_salary : null,
+          commission_on_profit: commission_on_profit !== undefined ? !!commission_on_profit : false,
+          aadhaar_number: aadhaar_number || null,
+          pan_number: pan_number || null,
+          notes: notes || null,
         },
       ])
       .select()
@@ -120,7 +128,10 @@ export async function POST(request) {
 export async function PATCH(request) {
   try {
     const body = await request.json();
-    const { id, outlet_id, user_id, name, email, phone, role, pin, is_active } = body;
+    const { 
+      id, outlet_id, user_id, name, email, phone, role, pin, is_active,
+      monthly_salary, commission_on_profit, aadhaar_number, pan_number, notes 
+    } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Missing staff id' }, { status: 400 });
@@ -135,6 +146,11 @@ export async function PATCH(request) {
     if (role !== undefined) updates.role = role;
     if (pin !== undefined) updates.pin_code = pin;
     if (is_active !== undefined) updates.is_active = is_active;
+    if (monthly_salary !== undefined) updates.monthly_salary = monthly_salary;
+    if (commission_on_profit !== undefined) updates.commission_on_profit = !!commission_on_profit;
+    if (aadhaar_number !== undefined) updates.aadhaar_number = aadhaar_number;
+    if (pan_number !== undefined) updates.pan_number = pan_number;
+    if (notes !== undefined) updates.notes = notes;
 
     const { data, error } = await supabaseAdmin
       .from('outlet_staff')

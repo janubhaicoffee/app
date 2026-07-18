@@ -31,6 +31,11 @@ export default function AdminStaff() {
     phone: '',
     role: 'staff',
     pin: '',
+    monthly_salary: '',
+    commission_on_profit: false,
+    aadhaar_number: '',
+    pan_number: '',
+    notes: '',
   });
 
   const showToast = (message, type = 'success') => {
@@ -77,7 +82,10 @@ export default function AdminStaff() {
 
   function openCreateModal() {
     setEditMember(null);
-    setForm({ outlet_id: '', name: '', email: '', phone: '', role: 'staff', pin: '' });
+    setForm({ 
+      outlet_id: '', name: '', email: '', phone: '', role: 'staff', pin: '',
+      monthly_salary: '', commission_on_profit: false, aadhaar_number: '', pan_number: '', notes: ''
+    });
     setShowModal(true);
   }
 
@@ -94,6 +102,8 @@ export default function AdminStaff() {
       if (editMember) {
         const body = { id: editMember.id, ...form };
         if (!form.pin) delete body.pin;
+        body.monthly_salary = form.monthly_salary ? parseFloat(form.monthly_salary) : null;
+
         res = await fetch('/api/admin/staff', {
           method: 'PATCH',
           headers: {
@@ -103,13 +113,15 @@ export default function AdminStaff() {
           body: JSON.stringify(body),
         });
       } else {
+        const body = { ...form };
+        body.monthly_salary = form.monthly_salary ? parseFloat(form.monthly_salary) : null;
         res = await fetch('/api/admin/staff', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify(form),
+          body: JSON.stringify(body),
         });
       }
 
@@ -345,6 +357,11 @@ export default function AdminStaff() {
                         phone: member.phone || '',
                         role: member.role || 'staff',
                         pin: '',
+                        monthly_salary: member.monthly_salary || '',
+                        commission_on_profit: member.commission_on_profit || false,
+                        aadhaar_number: member.aadhaar_number || '',
+                        pan_number: member.pan_number || '',
+                        notes: member.notes || '',
                       });
                       setShowModal(true);
                     }}
@@ -371,6 +388,29 @@ export default function AdminStaff() {
                     {member.is_active !== false ? <UserX size={14} /> : <UserCheck size={14} />}
                     {member.is_active !== false ? ' Deactivate' : ' Activate'}
                   </button>
+                  <a
+                    href={`/outlet/operations/staff/document?id=${member.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="admin-btn-sm"
+                    style={{
+                      flex: 1,
+                      justifyContent: 'center',
+                      border: '1px solid var(--border-color)',
+                      background: '#fff',
+                      color: '#333',
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      cursor: 'pointer',
+                      borderRadius: 6,
+                      fontWeight: 600,
+                      fontSize: '0.78rem',
+                    }}
+                  >
+                    <Shield size={14} /> Letter
+                  </a>
                 </div>
               </div>
             );
@@ -460,6 +500,56 @@ export default function AdminStaff() {
                       placeholder="1234"
                     />
                   </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Monthly Salary (₹)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={form.monthly_salary}
+                      onChange={(e) => setForm({ ...form, monthly_salary: e.target.value })}
+                      placeholder="e.g. 15000"
+                    />
+                  </div>
+                  <div className="form-group" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={form.commission_on_profit}
+                        onChange={(e) => setForm({ ...form, commission_on_profit: e.target.checked })}
+                        style={{ width: '16px', height: '16px' }}
+                      />
+                      Commission on Net Profit
+                    </label>
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Aadhaar Number</label>
+                    <input
+                      value={form.aadhaar_number}
+                      onChange={(e) => setForm({ ...form, aadhaar_number: e.target.value })}
+                      placeholder="12-digit Aadhaar"
+                      maxLength={12}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>PAN Number (Optional)</label>
+                    <input
+                      value={form.pan_number}
+                      onChange={(e) => setForm({ ...form, pan_number: e.target.value.toUpperCase() })}
+                      placeholder="10-character PAN"
+                      maxLength={10}
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Notes</label>
+                  <input
+                    value={form.notes}
+                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="modal-footer">

@@ -48,14 +48,14 @@ export default function DailyReport() {
       }
 
       if (oid) {
-        if (!oName) {
           try {
-            const { data: outlet } = await supabase
-              .from('outlets')
-              .select('name')
-              .eq('id', oid)
-              .maybeSingle();
-            if (outlet) oName = outlet.name;
+            const res = await fetch(`/api/outlet/settings?outletId=${oid}`);
+            if (res.ok) {
+              const body = await res.json();
+              if (body.data?.outlet_name) {
+                oName = body.data.outlet_name;
+              }
+            }
           } catch (_) {}
         }
         setOutletId(oid);
@@ -195,11 +195,11 @@ export default function DailyReport() {
 
       <div className="outlet-card" style={{ marginBottom: 20 }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <h1 style={{ fontSize: 22, margin: 0, color: '#1a1a1a' }}>
+          <h1 style={{ fontSize: 22, margin: 0, color: 'var(--primary-color, #3e2723)' }}>
             {outletName || 'Janu Bhai Coffee'}
           </h1>
-          <h2 style={{ fontSize: 18, margin: '4px 0', color: '#4a5568' }}>Daily Business Report</h2>
-          <p style={{ fontSize: 14, color: '#718096', margin: 0 }}>
+          <h2 style={{ fontSize: 18, margin: '4px 0', color: 'var(--text-color, #3e2723)' }}>Daily Business Report</h2>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary, #5d4037)', margin: 0 }}>
             {new Date(date).toLocaleDateString('en-IN', {
               weekday: 'long',
               year: 'numeric',

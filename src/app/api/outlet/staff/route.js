@@ -43,6 +43,11 @@ export async function POST(request) {
       pin_code,
       permissions,
       is_active,
+      monthly_salary,
+      commission_on_profit,
+      aadhaar_number,
+      pan_number,
+      notes,
     } = body;
 
     if (!outlet_id || !role) {
@@ -62,6 +67,11 @@ export async function POST(request) {
       pin_code: pin_code || null,
       permissions: permissions || {},
       is_active: is_active !== undefined ? !!is_active : true,
+      monthly_salary: monthly_salary !== undefined ? monthly_salary : null,
+      commission_on_profit: commission_on_profit !== undefined ? !!commission_on_profit : false,
+      aadhaar_number: aadhaar_number || null,
+      pan_number: pan_number || null,
+      notes: notes || null,
     };
 
     const { data, error } = await supabaseAdmin
@@ -82,7 +92,10 @@ export async function POST(request) {
 export async function PATCH(request) {
   try {
     const body = await request.json();
-    const { id, role, name, display_name, phone, email, pin_code, permissions, is_active } = body;
+    const { 
+      id, role, name, display_name, phone, email, pin_code, permissions, is_active,
+      monthly_salary, commission_on_profit, aadhaar_number, pan_number, notes 
+    } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Missing staff id' }, { status: 400 });
@@ -97,6 +110,11 @@ export async function PATCH(request) {
     if (pin_code !== undefined) updates.pin_code = pin_code;
     if (permissions !== undefined) updates.permissions = permissions;
     if (is_active !== undefined) updates.is_active = !!is_active;
+    if (monthly_salary !== undefined) updates.monthly_salary = monthly_salary;
+    if (commission_on_profit !== undefined) updates.commission_on_profit = !!commission_on_profit;
+    if (aadhaar_number !== undefined) updates.aadhaar_number = aadhaar_number;
+    if (pan_number !== undefined) updates.pan_number = pan_number;
+    if (notes !== undefined) updates.notes = notes;
 
     const { data, error } = await supabaseAdmin
       .from('outlet_staff')
