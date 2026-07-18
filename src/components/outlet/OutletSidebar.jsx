@@ -291,43 +291,47 @@ export default function OutletSidebar() {
                 window.location.href = e.target.value;
               }}
               style={{
-                padding: '5px 8px',
+                padding: '6px 10px',
                 fontSize: '11px',
-                fontWeight: '700',
-                borderRadius: '4px',
-                border: '1.5px solid var(--border-color, #E6D5B8)',
-                background: 'var(--primary-color, #4A3B32)',
+                fontWeight: '600',
+                borderRadius: '6px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(255, 255, 255, 0.05)',
                 color: '#F8F1E4',
                 outline: 'none',
                 cursor: 'pointer',
+                transition: 'all 0.2s ease',
               }}
             >
-              <option value={getSiteUrls().outlet}>OUTLET</option>
-              {isSuperAdmin && <option value={getSiteUrls().admin}>ADMIN</option>}
-              <option value={getSiteUrls().pos}>POS</option>
+              <option value={getSiteUrls().outlet}>📍 OUTLET</option>
+              {isSuperAdmin && <option value={getSiteUrls().admin}>⚙️ ADMIN</option>}
+              <option value={getSiteUrls().pos}>🛒 POS</option>
             </select>
           )}
         </div>
 
         {isSuperAdmin && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-            <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginTop: '4px' }}>
+            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
               {/* Outlet Switcher */}
               <select
                 value={selectedOutletId}
                 onChange={handleOutletChange}
                 style={{
                   flex: 1,
-                  padding: '5px 8px',
+                  padding: '6px 8px',
                   fontSize: '11px',
-                  fontWeight: '700',
-                  borderRadius: '4px',
-                  border: '1.5px solid var(--border-color, #E6D5B8)',
-                  background: 'var(--primary-color, #4A3B32)',
+                  fontWeight: '600',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'rgba(255, 255, 255, 0.05)',
                   color: '#F8F1E4',
                   outline: 'none',
                   cursor: 'pointer',
-                  maxWidth: '50%',
+                  width: '50%',
+                  textOverflow: 'ellipsis',
+                  overflow: 'hidden',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 <option value="create-new">➕ CREATE NEW</option>
@@ -344,16 +348,19 @@ export default function OutletSidebar() {
                 onChange={handleStaffChange}
                 style={{
                   flex: 1,
-                  padding: '5px 8px',
+                  padding: '6px 8px',
                   fontSize: '11px',
-                  fontWeight: '700',
-                  borderRadius: '4px',
-                  border: '1.5px solid var(--border-color, #E6D5B8)',
-                  background: 'var(--primary-color, #4A3B32)',
+                  fontWeight: '600',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'rgba(255, 255, 255, 0.05)',
                   color: '#F8F1E4',
                   outline: 'none',
                   cursor: 'pointer',
-                  maxWidth: '50%',
+                  width: '50%',
+                  textOverflow: 'ellipsis',
+                  overflow: 'hidden',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 <option value="self">👑 SELF</option>

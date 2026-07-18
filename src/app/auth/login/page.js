@@ -12,6 +12,33 @@ function UnifiedAuthContent() {
     useAuth();
 
   const redirectTo = searchParams.get('redirect') || '/account';
+  
+  const handleLoginSuccess = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push(redirectTo);
+        return;
+      }
+      const res = await fetch('/api/auth/check-role', {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+      const { role } = await res.json();
+      
+      if (searchParams.get('redirect')) {
+        router.push(searchParams.get('redirect'));
+      } else if (role === 'superadmin') {
+        router.push('/admin');
+      } else if (role === 'partner' || role === 'staff') {
+        router.push('/pos/dashboard');
+      } else {
+        router.push(redirectTo);
+      }
+    } catch (err) {
+      console.error('Role check failed:', err);
+      router.push(redirectTo);
+    }
+  };
   const [mode, setMode] = useState('phone'); // phone | otp | email | email-signup
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
@@ -42,7 +69,7 @@ function UnifiedAuthContent() {
     setError(null);
     try {
       await verifyOtp(phone, otp);
-      router.push(redirectTo);
+      await handleLoginSuccess();
     } catch (err) {
       setError(err.message || 'Invalid OTP');
     }
@@ -68,7 +95,7 @@ function UnifiedAuthContent() {
     try {
       if (mode === 'email') {
         await signInWithEmail(email, password);
-        router.push(redirectTo);
+        await handleLoginSuccess();
       } else {
         const data = await signUpWithEmail(email, password, name);
         if (data?.user?.identities?.length === 0) {

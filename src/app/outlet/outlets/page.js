@@ -31,6 +31,7 @@ export default function OutletManagementPortal() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editOutlet, setEditOutlet] = useState(null);
+  const [deleteOutletId, setDeleteOutletId] = useState(null);
   const [toast, setToast] = useState(null);
   const [stats, setStats] = useState({ total: 0, active: 0 });
   const [saving, setSaving] = useState(false);
@@ -237,10 +238,8 @@ export default function OutletManagementPortal() {
   }
 
   async function handleDeleteOutlet(id) {
-    if (!confirm('Are you sure you want to delete this outlet? All associated staff, schedules, transactions, and POS data will be deleted.')) {
-      return;
-    }
     try {
+      setSaving(true);
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -260,6 +259,9 @@ export default function OutletManagementPortal() {
       }
     } catch (err) {
       showToast('Failed to delete outlet', 'error');
+    } finally {
+      setSaving(false);
+      setDeleteOutletId(null);
     }
   }
 
@@ -494,7 +496,7 @@ export default function OutletManagementPortal() {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleDeleteOutlet(outlet.id);
+                        setDeleteOutletId(outlet.id);
                       }}
                       style={{
                         padding: '0.3rem',
@@ -727,6 +729,42 @@ export default function OutletManagementPortal() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteOutletId && (
+        <div className="modal-overlay" onClick={() => setDeleteOutletId(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h2 style={{ color: '#c62828', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Trash2 size={20} /> Confirm Deletion
+              </h2>
+              <button className="close-btn" onClick={() => setDeleteOutletId(null)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body" style={{ padding: '1.5rem', lineHeight: '1.5' }}>
+              Are you sure you want to delete this outlet? All associated staff, schedules, transactions, and POS data will be <strong>deleted permanently</strong>.
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color, #e0d5c1)' }}>
+              <button
+                className="admin-btn"
+                style={{ background: 'transparent', color: 'var(--text-color, #5D4037)', border: '1px solid var(--border-color, #e0d5c1)' }}
+                onClick={() => setDeleteOutletId(null)}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                className="admin-btn"
+                style={{ background: '#c62828', color: '#fff', border: 'none' }}
+                onClick={() => handleDeleteOutlet(deleteOutletId)}
+                disabled={saving}
+              >
+                {saving ? 'Deleting...' : 'Delete Outlet'}
+              </button>
+            </div>
           </div>
         </div>
       )}

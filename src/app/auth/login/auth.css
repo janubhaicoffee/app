@@ -61,20 +61,37 @@
 
 .auth-form input {
   width: 100%;
-  padding: 12px;
+  padding: 14px 16px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-family: var(--font-inter);
   font-size: 1rem;
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: rgba(0, 0, 0, 0.3); /* Darker background to ensure light text is visible */
   color: var(--text-primary);
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+/* Fix for Chrome/Safari Autofill turning background light while text stays light */
+.auth-form input:-webkit-autofill,
+.auth-form input:-webkit-autofill:hover, 
+.auth-form input:-webkit-autofill:focus, 
+.auth-form input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #2a1a17 inset !important;
+  -webkit-text-fill-color: #f5f0ea !important;
+  caret-color: #f5f0ea !important;
+  border: 1px solid var(--accent-gold) !important;
+}
+
+.auth-form input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.5;
 }
 
 .auth-form input:focus {
   outline: none;
   border-color: var(--accent-gold);
-  box-shadow: 0 0 0 3px rgba(216, 154, 30, 0.15);
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px var(--accent-gold-light);
 }
 
 .auth-footer {

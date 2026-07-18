@@ -37,6 +37,11 @@ export default function AdminOutlets() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [isExtractingFssai, setIsExtractingFssai] = useState(false);
+  const [fssaiFile, setFssaiFile] = useState(null);
+
   const [form, setForm] = useState({
     name: '',
     code: '',
@@ -46,7 +51,8 @@ export default function AdminOutlets() {
     pincode: '',
     phone: '',
     email: '',
-    gstin: '',
+    fssai_number: '',
+    fssai_certificate_url: '',
     manager_name: '',
     manager_phone: '',
     manager_email: '',
@@ -60,6 +66,99 @@ export default function AdminOutlets() {
   useEffect(() => {
     loadOutlets();
   }, []);
+
+  useEffect(() => {
+    if (form.pincode && form.pincode.length === 6 && /^\d+$/.test(form.pincode)) {
+      fetchLocation(form.pincode);
+    }
+  }, [form.pincode]);
+
+  async function fetchLocation(pin) {
+    setIsFetchingLocation(true);
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+      const data = await res.json();
+      if (data && data[0] && data[0].Status === 'Success') {
+        const postOffice = data[0].PostOffice[0];
+        setForm(prev => ({
+          ...prev,
+          city: prev.city || postOffice.District,
+          state: prev.state || postOffice.State
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to fetch pincode data', err);
+    } finally {
+      setIsFetchingLocation(false);
+    }
+  }
+
+  const handleNameChange = (e) => {
+    const newName = e.target.value;
+    if (!editOutlet && !form.code) { // Only auto-gen if creating new and code isn't manually set yet, or we could just override it if it matches the pattern.
+      // Auto generate code from name
+      const words = newName.split(/[\s-]+/).filter(Boolean);
+      let code = 'JBC-';
+      if (words.length === 1) {
+        code += words[0].substring(0, 3).toUpperCase();
+      } else {
+        // Last word or prominent word
+        const lastWord = words[words.length - 1];
+        if (lastWord.length <= 4) {
+           code += lastWord.toUpperCase();
+        } else {
+           code += lastWord.substring(0, 3).toUpperCase();
+        }
+      }
+      setForm({ ...form, name: newName, code: code !== 'JBC-' ? code : '' });
+    } else {
+      setForm({ ...form, name: newName });
+    }
+  };
+
+  const handleFssaiUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setFssaiFile(file);
+    setIsExtractingFssai(true);
+
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Image = reader.result;
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        const res = await fetch('/api/admin/extract-fssai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ base64Image }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.fssai_number) {
+            setForm(prev => ({ ...prev, fssai_number: data.fssai_number }));
+            showToast('FSSAI Number extracted successfully!');
+          } else {
+            showToast('Could not find FSSAI Number in image', 'error');
+          }
+        } else {
+          showToast('Failed to extract FSSAI details', 'error');
+        }
+        setIsExtractingFssai(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Error extracting FSSAI:', err);
+      showToast('Error extracting FSSAI', 'error');
+      setIsExtractingFssai(false);
+    }
+  };
 
   async function loadOutlets() {
     try {
@@ -105,7 +204,8 @@ export default function AdminOutlets() {
       pincode: '',
       phone: '',
       email: '',
-      gstin: '',
+      fssai_number: '',
+      fssai_certificate_url: '',
       manager_name: '',
       manager_phone: '',
       manager_email: '',
@@ -115,6 +215,8 @@ export default function AdminOutlets() {
       internet: '',
       cogs: '',
     });
+    setFssaiFile(null);
+    setCurrentStep(1);
     setShowModal(true);
   }
 
@@ -130,7 +232,8 @@ export default function AdminOutlets() {
       pincode: outlet.pincode || '',
       phone: outlet.phone || '',
       email: outlet.email || '',
-      gstin: settings.gstin || '',
+      fssai_number: settings.fssai_number || '',
+      fssai_certificate_url: settings.fssai_certificate_url || '',
       manager_name: settings.manager_name || '',
       manager_phone: settings.manager_phone || '',
       manager_email: settings.manager_email || '',
@@ -140,6 +243,8 @@ export default function AdminOutlets() {
       internet: settings.internet || '',
       cogs: settings.cogs || '',
     });
+    setFssaiFile(null);
+    setCurrentStep(1);
     setShowModal(true);
   }
 
@@ -152,8 +257,29 @@ export default function AdminOutlets() {
       } = await supabase.auth.getSession();
       if (!session) return;
 
+      let finalFssaiUrl = form.fssai_certificate_url;
+      if (fssaiFile) {
+        const fileExt = fssaiFile.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('outlet-documents')
+          .upload(fileName, fssaiFile);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('outlet-documents')
+          .getPublicUrl(fileName);
+        
+        finalFssaiUrl = publicUrlData.publicUrl;
+      }
+
       const settings = {
-        gstin: form.gstin,
+        fssai_number: form.fssai_number,
+        fssai_certificate_url: finalFssaiUrl,
         manager_name: form.manager_name,
         manager_phone: form.manager_phone,
         manager_email: form.manager_email,
@@ -450,205 +576,165 @@ export default function AdminOutlets() {
             </div>
             <form onSubmit={handleSave}>
               <div className="modal-body">
-                <h3
-                  style={{
-                    margin: '0 0 0.75rem',
-                    fontSize: '0.9rem',
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  Basic Information
-                </h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Outlet Name *</label>
-                    <input
-                      required
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      placeholder="Janu Bhai Coffee - Indira Nagar"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Outlet Code *</label>
-                    <input
-                      required
-                      value={form.code}
-                      onChange={(e) => setForm({ ...form, code: e.target.value })}
-                      placeholder="JBC-IND"
-                      style={{ textTransform: 'uppercase' }}
-                    />
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>Address</label>
-                  <input
-                    value={form.address}
-                    onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    placeholder="123, Main Road"
-                  />
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>City</label>
-                    <input
-                      value={form.city}
-                      onChange={(e) => setForm({ ...form, city: e.target.value })}
-                      placeholder="Bengaluru"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>State</label>
-                    <input
-                      value={form.state}
-                      onChange={(e) => setForm({ ...form, state: e.target.value })}
-                      placeholder="Karnataka"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Pincode</label>
-                    <input
-                      value={form.pincode}
-                      onChange={(e) => setForm({ ...form, pincode: e.target.value })}
-                      placeholder="560001"
-                    />
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Phone</label>
-                    <input
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder="+91 9876543210"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Email</label>
-                    <input
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      placeholder="outlet@janubhaicoffee.com"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>GSTIN</label>
-                    <input
-                      value={form.gstin}
-                      onChange={(e) => setForm({ ...form, gstin: e.target.value })}
-                      placeholder="29ABCDE1234F1Z5"
-                    />
-                  </div>
+                <div style={{ display: 'flex', gap: '5px', marginBottom: '20px' }}>
+                  {[1, 2, 3, 4].map(step => (
+                    <div key={step} style={{ height: '4px', flex: 1, backgroundColor: currentStep >= step ? 'var(--accent-gold)' : 'var(--border-color)', borderRadius: '2px', transition: 'background-color 0.3s' }} />
+                  ))}
                 </div>
 
-                <h3
-                  style={{
-                    margin: '1rem 0 0.75rem',
-                    fontSize: '0.9rem',
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  Manager Details
-                </h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Manager Name</label>
-                    <input
-                      value={form.manager_name}
-                      onChange={(e) => setForm({ ...form, manager_name: e.target.value })}
-                      placeholder="Rahul Sharma"
-                    />
+                {currentStep === 1 && (
+                  <div className="fade-in">
+                    <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Step 1: Basic Information</h3>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Outlet Name *</label>
+                        <input required value={form.name} onChange={handleNameChange} placeholder="Janu Bhai Coffee - Indira Nagar" />
+                      </div>
+                      <div className="form-group">
+                        <label>Outlet Code *</label>
+                        <input required value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="JBC-IND" style={{ textTransform: 'uppercase' }} />
+                      </div>
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label>Manager Phone</label>
-                    <input
-                      value={form.manager_phone}
-                      onChange={(e) => setForm({ ...form, manager_phone: e.target.value })}
-                      placeholder="+91 9876543210"
-                    />
+                  
+                  <h4 style={{ margin: '1rem 0 0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>FSSAI Details</h4>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Upload FSSAI Certificate</label>
+                      <input 
+                        type="file" 
+                        accept="image/*,application/pdf"
+                        onChange={handleFssaiUpload}
+                      />
+                      {isExtractingFssai && <span style={{ fontSize: '0.8rem', color: 'var(--accent-gold)' }}>Analyzing with AI...</span>}
+                      {form.fssai_certificate_url && !fssaiFile && (
+                        <a href={form.fssai_certificate_url} target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--accent-gold)', marginTop: '4px', display: 'inline-block' }}>View Current Certificate</a>
+                      )}
+                    </div>
+                    <div className="form-group">
+                      <label>FSSAI Number</label>
+                      <input 
+                        value={form.fssai_number} 
+                        onChange={(e) => setForm({ ...form, fssai_number: e.target.value })} 
+                        placeholder="14-Digit Number" 
+                      />
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label>Manager Email</label>
-                    <input
-                      type="email"
-                      value={form.manager_email}
-                      onChange={(e) => setForm({ ...form, manager_email: e.target.value })}
-                      placeholder="manager@example.com"
-                    />
-                  </div>
-                </div>
+                )}
 
-                <h3
-                  style={{
-                    margin: '1rem 0 0.75rem',
-                    fontSize: '0.9rem',
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  Financial Settings
-                </h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Monthly Rent (₹)</label>
-                    <input
-                      type="number"
-                      value={form.rent}
-                      onChange={(e) => setForm({ ...form, rent: e.target.value })}
-                      placeholder="50000"
-                    />
+                {currentStep === 2 && (
+                  <div className="fade-in">
+                    <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Step 2: Location</h3>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Pincode</label>
+                        <div style={{ position: 'relative' }}>
+                          <input value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} placeholder="560001" maxLength={6} />
+                          {isFetchingLocation && <span style={{ position: 'absolute', right: '10px', top: '10px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Fetching...</span>}
+                        </div>
+                      </div>
+                      <div className="form-group" style={{ flex: 2 }}>
+                        <label>Address</label>
+                        <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123, Main Road" />
+                      </div>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>City</label>
+                        <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Bengaluru" />
+                      </div>
+                      <div className="form-group">
+                        <label>State</label>
+                        <input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} placeholder="Karnataka" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label>Monthly Electricity (₹)</label>
-                    <input
-                      type="number"
-                      value={form.electricity}
-                      onChange={(e) => setForm({ ...form, electricity: e.target.value })}
-                      placeholder="8000"
-                    />
+                )}
+
+                {currentStep === 3 && (
+                  <div className="fade-in">
+                    <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Step 3: Contact & Manager</h3>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Outlet Phone</label>
+                        <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 9876543210" />
+                      </div>
+                      <div className="form-group">
+                        <label>Outlet Email</label>
+                        <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="outlet@janubhaicoffee.com" />
+                      </div>
+                    </div>
+                    <h4 style={{ margin: '1rem 0 0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Manager Details</h4>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Name</label>
+                        <input value={form.manager_name} onChange={(e) => setForm({ ...form, manager_name: e.target.value })} placeholder="Rahul Sharma" />
+                      </div>
+                      <div className="form-group">
+                        <label>Phone</label>
+                        <input value={form.manager_phone} onChange={(e) => setForm({ ...form, manager_phone: e.target.value })} placeholder="+91 9876543210" />
+                      </div>
+                      <div className="form-group">
+                        <label>Email</label>
+                        <input type="email" value={form.manager_email} onChange={(e) => setForm({ ...form, manager_email: e.target.value })} placeholder="manager@example.com" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label>Monthly Water (₹)</label>
-                    <input
-                      type="number"
-                      value={form.water}
-                      onChange={(e) => setForm({ ...form, water: e.target.value })}
-                      placeholder="2000"
-                    />
+                )}
+
+                {currentStep === 4 && (
+                  <div className="fade-in">
+                    <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Step 4: Financial Settings</h3>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Monthly Rent (₹)</label>
+                        <input type="number" value={form.rent} onChange={(e) => setForm({ ...form, rent: e.target.value })} placeholder="50000" />
+                      </div>
+                      <div className="form-group">
+                        <label>Monthly Electricity (₹)</label>
+                        <input type="number" value={form.electricity} onChange={(e) => setForm({ ...form, electricity: e.target.value })} placeholder="8000" />
+                      </div>
+                      <div className="form-group">
+                        <label>Monthly Water (₹)</label>
+                        <input type="number" value={form.water} onChange={(e) => setForm({ ...form, water: e.target.value })} placeholder="2000" />
+                      </div>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Monthly Internet (₹)</label>
+                        <input type="number" value={form.internet} onChange={(e) => setForm({ ...form, internet: e.target.value })} placeholder="1500" />
+                      </div>
+                      <div className="form-group">
+                        <label>COGS %</label>
+                        <input type="number" value={form.cogs} onChange={(e) => setForm({ ...form, cogs: e.target.value })} placeholder="35" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Monthly Internet (₹)</label>
-                    <input
-                      type="number"
-                      value={form.internet}
-                      onChange={(e) => setForm({ ...form, internet: e.target.value })}
-                      placeholder="1500"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>COGS %</label>
-                    <input
-                      type="number"
-                      value={form.cogs}
-                      onChange={(e) => setForm({ ...form, cogs: e.target.value })}
-                      placeholder="35"
-                    />
-                  </div>
-                </div>
+                )}
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                 <button
                   type="button"
                   className="admin-btn-outline"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    if (currentStep > 1) {
+                      setCurrentStep(currentStep - 1);
+                    } else {
+                      setShowModal(false);
+                    }
+                  }}
                 >
-                  Cancel
+                  {currentStep > 1 ? 'Previous' : 'Cancel'}
                 </button>
-                <button type="submit" className="admin-btn" disabled={saving}>
-                  {saving ? 'Saving...' : editOutlet ? 'Update Outlet' : 'Create Outlet'}
-                </button>
+                {currentStep < 4 ? (
+                  <button type="button" className="admin-btn" onClick={() => setCurrentStep(currentStep + 1)}>
+                    Next Step
+                  </button>
+                ) : (
+                  <button type="submit" className="admin-btn" disabled={saving}>
+                    {saving ? 'Saving...' : editOutlet ? 'Update Outlet' : 'Create Outlet'}
+                  </button>
+                )}
               </div>
             </form>
           </div>

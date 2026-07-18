@@ -178,6 +178,9 @@ export default function SidebarNav() {
         <Link href="/admin/settings" className="admin-nav-link">
           <Settings size={20} /> Store Settings
         </Link>
+        <Link href="/admin/cafe-settings" className="admin-nav-link">
+          <Building2 size={20} /> Cafe Settings
+        </Link>
         <Link href="/admin/shipping" className="admin-nav-link">
           <Truck size={20} /> Shipping Zones
         </Link>

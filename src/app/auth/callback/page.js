@@ -16,8 +16,26 @@ function CallbackContent() {
         return;
       }
       if (data?.session) {
-        const redirectTo = searchParams.get('redirect') || '/account';
-        router.push(redirectTo);
+        try {
+          const res = await fetch('/api/auth/check-role', {
+            headers: { Authorization: `Bearer ${data.session.access_token}` }
+          });
+          const { role } = await res.json();
+          
+          if (searchParams.get('redirect')) {
+            router.push(searchParams.get('redirect'));
+          } else if (role === 'superadmin') {
+            router.push('/admin');
+          } else if (role === 'partner' || role === 'staff') {
+            router.push('/pos/dashboard');
+          } else {
+            router.push('/account');
+          }
+        } catch (err) {
+          console.error('Role check failed:', err);
+          const redirectTo = searchParams.get('redirect') || '/account';
+          router.push(redirectTo);
+        }
       }
     };
     handleCallback();

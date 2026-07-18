@@ -1,4 +1,4 @@
-﻿import { createClient } from '@/lib/supabaseWrapper';
+import { createClient } from '@/lib/supabaseWrapper';
 import { NextResponse } from 'next/server';
 async function verifyAdmin(request) {
   const authHeader = request.headers.get('Authorization');
@@ -235,6 +235,25 @@ export async function GET(request) {
           gstin: '',
           admin_notification_emails: '',
           maintenance_mode: false,
+        },
+      });
+    }
+    if (type === 'cafe_settings') {
+      const { data: settings, error } = await supabase
+        .from('store_settings')
+        .select('*')
+        .eq('id', 'cafe_global')
+        .single();
+      if (error && error.code !== 'PGRST116') throw error;
+      return NextResponse.json({
+        data: settings || {
+          id: 'cafe_global',
+          cafe_name: 'Janu Bhai Cafe',
+          global_gstin: '',
+          central_fssai: '',
+          support_email: '',
+          support_phone: '',
+          hq_address: '',
         },
       });
     }
@@ -629,6 +648,14 @@ export async function POST(request) {
         .upsert({ id: 'global', ...payload, updated_at: new Date().toISOString() });
       if (error) throw error;
       await logAudit(supabase, adminEmail, 'update', 'settings', 'global', payload);
+      return NextResponse.json({ success: true });
+    }
+    if (action === 'update_cafe_settings') {
+      const { error } = await supabase
+        .from('store_settings')
+        .upsert({ id: 'cafe_global', ...payload, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      await logAudit(supabase, adminEmail, 'update', 'settings', 'cafe_global', payload);
       return NextResponse.json({ success: true });
     }
     if (action === 'create_coupon') {
