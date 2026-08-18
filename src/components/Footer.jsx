@@ -46,16 +46,19 @@ export default function Footer() {
               <span className="footer-col-title">Shop</span>
               <ul>
                 <li>
-                  <Link href="/product/instantcoffee">Coffee Powder</Link>
+                  <Link href="/product/instantcoffee">Instant Coffee (100g / 1kg)</Link>
                 </li>
                 <li>
-                  <Link href="/process">Our Sourcing</Link>
+                  <Link href="/process">Our Sourcing & Process</Link>
                 </li>
                 <li>
-                  <Link href="/">Recipes</Link>
+                  <Link href="/track">Track Order</Link>
                 </li>
                 <li>
-                  <Link href="/contact">Bulk Orders</Link>
+                  <Link href="/contact">Bulk / B2B Orders</Link>
+                </li>
+                <li>
+                  <Link href="/outlet" style={{ opacity: 0.6, fontSize: '0.8rem' }}>Partner / Outlet Hub</Link>
                 </li>
               </ul>
             </div>

@@ -32,19 +32,18 @@ export const viewport = {
 
 export const metadata = {
   title: {
-    default: 'Janu Bhai Coffee | Premium Chikmagalur Coffee Delivered PAN India',
+    default: 'Janu Bhai Coffee | Premium Instant Coffee from Chikmagalur',
     template: '%s | Janu Bhai Coffee',
   },
   description:
-    'Authentic, small-batch roasted coffee from the hills of Chikmagaluru. Available for retail and commercial wholesale. Delhi-based brand delivering fresh coffee PAN India.',
+    'Artisan roasted, single-estate instant coffee powder from Chikmagalur, Karnataka. Micro-crystallized to dissolve in 3 seconds in hot or cold milk with rich crema and zero bitterness. Delivered PAN India.',
   keywords: [
-    'buy coffee online India',
-    'Chikmagalur coffee',
-    'wholesale coffee beans Delhi',
-    'B2B coffee suppliers India',
-    'premium instant coffee',
-    'South Indian filter coffee blend',
+    'buy instant coffee online India',
+    'Chikmagalur instant coffee',
+    'premium instant coffee powder',
+    'freeze dried instant coffee',
     'Janu Bhai Coffee',
+    'best instant coffee India',
     'fresh roasted coffee PAN India',
   ],
   authors: [{ name: 'Janu Bhai Coffee' }],
@@ -54,9 +53,9 @@ export const metadata = {
     type: 'website',
     locale: 'en_IN',
     url: 'https://janubhai.com',
-    title: 'Janu Bhai Coffee | Premium Chikmagalur Coffee',
+    title: 'Janu Bhai Coffee | Premium Instant Coffee from Chikmagalur',
     description:
-      'Authentic, small-batch roasted coffee from Chikmagaluru. Retail and commercial wholesale, delivered PAN India.',
+      'Artisan roasted single-estate instant coffee powder from Chikmagalur. Dissolves in 3s in hot or cold milk. Order online PAN India.',
     siteName: 'Janu Bhai Coffee',
     images: [
       {

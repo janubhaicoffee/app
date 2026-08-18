@@ -87,26 +87,16 @@ export default function TopBar() {
             href="/product/instantcoffee"
             className={`nav-link ${pathname.startsWith('/product/') ? 'active' : ''}`}
           >
-            {' '}
-            Coffee Powder
-          </Link>
-          <Link href="/" className={`nav-link ${pathname === '/' ? 'active' : ''}`}>
-            {' '}
-            Recipes
+            Shop Coffee
           </Link>
           <Link href="/process" className={`nav-link ${pathname === '/process' ? 'active' : ''}`}>
-            {' '}
             Our Sourcing
           </Link>
+          <Link href="/track" className={`nav-link ${pathname === '/track' ? 'active' : ''}`}>
+            Track Order
+          </Link>
           <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`}>
-            {' '}
             Contact
-          </Link>{' '}
-          <Link
-            href={outletHref}
-            className={`nav-link outlet-btn ${pathname.startsWith('/outlet') ? 'active' : ''}`}
-          >
-            Outlet Management
           </Link>
         </nav>
         <div className="desktop-action-group">
@@ -124,10 +114,10 @@ export default function TopBar() {
             </Link>
           </div>
         </div>
-      </div>{' '}
-      {/* 2. MOBILE VIEWPORT LAYOUT */}{' '}
+      </div>
+
+      {/* 2. MOBILE VIEWPORT LAYOUT */}
       <div className="topbar-mobile-inner">
-        {' '}
         {isHome ? (
           <button
             className="app-icon-btn"
@@ -140,9 +130,8 @@ export default function TopBar() {
           <Link href="/" className="app-icon-btn" aria-label="Go back to Home">
             <ArrowLeft size={22} />
           </Link>
-        )}{' '}
+        )}
         <div className="mobile-center-title-area">
-          {' '}
           {isHome ? (
             <Image
               src="/logo.png"
@@ -157,13 +146,13 @@ export default function TopBar() {
           )}
         </div>
         <Link href="/cart" className="app-icon-btn relative-badge" aria-label="Shopping Cart">
-          <ShoppingBag size={22} />{' '}
+          <ShoppingBag size={22} />
           {cartCount > 0 && <span className="app-cart-badge">{cartCount}</span>}
         </Link>
-      </div>{' '}
-      {/* Hamburger Sidebar Navigation Drawer (Mobile) */}{' '}
+      </div>
+
+      {/* Hamburger Sidebar Navigation Drawer (Mobile) */}
       <AnimatePresence>
-        {' '}
         {isMobileMenuOpen && (
           <>
             <motion.div
@@ -197,7 +186,7 @@ export default function TopBar() {
                   className="sidebar-link-item-global"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <span>Buy Coffee Powder</span>
+                  <span>Shop Instant Coffee</span>
                   <ChevronRight size={16} />
                 </Link>
                 <Link
@@ -205,15 +194,7 @@ export default function TopBar() {
                   className="sidebar-link-item-global"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <span>Our Sourcing Process</span>
-                  <ChevronRight size={16} />
-                </Link>
-                <Link
-                  href="/contact"
-                  className="sidebar-link-item-global"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <span>Contact Us / Bulk Orders</span>
+                  <span>Our Sourcing & Process</span>
                   <ChevronRight size={16} />
                 </Link>
                 <Link
@@ -225,16 +206,24 @@ export default function TopBar() {
                   <ChevronRight size={16} />
                 </Link>
                 <Link
-                  href={outletHref}
-                  className="sidebar-link-item-global outlet-btn"
+                  href="/contact"
+                  className="sidebar-link-item-global"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <span>Outlet Management</span>
+                  <span>Contact & Bulk Enquiries</span>
+                  <ChevronRight size={16} />
+                </Link>
+                <Link
+                  href={user ? '/account' : '/auth/login'}
+                  className="sidebar-link-item-global"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span>{user ? 'My Account' : 'Login / Register'}</span>
                   <ChevronRight size={16} />
                 </Link>
               </div>
               <div className="sidebar-footer-global">
-                <p>Â© {new Date().getFullYear()} Janu Bhai Coffeehouse.</p>
+                <p>© {new Date().getFullYear()} Janu Bhai Coffee.</p>
               </div>
             </motion.div>
           </>

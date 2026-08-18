@@ -367,6 +367,37 @@ export default function OutletSidebar() {
             ) : null}
           </div>
         )}
+
+        {/* Quick Launch POS Terminal */}
+        <button
+          onClick={() => {
+            if (selectedOutletId && outletsList.length > 0) {
+              const currentOutlet = outletsList.find((o) => o.id === selectedOutletId) || outletsList[0];
+              sessionStorage.setItem('pos_outlet', JSON.stringify(currentOutlet));
+            }
+            router.push('/pos/dashboard');
+          }}
+          style={{
+            width: '100%',
+            padding: '10px 14px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #d89a1e 0%, #b88015 100%)',
+            color: '#1a0f0c',
+            border: 'none',
+            fontWeight: '800',
+            fontSize: '12px',
+            letterSpacing: '0.5px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(216, 154, 30, 0.3)',
+            transition: 'all 0.2s',
+          }}
+        >
+          <ShoppingCart size={15} /> ⚡ LAUNCH POS TERMINAL
+        </button>
       </div>
 
       <nav className="outlet-sidebar-nav">

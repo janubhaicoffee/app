@@ -36,6 +36,7 @@ export default function PosOutletSelect() {
 
   const handleSelect = (outlet) => {
     sessionStorage.setItem('pos_outlet', JSON.stringify(outlet));
+    sessionStorage.setItem('selected_outlet_id', outlet.id);
     prefetchOutletData(outlet.id);
     router.push('/pos/dashboard');
   };

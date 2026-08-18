@@ -16,6 +16,7 @@ import {
   ListOrdered,
   Users,
   Package,
+  Store,
 } from 'lucide-react';
 import '../pos.css';
 
@@ -149,6 +150,25 @@ export default function PosDashboard() {
         <h1>{outlet?.name || 'POS'} Dashboard</h1>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {shift && <span className={`pos-badge ${shift.status}`}>Shift: {shift.status}</span>}
+          <button
+            onClick={() => {
+              if (outlet?.id) {
+                sessionStorage.setItem('selected_outlet_id', outlet.id);
+              }
+              router.push('/outlet/dashboard');
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              background: 'rgba(216, 154, 30, 0.15)',
+              border: '1px solid var(--accent-gold, #d89a1e)',
+              color: 'var(--accent-gold, #d89a1e)',
+              fontWeight: 700,
+            }}
+          >
+            <Store size={15} /> Outlet Hub
+          </button>
           <button onClick={() => router.push('/pos/orders/new')}>
             <PlusCircle size={16} /> New Order
           </button>

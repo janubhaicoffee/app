@@ -1,570 +1,706 @@
 'use client';
-import './page.css';
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search,
-  Menu,
   ShoppingBag,
-  Heart,
+  Zap,
   Star,
+  Check,
+  Truck,
+  Leaf,
+  ShieldCheck,
+  Sparkles,
   ArrowRight,
-  X,
-  ChevronRight,
-  Play,
-  RotateCcw,
   Plus,
-  User,
+  Minus,
+  RotateCcw,
+  Flame,
+  Droplets,
+  Clock,
+  ChevronDown,
+  HelpCircle,
 } from 'lucide-react';
+import './page.css';
 
-// Recipes dataset (No references to "freezedried" or "0 chicory")
-const recipes = [
+const PACK_SIZES = [
   {
-    id: 'espresso-cappuccino',
-    name: 'Espresso Cappuccino',
-    category: 'cappuccinos',
-    image: '/cappuccino_cup.png',
-    rating: '4.8',
-    reviews: '1,245',
-    desc: 'A rich, classic Italian cappuccino made with premium coffee, warm steamed milk, and a thick, luxurious layer of frothed milk foam. Finished with a light dusting of cocoa.',
-    ingredients: [
-      '2 tsp Janu Bhai Coffee',
-      '60ml hot water',
-      '120ml whole milk (steamed & frothed)',
-      'Cocoa powder (for dusting)',
-    ],
+    id: '100g',
+    variantId: 'v_thoda_100',
+    name: '100g Starter Jar',
+    weightLabel: '100g',
+    price: 300,
+    originalPrice: 399,
+    servings: '~50 cups',
+    costPerCup: '₹6 / cup',
+    badge: 'Popular',
+    image: '/product/100gram/100gramfront.png',
+    backImage: '/product/100gram/100gramback.png',
+    description: 'Perfect for daily morning coffee lovers & first-time tasters.',
+  },
+  {
+    id: '1kg',
+    variantId: 'v_thoda_1000',
+    name: '1kg Value Pouch',
+    weightLabel: '1kg (1000g)',
+    price: 3000,
+    originalPrice: 3990,
+    servings: '~500 cups',
+    costPerCup: '₹6 / cup',
+    badge: 'Best Value (Save ₹990)',
+    image: '/product/1000gram/1000gramfront.png',
+    backImage: '/product/1000gram/1000gramback.png',
+    description: 'Bulk economy pack for families, offices & heavy coffee drinkers.',
+  },
+];
+
+const BREW_METHODS = [
+  {
+    id: 'hot',
+    title: 'Velvety Hot Coffee',
+    subtitle: 'Smooth & comforting',
+    icon: Flame,
     steps: [
-      'Dissolve 2 tsp of Janu Bhai Coffee in 60ml of hot water to create a strong double-espresso base.',
-      'Steam and froth 120ml of whole milk in a pitcher until it forms a thick, dense foam.',
-      'Pour the espresso base into a warm ceramic cup.',
-      'Gently pour the steamed milk over the espresso, holding back the foam with a spoon.',
-      'Spoon the remaining thick foam on top and dust lightly with cocoa powder.',
+      'Add 1 tsp (2g) of Janu Bhai Coffee Powder to your cup.',
+      'Pour 150ml of piping hot milk or boiled water.',
+      'Stir vigorously for 3 seconds — watch rich crema form instantly.',
     ],
   },
   {
-    id: 'caffe-mocha',
-    name: 'Caffe Mocha Americano',
-    category: 'espressos',
-    image: '/mocha_cup.png',
-    rating: '4.9',
-    reviews: '958',
-    desc: 'A decadent combination of strong espresso, dark chocolate syrup, and silky steamed milk, topped with a velvety microfoam layer. A perfect sweet treat.',
-    ingredients: [
-      '2 tsp Janu Bhai Coffee',
-      '60ml hot water',
-      '1 tbsp premium dark chocolate syrup',
-      '120ml milk (steamed)',
-      'Chocolate shavings (optional)',
-    ],
+    id: 'iced',
+    title: 'Barista Iced Latte',
+    subtitle: 'Chilled & refreshing',
+    icon: Droplets,
     steps: [
-      'Mix dark chocolate syrup with strong coffee base in the bottom of a cup.',
-      'Pour hot water and stir until fully combined.',
-      'Pour in steamed milk slowly to create a smooth layer.',
-      'Top with a thin layer of foam and garnish with chocolate shavings.',
+      'Dissolve 1.5 tsp of Janu Bhai Coffee in 30ml warm water or milk.',
+      'Fill a tall glass with 4-5 fresh ice cubes and 150ml cold milk.',
+      'Pour the coffee shot over milk and stir for an iced café indulgence.',
     ],
   },
   {
-    id: 'iced-oat-latte',
-    name: 'Iced Oat Milk Latte',
-    category: 'lattes',
-    image: '/iced_latte.png',
-    rating: '4.7',
-    reviews: '2,130',
-    desc: 'A cooling, refreshing iced latte featuring cold oat milk and ice cubes drowned in a bold double-espresso shot. Naturally sweet and smooth.',
-    ingredients: [
-      '2 tsp Janu Bhai Coffee',
-      '50ml warm water',
-      '150ml cold oat milk',
-      'Ice cubes',
-      '1 tsp maple syrup (optional)',
-    ],
+    id: 'black',
+    title: 'Pure Black Espresso',
+    subtitle: 'Bold & zero calorie',
+    icon: Zap,
     steps: [
-      'Prepare strong espresso shot by mixing Janu Bhai Coffee and warm water.',
-      'Fill a glass with ice cubes and pour in cold oat milk.',
-      'Drizzle maple syrup if desired.',
-      'Slowly pour the espresso shot over the oat milk for a beautiful layered look.',
-    ],
-  },
-  {
-    id: 'classic-affogato',
-    name: 'Classic Affogato',
-    category: 'espressos',
-    image: '/affogato_cup.png',
-    rating: '4.9',
-    reviews: '782',
-    desc: 'A simple yet luxurious dessert. A single scoop of premium vanilla bean ice cream drowned in a hot, concentrated double-espresso shot.',
-    ingredients: [
-      '1.5 tsp Janu Bhai Coffee',
-      '40ml hot water',
-      '1 scoop premium vanilla bean ice cream',
-    ],
-    steps: [
-      'Place a scoop of vanilla bean ice cream in a cold dessert bowl.',
-      'Mix Janu Bhai Coffee with hot water in a small pitcher.',
-      'Right before serving, pour the hot coffee shot over the ice cream scoop.',
-    ],
-  },
-  {
-    id: 'chikmagalur-shakerato',
-    name: 'Chikmagalur Shakerato',
-    category: 'iced',
-    image: '/shakerato_cup.png',
-    rating: '4.8',
-    reviews: '560',
-    desc: 'A bold, icy espresso shot shaken vigorously with brown sugar and ice until a thick, frothy crema forms on top. Served in a chilled glass.',
-    ingredients: [
-      '2 tsp Janu Bhai Coffee',
-      '60ml warm water',
-      '2 tsp brown sugar',
-      '4-5 ice cubes',
-    ],
-    steps: [
-      'Combine coffee, warm water, and brown sugar in a shaker.',
-      'Add ice cubes and shake vigorously for 15-20 seconds.',
-      'Strain into a chilled glass, allowing the thick foam to form the top layer.',
+      'Take 1 tsp of Janu Bhai Coffee in an espresso or americano mug.',
+      'Add 120ml of hot water (approx 85-90°C).',
+      'Enjoy the pure aromatic notes of Chikmagalur estate Arabica.',
     ],
   },
 ];
 
+const COMPARISON_ROWS = [
+  {
+    feature: 'Bean Sourcing',
+    janubhai: '100% Single-Estate Chikmagalur Arabica',
+    commercial: 'Low-grade mixed robusta & filler beans',
+  },
+  {
+    feature: 'Processing Tech',
+    janubhai: 'Cold micro-crystallization (Aroma Lock)',
+    commercial: 'High-heat thermal spray drying (burnt aroma)',
+  },
+  {
+    feature: 'Solubility',
+    janubhai: 'Dissolves in 3s in Hot or Chilled milk/water',
+    commercial: 'Leaves undissolved lumps in cold liquids',
+  },
+  {
+    feature: 'Taste & Acidity',
+    janubhai: 'Smooth caramel & chocolate notes, zero bitterness',
+    commercial: 'Harsh, bitter, metallic aftertaste',
+  },
+  {
+    feature: 'Energy Boost',
+    janubhai: 'Clean, sustained 3.2% caffeine without crash',
+    commercial: 'Sudden spike followed by jitters and energy crash',
+  },
+];
+
+const REVIEWS = [
+  {
+    id: 1,
+    name: 'Vikram Malhotra',
+    city: 'New Delhi',
+    rating: 5,
+    tag: 'Verified Buyer',
+    text: 'Janu Bhai has completely replaced my expensive espresso machine on busy mornings. The aroma when you open the jar is pure Chikmagalur heaven. Dissolves in seconds and tastes like a fresh café brew.',
+  },
+  {
+    id: 2,
+    name: 'Anjali Sharma',
+    city: 'Bengaluru',
+    rating: 5,
+    tag: 'Verified Buyer',
+    text: 'Being from Karnataka, I am extremely particular about my coffee. This Thoda Hard blend has the exact rich body and zero bitter aftertaste. Iced latte with oat milk is unbelievable with this powder!',
+  },
+  {
+    id: 3,
+    name: 'Rohan Mehta',
+    city: 'Mumbai',
+    rating: 5,
+    tag: 'Verified Buyer',
+    text: 'The 1kg pack is an absolute lifesaver for our office. Fast shipping, airtight seal, and every single cup has a thick velvety froth. 10/10 recommendation.',
+  },
+];
+
+const FAQS = [
+  {
+    q: 'How many cups does one 100g pack make?',
+    a: 'Each 100g jar yields approximately 50 rich cups of coffee (using the recommended 2g teaspoon per serving). The 1kg pouch makes 500+ cups.',
+  },
+  {
+    q: 'Does it dissolve easily in cold milk for iced coffee?',
+    a: 'Yes! Our micro-crystallized freeze-dried extraction process ensures 100% instant solubility in cold milk, oat milk, or chilled water within 3 seconds without clumps.',
+  },
+  {
+    q: 'What is the blend ratio and origin?',
+    a: 'Our signature "Thoda Hard" instant coffee is crafted with 70% single-estate Arabica from high-altitude plantations in Chikmagalur, Karnataka, blended with 30% fine roasted chicory for a thick, velvety body.',
+  },
+  {
+    q: 'How fast is shipping across India?',
+    a: 'All orders are dispatched within 24 hours. Metro deliveries typically arrive in 2-3 business days, and rest of India in 3-5 business days. Tracking details are sent via SMS/Email.',
+  },
+];
+
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [selectedRecipe, setSelectedRecipe] = useState(recipes[0]);
-  const [activeSize, setActiveSize] = useState('100g');
-  const [favorites, setFavorites] = useState([]);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [addedAnimation, setAddedAnimation] = useState(false);
+  const [selectedPackId, setSelectedPackId] = useState('100g');
+  const [quantity, setQuantity] = useState(1);
+  const [activeBrewTab, setActiveBrewTab] = useState('hot');
+  const [expandedFaq, setExpandedFaq] = useState(0);
+  const [addedToast, setAddedToast] = useState(false);
+  const [viewSide, setViewSide] = useState('front'); // 'front' | 'back'
+  const [isScrolledPastHero, setIsScrolledPastHero] = useState(false);
 
-  const { addToCart, getCartCount, clearCart } = useCart();
+  const heroRef = useRef(null);
   const router = useRouter();
+  const { addToCart, clearCart } = useCart();
 
-  // Handle window resizing
+  const selectedPack = PACK_SIZES.find((p) => p.id === selectedPackId) || PACK_SIZES[0];
+
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
+    const handleScroll = () => {
+      if (heroRef.current) {
+        const rect = heroRef.current.getBoundingClientRect();
+        setIsScrolledPastHero(rect.bottom < 100);
+      }
     };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Filter recipes
-  const filteredRecipes = recipes.filter((recipe) => {
-    const matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = activeCategory === 'all' || recipe.category === activeCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  // Toggle favorite
-  const toggleFavorite = (id, e) => {
-    e.stopPropagation();
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    );
-  };
-
-  // Trigger Add to Cart for the coffee variant used
-  const handleAddToCart = (e) => {
-    e.stopPropagation();
-    const isLarge = activeSize === '1kg';
+  const handleAddToCart = () => {
     const itemToAdd = {
       id: 'instantcoffee',
-      variant_id: isLarge ? 'v_thoda_1000' : 'v_thoda_100',
-      name: `Janu Bhai Instant Coffee (Thoda Hard - ${isLarge ? '1kg' : '100g'})`,
-      price: isLarge ? 3000 : 300,
-      image: '/product/100gram/100gramfront.png',
-      quantity: 1,
+      variant_id: selectedPack.variantId,
+      name: `Janu Bhai Instant Coffee (Thoda Hard - ${selectedPack.weightLabel})`,
+      price: selectedPack.price,
+      image: selectedPack.image,
+      quantity: quantity,
     };
     addToCart(itemToAdd);
-    setAddedAnimation(true);
-    setTimeout(() => setAddedAnimation(false), 2000);
+    setAddedToast(true);
+    setTimeout(() => setAddedToast(false), 2500);
   };
 
   const handleBuyNow = () => {
     clearCart();
-    const isLarge = activeSize === '1kg';
     const itemToAdd = {
       id: 'instantcoffee',
-      variant_id: isLarge ? 'v_thoda_1000' : 'v_thoda_100',
-      name: `Janu Bhai Instant Coffee (Thoda Hard - ${isLarge ? '1kg' : '100g'})`,
-      price: isLarge ? 3000 : 300,
-      image: '/product/100gram/100gramfront.png',
-      quantity: 1,
+      variant_id: selectedPack.variantId,
+      name: `Janu Bhai Instant Coffee (Thoda Hard - ${selectedPack.weightLabel})`,
+      price: selectedPack.price,
+      image: selectedPack.image,
+      quantity: quantity,
     };
     addToCart(itemToAdd);
     router.push('/checkout?mode=standard');
   };
 
-  const categories = [
-    { id: 'all', name: 'All' },
-    { id: 'espressos', name: 'Espresso' },
-    { id: 'cappuccinos', name: 'Cappuccino' },
-    { id: 'lattes', name: 'Lattes' },
-    { id: 'iced', name: 'Iced Coffee' },
-  ];
-
   return (
-    <div className="app-container">
-      {/* Background radial soft light */}
-      <div className="app-bg-glow" />
-
-      {/* Main split dashboard (desktop) / single layout (mobile) */}
-      <div className="app-viewport">
-        {/* LEFT PANEL / MAIN LISTING */}
-        <div className="app-left-panel">
-          <div className="app-scroll-content">
-            {/* Welcoming Banner */}
-            <div className="app-welcome-section">
-              <h2>Select your brew.</h2>
-              <p>Curated recipes made with premium Janu Bhai coffee.</p>
-              <div style={{ marginTop: '12px' }}>
-                <Link
-                  href="/product/instantcoffee"
-                  className="btn-shop-coffee"
-                  style={{
-                    display: 'inline-block',
-                    color: 'var(--app-accent)',
-                    fontWeight: 'bold',
-                    textDecoration: 'underline',
-                  }}
-                >
-                  Shop Coffee →
-                </Link>
+    <div className="home-d2c-wrapper">
+      {/* 1. HERO PRODUCT SECTION */}
+      <section className="d2c-hero-section" ref={heroRef}>
+        <div className="d2c-hero-bg-glow" />
+        <div className="container d2c-hero-grid">
+          {/* Hero Left: Product Visuals */}
+          <div className="d2c-hero-visual-col">
+            <div className="d2c-product-stage">
+              <div className="d2c-badge-floating origin-badge">
+                <Leaf size={14} />
+                <span>Chikmagalur Single Estate</span>
               </div>
-            </div>
 
-            {/* Search Bar */}
-            <div className="app-search-wrapper">
-              <div className="app-search-input-box">
-                <Search size={18} className="app-search-icon" />
-                <input
-                  type="text"
-                  placeholder="Search coffee recipes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                  <button className="search-clear-btn" onClick={() => setSearchQuery('')}>
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-            </div>
+              <div className="d2c-product-image-wrap">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={selectedPack.id + viewSide}
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    transition={{ duration: 0.3 }}
+                    className="d2c-main-image-container"
+                  >
+                    <Image
+                      src={viewSide === 'front' ? selectedPack.image : selectedPack.backImage}
+                      alt={selectedPack.name}
+                      width={480}
+                      height={480}
+                      priority
+                      className="d2c-hero-product-img"
+                    />
+                  </motion.div>
+                </AnimatePresence>
 
-            {/* Category Filter Pills */}
-            <div className="app-categories-scroll">
-              <div className="app-categories-container">
-                {categories.map((cat) => (
+                {/* View toggle (Front / Nutrition Back) */}
+                <div className="d2c-view-toggle">
                   <button
-                    key={cat.id}
-                    className={`category-pill ${activeCategory === cat.id ? 'active' : ''}`}
-                    onClick={() => setActiveCategory(cat.id)}
+                    className={`d2c-view-btn ${viewSide === 'front' ? 'active' : ''}`}
+                    onClick={() => setViewSide('front')}
                   >
-                    {cat.name}
+                    Front Pack
                   </button>
-                ))}
+                  <button
+                    className={`d2c-view-btn ${viewSide === 'back' ? 'active' : ''}`}
+                    onClick={() => setViewSide('back')}
+                  >
+                    Nutrition & Details
+                  </button>
+                </div>
+              </div>
+
+              {/* Trust Pill under image */}
+              <div className="d2c-floating-stat-card">
+                <div className="d2c-rating-chip">
+                  <Star size={14} className="star-filled" />
+                  <span className="rating-num">4.9</span>
+                  <span className="rating-count">(1,850+ Verified Ratings)</span>
+                </div>
+                <div className="d2c-speed-chip">
+                  <Clock size={14} />
+                  <span>Ready in 3s</span>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Recipes Grid */}
-            <div className="app-recipes-grid">
-              {filteredRecipes.length > 0 ? (
-                filteredRecipes.map((recipe) => (
-                  <div
-                    key={recipe.id}
-                    className={`recipe-card-premium ${selectedRecipe?.id === recipe.id && !isMobile ? 'active' : ''}`}
-                    onClick={() => {
-                      setSelectedRecipe(recipe);
-                      if (isMobile) setIsDetailOpen(true);
-                    }}
-                  >
-                    <div className="recipe-card-image-container">
-                      <Image
-                        src={recipe.image}
-                        alt={recipe.name}
-                        width={200}
-                        height={200}
-                        className="recipe-card-img-topview"
-                        priority
-                      />
-                    </div>
-                    <div className="recipe-card-details">
-                      <h3 className="recipe-card-title">{recipe.name}</h3>
-                      <div className="recipe-card-rating">
-                        <Star size={12} fill="currentColor" stroke="none" />
-                        <span>{recipe.rating}</span>
-                      </div>
-                      <div className="recipe-card-footer">
-                        <span className="recipe-card-price">₹300</span>
-                        <button
-                          className="recipe-card-add-btn"
-                          onClick={(e) => handleAddToCart(e)}
-                          aria-label="Add Janu Bhai Coffee to cart"
-                        >
-                          <Plus size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="no-recipes-found">
-                  <p>No recipes match your search.</p>
-                </div>
-              )}
+          {/* Hero Right: Direct Purchase & Highlights */}
+          <div className="d2c-hero-details-col">
+            <div className="d2c-brand-pill">
+              <Sparkles size={13} />
+              <span>PREMIUM INSTANT COFFEE</span>
             </div>
 
-            {/* Special For You Banner */}
-            <div className="special-for-you-section">
-              <h3 className="special-title">Special for you</h3>
-              <div
-                className="special-card"
-                onClick={() => {
-                  setSelectedRecipe(recipes[3]); // Affogato
-                  if (isMobile) setIsDetailOpen(true);
-                }}
-              >
-                <div className="special-card-left">
-                  <h4>Barista's Choice</h4>
-                  <h3>Classic Affogato</h3>
-                  <p>Vanilla bean ice cream drowned in hot espresso.</p>
+            <h1 className="d2c-main-title">
+              REAL INSTANT COFFEE.
+              <br />
+              <span className="d2c-highlight-text">NO COMPROMISE.</span>
+            </h1>
+
+            <p className="d2c-lead-description">
+              Artisan roasted in small batches from Chikmagalur estates. Micro-crystallized to
+              dissolve in 3 seconds in hot or chilled milk with a rich, velvety crema.
+            </p>
+
+            {/* Pack Size Selector */}
+            <div className="d2c-pack-selector-card">
+              <div className="d2c-selector-header">
+                <span className="d2c-selector-title">Select Pack Size</span>
+                <span className="d2c-delivery-note">
+                  <Truck size={13} /> Free delivery across India
+                </span>
+              </div>
+
+              <div className="d2c-pack-options-grid">
+                {PACK_SIZES.map((pack) => {
+                  const isSelected = selectedPackId === pack.id;
+                  return (
+                    <button
+                      key={pack.id}
+                      type="button"
+                      className={`d2c-pack-card ${isSelected ? 'selected' : ''}`}
+                      onClick={() => setSelectedPackId(pack.id)}
+                    >
+                      {pack.badge && (
+                        <span
+                          className={`d2c-pack-badge ${pack.id === '1kg' ? 'badge-save' : ''}`}
+                        >
+                          {pack.badge}
+                        </span>
+                      )}
+                      <div className="d2c-pack-info">
+                        <span className="d2c-pack-weight">{pack.weightLabel}</span>
+                        <span className="d2c-pack-servings">
+                          {pack.servings} ({pack.costPerCup})
+                        </span>
+                      </div>
+                      <div className="d2c-pack-pricing">
+                        <span className="d2c-price-current">
+                          ₹{pack.price.toLocaleString('en-IN')}
+                        </span>
+                        <span className="d2c-price-original">₹{pack.originalPrice}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Quantity & Buy Buttons */}
+              <div className="d2c-purchase-action-group">
+                <div className="d2c-qty-picker">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus size={15} />
+                  </button>
+                  <span>{quantity}</span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => q + 1)}
+                    aria-label="Increase quantity"
+                  >
+                    <Plus size={15} />
+                  </button>
                 </div>
-                <div className="special-card-right">
-                  <Image src="/affogato_cup.png" alt="Affogato" width={100} height={100} />
+
+                <button type="button" className="d2c-btn-buy-now" onClick={handleBuyNow}>
+                  <Zap size={18} />
+                  <span>Buy Now — ₹{(selectedPack.price * quantity).toLocaleString('en-IN')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`d2c-btn-add-cart ${addedToast ? 'added' : ''}`}
+                  onClick={handleAddToCart}
+                >
+                  {addedToast ? (
+                    <>
+                      <Check size={18} /> Added to Cart!
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag size={18} /> Add to Cart
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Quick Trust Badges */}
+              <div className="d2c-hero-trust-row">
+                <div className="d2c-trust-mini">
+                  <Check size={14} className="check-icon" /> 100% Arabica Blend
+                </div>
+                <div className="d2c-trust-mini">
+                  <Check size={14} className="check-icon" /> Zero Artificial Preservatives
+                </div>
+                <div className="d2c-trust-mini">
+                  <Check size={14} className="check-icon" /> Dissolves in Hot / Cold Milk
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* RIGHT PANEL / DETAIL VIEW (DESKTOP) */}
-        {!isMobile && selectedRecipe && (
-          <div className="app-right-panel">
-            <div className="detail-view-container">
-              {/* Top View Coffee Display */}
-              <div className="detail-coffee-display">
-                <div className="detail-coffee-circle-bg">
-                  <Image
-                    src={selectedRecipe.image}
-                    alt={selectedRecipe.name}
-                    width={320}
-                    height={320}
-                    className="detail-coffee-large-img"
-                    priority
-                  />
-                </div>
+      {/* 2. TRUST HIGHLIGHT BAR */}
+      <section className="d2c-trust-strip">
+        <div className="container d2c-trust-strip-inner">
+          <div className="d2c-strip-item">
+            <Leaf size={22} className="d2c-strip-icon" />
+            <div>
+              <h4>Chikmagalur Estates</h4>
+              <p>High altitude canopy-grown beans</p>
+            </div>
+          </div>
+          <div className="d2c-strip-item">
+            <Sparkles size={22} className="d2c-strip-icon" />
+            <div>
+              <h4>Micro-Crystallized</h4>
+              <p>Locked in aroma, 3s instant dissolve</p>
+            </div>
+          </div>
+          <div className="d2c-strip-item">
+            <ShieldCheck size={22} className="d2c-strip-icon" />
+            <div>
+              <h4>Zero Burnt Bitterness</h4>
+              <p>Clean medium roast flavor profile</p>
+            </div>
+          </div>
+          <div className="d2c-strip-item">
+            <Truck size={22} className="d2c-strip-icon" />
+            <div>
+              <h4>Fast Dispatch</h4>
+              <p>Direct to your doorstep pan-India</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. ROAST SCIENCE & BLEND STORY */}
+      <section className="d2c-story-section">
+        <div className="container d2c-story-grid">
+          <div className="d2c-story-content">
+            <span className="d2c-section-eyebrow">The Craft Behind Janu Bhai</span>
+            <h2 className="d2c-section-title">
+              Why Regular Instant Coffee Tastes Bitter — <br />
+              <span className="d2c-highlight-text">And Why Ours Doesn’t.</span>
+            </h2>
+            <p className="d2c-story-para">
+              Most mass-market commercial instant coffees use cheap robusta filler beans roasted at
+              extreme thermal temperatures, burning away natural aromatics and leaving a harsh,
+              metallic aftertaste.
+            </p>
+            <p className="d2c-story-para">
+              Janu Bhai takes single-estate Arabica cherries from Chikmagalur, Karnataka. We
+              medium-roast them at 210–220°C to activate natural Maillard caramelization, followed
+              by gentle sub-zero freeze drying. The result is pure, smooth coffee crystals that
+              produce a luscious crema the moment they meet milk or hot water.
+            </p>
+
+            <div className="d2c-specs-grid">
+              <div className="d2c-spec-card">
+                <span className="d2c-spec-val">70%</span>
+                <span className="d2c-spec-lbl">Estate Arabica</span>
               </div>
-
-              {/* Detail Content Card */}
-              <div className="detail-content-card">
-                <div className="detail-content-header">
-                  <div>
-                    <h2 className="detail-coffee-name">{selectedRecipe.name}</h2>
-                    <div className="detail-coffee-meta">
-                      <div className="detail-stars">
-                        <Star size={14} fill="currentColor" stroke="none" />
-                        <span>
-                          {selectedRecipe.rating}{' '}
-                          <span className="reviews-count">({selectedRecipe.reviews})</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="detail-price-box">
-                    <span className="detail-price-label">Janu Bhai Coffee</span>
-                    <span className="detail-price-amount">
-                      {activeSize === '1kg' ? '₹3,000' : '₹300'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Pack Size Selector */}
-                <div className="detail-size-selector">
-                  <span className="selector-title">Select Coffee Powder Pack</span>
-                  <div className="size-options-group">
-                    {['100g', '1kg'].map((size) => (
-                      <button
-                        key={size}
-                        className={`size-btn ${activeSize === size ? 'active' : ''}`}
-                        onClick={() => setActiveSize(size)}
-                        style={{ borderRadius: '20px', width: 'auto', padding: '0 20px' }}
-                      >
-                        {size} {size === '100g' ? 'Starter' : 'Value (Save 10%)'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="detail-divider" />
-
-                {/* Description */}
-                <div className="detail-description-section">
-                  <h3>Recipe Description</h3>
-                  <p>{selectedRecipe.desc}</p>
-                </div>
-
-                {/* Ingredients & Steps split */}
-                <div className="detail-split-instructions">
-                  <div className="detail-ingredients">
-                    <h3>Ingredients Needed</h3>
-                    <ul>
-                      {selectedRecipe.ingredients.map((ing, i) => (
-                        <li key={i}>{ing}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="detail-steps">
-                    <h3>Preparation Steps</h3>
-                    <ol>
-                      {selectedRecipe.steps.map((step, i) => (
-                        <li key={i}>{step}</li>
-                      ))}
-                    </ol>
-                  </div>
-                </div>
-
-                {/* Sticky Action Row */}
-                <div className="detail-action-sticky">
-                  <button
-                    className={`btn-add-to-cart-app ${addedAnimation ? 'added' : ''}`}
-                    onClick={(e) => handleAddToCart(e)}
-                  >
-                    {addedAnimation ? 'Added to Cart' : 'Add Coffee to Cart'}
-                  </button>
-                  <button className="btn-buy-now-app" onClick={handleBuyNow}>
-                    Buy Now
-                  </button>
-                </div>
+              <div className="d2c-spec-card">
+                <span className="d2c-spec-val">30%</span>
+                <span className="d2c-spec-lbl">Rich Chicory Body</span>
+              </div>
+              <div className="d2c-spec-card">
+                <span className="d2c-spec-val">3.2%</span>
+                <span className="d2c-spec-lbl">Clean Caffeine Boost</span>
+              </div>
+              <div className="d2c-spec-card">
+                <span className="d2c-spec-val">0g</span>
+                <span className="d2c-spec-lbl">Added Sugars / Fillers</span>
               </div>
             </div>
           </div>
-        )}
-      </div>
 
-      {/* MOBILE DRAWER DETAILS (SLIDE UP) */}
-      <AnimatePresence>
-        {isMobile && isDetailOpen && selectedRecipe && (
-          <>
-            <motion.div
-              className="drawer-overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsDetailOpen(false)}
-            />
-            <motion.div
-              className="drawer-sheet"
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            >
-              <div className="drawer-handle" />
-              <button
-                className="drawer-close-btn"
-                onClick={() => setIsDetailOpen(false)}
-                aria-label="Close details"
-              >
-                <X size={20} />
-              </button>
-
-              <div className="drawer-scroll-content">
-                {/* Large Coffee Cup */}
-                <div className="drawer-coffee-display">
-                  <Image
-                    src={selectedRecipe.image}
-                    alt={selectedRecipe.name}
-                    width={220}
-                    height={220}
-                    className="drawer-coffee-img"
-                  />
-                </div>
-
-                {/* Title Card */}
-                <div className="drawer-title-card">
-                  <div className="drawer-title-header">
-                    <div>
-                      <h2>{selectedRecipe.name}</h2>
-                      <div className="drawer-rating">
-                        <Star size={14} fill="currentColor" stroke="none" />
-                        <span>
-                          {selectedRecipe.rating} ({selectedRecipe.reviews})
-                        </span>
-                      </div>
-                    </div>
-                    <div className="drawer-price-tag">
-                      <span>{activeSize === '1kg' ? '₹3,000' : '₹300'}</span>
-                    </div>
-                  </div>
-
-                  {/* Pack Size Selector */}
-                  <div className="detail-size-selector">
-                    <span className="selector-title">Select Coffee Powder Pack</span>
-                    <div className="size-options-group">
-                      {['100g', '1kg'].map((size) => (
-                        <button
-                          key={size}
-                          className={`size-btn ${activeSize === size ? 'active' : ''}`}
-                          onClick={() => setActiveSize(size)}
-                          style={{ borderRadius: '20px', width: 'auto', padding: '0 20px' }}
-                        >
-                          {size} {size === '100g' ? 'Starter' : 'Value'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="detail-divider" />
-
-                  {/* Description */}
-                  <div className="drawer-desc">
-                    <h3>Description</h3>
-                    <p>{selectedRecipe.desc}</p>
-                  </div>
-
-                  {/* Ingredients */}
-                  <div className="drawer-ingredients">
-                    <h3>Ingredients</h3>
-                    <ul>
-                      {selectedRecipe.ingredients.map((ing, i) => (
-                        <li key={i}>{ing}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Steps */}
-                  <div className="drawer-steps">
-                    <h3>Recipe Steps</h3>
-                    <ol>
-                      {selectedRecipe.steps.map((step, i) => (
-                        <li key={i}>{step}</li>
-                      ))}
-                    </ol>
-                  </div>
-                </div>
+          <div className="d2c-story-media">
+            <div className="d2c-story-card-glass">
+              <Image
+                src="/expertly_roasted.png"
+                alt="Expertly Roasted Janu Bhai Coffee"
+                width={500}
+                height={500}
+                className="d2c-story-img"
+              />
+              <div className="d2c-glass-footer">
+                <h4>Small Batch Roast Master Guarantee</h4>
+                <p>Every batch freshly sealed in airtight packaging.</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-              {/* Sticky bottom CTA */}
-              <div className="drawer-cta-sticky">
+      {/* 4. COMPARISON MATRIX */}
+      <section className="d2c-comparison-section">
+        <div className="container">
+          <div className="d2c-section-center-head">
+            <span className="d2c-section-eyebrow">The Clear Difference</span>
+            <h2 className="d2c-section-title">Janu Bhai vs Commercial Instant Brands</h2>
+          </div>
+
+          <div className="d2c-table-wrapper">
+            <table className="d2c-comparison-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th className="th-highlight">Janu Bhai Instant Coffee</th>
+                  <th>Mass Market Brands</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON_ROWS.map((row, idx) => (
+                  <tr key={idx}>
+                    <td className="td-feature">{row.feature}</td>
+                    <td className="td-highlight">
+                      <Check size={16} className="td-check" />
+                      <span>{row.janubhai}</span>
+                    </td>
+                    <td className="td-commercial">{row.commercial}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. 3-SECOND BREW GUIDE */}
+      <section className="d2c-brew-section">
+        <div className="container">
+          <div className="d2c-section-center-head">
+            <span className="d2c-section-eyebrow">Zero Equipment Required</span>
+            <h2 className="d2c-section-title">How To Brew in 3 Seconds</h2>
+            <p className="d2c-section-desc">
+              No French press, moka pot, or filter paper needed. Just instant café perfection.
+            </p>
+          </div>
+
+          {/* Brew Tabs */}
+          <div className="d2c-brew-tabs">
+            {BREW_METHODS.map((method) => {
+              const Icon = method.icon;
+              return (
                 <button
-                  className={`btn-add-to-cart-app ${addedAnimation ? 'added' : ''}`}
-                  onClick={(e) => handleAddToCart(e)}
+                  key={method.id}
+                  type="button"
+                  className={`d2c-brew-tab-btn ${activeBrewTab === method.id ? 'active' : ''}`}
+                  onClick={() => setActiveBrewTab(method.id)}
                 >
-                  {addedAnimation ? 'Added' : 'Add to Cart'}
+                  <Icon size={18} />
+                  <div>
+                    <span className="tab-title">{method.title}</span>
+                  </div>
                 </button>
-                <button className="btn-buy-now-app" onClick={handleBuyNow}>
-                  Buy Now
-                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Brew Steps */}
+          {(() => {
+            const currentMethod =
+              BREW_METHODS.find((m) => m.id === activeBrewTab) || BREW_METHODS[0];
+            return (
+              <div className="d2c-brew-steps-card">
+                <div className="d2c-steps-grid">
+                  {currentMethod.steps.map((step, index) => (
+                    <div key={index} className="d2c-step-item">
+                      <div className="d2c-step-number">{index + 1}</div>
+                      <p className="d2c-step-text">{step}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </motion.div>
-          </>
+            );
+          })()}
+        </div>
+      </section>
+
+      {/* 6. VERIFIED REVIEWS */}
+      <section className="d2c-reviews-section">
+        <div className="container">
+          <div className="d2c-section-center-head">
+            <div className="d2c-stars-row">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={18} fill="currentColor" className="star-filled" />
+              ))}
+            </div>
+            <h2 className="d2c-section-title">Loved By 10,000+ Coffee Drinkers</h2>
+            <p className="d2c-section-desc">Real feedback from verified buyers across India</p>
+          </div>
+
+          <div className="d2c-reviews-grid">
+            {REVIEWS.map((rev) => (
+              <div key={rev.id} className="d2c-review-card">
+                <div className="d2c-rev-header">
+                  <div className="d2c-rev-stars">
+                    {[...Array(rev.rating)].map((_, i) => (
+                      <Star key={i} size={14} fill="currentColor" className="star-filled" />
+                    ))}
+                  </div>
+                  <span className="d2c-rev-tag">{rev.tag}</span>
+                </div>
+                <p className="d2c-rev-text">“{rev.text}”</p>
+                <div className="d2c-rev-author">
+                  <strong>{rev.name}</strong>
+                  <span>{rev.city}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 7. FAQS */}
+      <section className="d2c-faq-section">
+        <div className="container" style={{ maxWidth: '800px' }}>
+          <div className="d2c-section-center-head">
+            <span className="d2c-section-eyebrow">Frequently Asked</span>
+            <h2 className="d2c-section-title">Got Questions?</h2>
+          </div>
+
+          <div className="d2c-faq-accordion">
+            {FAQS.map((faq, index) => {
+              const isOpen = expandedFaq === index;
+              return (
+                <div key={index} className={`d2c-faq-item ${isOpen ? 'open' : ''}`}>
+                  <button
+                    type="button"
+                    className="d2c-faq-trigger"
+                    onClick={() => setExpandedFaq(isOpen ? -1 : index)}
+                  >
+                    <span>{faq.q}</span>
+                    <ChevronDown size={18} className={`faq-chevron ${isOpen ? 'rotate' : ''}`} />
+                  </button>
+                  {isOpen && (
+                    <div className="d2c-faq-body">
+                      <p>{faq.a}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 8. BOTTOM PURCHASE BANNER */}
+      <section className="d2c-bottom-cta-banner">
+        <div className="container d2c-bottom-cta-inner">
+          <div>
+            <h3>Ready for your finest daily cup?</h3>
+            <p>Order your 100g Starter Jar (₹300) or 1kg Value Pouch (₹3,000) today.</p>
+          </div>
+          <div className="d2c-bottom-cta-actions">
+            <button type="button" className="d2c-btn-buy-now" onClick={handleBuyNow}>
+              <Zap size={18} /> Buy Now
+            </button>
+            <button type="button" className="d2c-btn-add-cart" onClick={handleAddToCart}>
+              <ShoppingBag size={18} /> Add to Cart
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. STICKY MOBILE BOTTOM BAR (on scroll) */}
+      <AnimatePresence>
+        {isScrolledPastHero && (
+          <motion.div
+            className="d2c-mobile-sticky-bar"
+            initial={{ y: 100 }}
+            animate={{ y: 0 }}
+            exit={{ y: 100 }}
+            transition={{ duration: 0.25 }}
+          >
+            <div className="d2c-sticky-info">
+              <span className="d2c-sticky-name">{selectedPack.weightLabel}</span>
+              <span className="d2c-sticky-price">₹{selectedPack.price}</span>
+            </div>
+            <div className="d2c-sticky-actions">
+              <button
+                type="button"
+                className="d2c-sticky-cart-btn"
+                onClick={handleAddToCart}
+                aria-label="Add to cart"
+              >
+                <ShoppingBag size={18} />
+              </button>
+              <button type="button" className="d2c-sticky-buy-btn" onClick={handleBuyNow}>
+                <Zap size={16} /> Buy Now
+              </button>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
