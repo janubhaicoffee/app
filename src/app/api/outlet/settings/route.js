@@ -1,17 +1,11 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const outletId = searchParams.get('outletId');
     if (!outletId) return NextResponse.json({ error: 'Missing outletId' }, { status: 400 });
-
-    const supabaseClient = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { data: outlet } = await supabaseAdmin
       .from('outlets')
@@ -58,9 +52,13 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const supabaseClient = createRouteHandlerClient({ cookies });
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authHeader = request.headers.get('Authorization');
+    let userId = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+      if (user) userId = user.id;
+    }
 
     const body = await request.json();
     const { outletId, operating_hours, pos_config, notifications } = body;
@@ -87,7 +85,7 @@ export async function POST(request) {
       if (existing) {
         await supabaseAdmin
           .from('outlet_settings')
-          .update({ value: pos_config, updated_by: session.user.id, updated_at: new Date().toISOString() })
+          .update({ value: pos_config, updated_by: userId, updated_at: new Date().toISOString() })
           .eq('id', existing.id);
       } else {
         await supabaseAdmin
@@ -97,7 +95,7 @@ export async function POST(request) {
             key: 'pos_config',
             value: pos_config,
             description: 'POS & Receipt Configuration',
-            updated_by: session.user.id
+            updated_by: userId
           });
       }
     }
@@ -113,7 +111,7 @@ export async function POST(request) {
       if (existingNotif) {
         await supabaseAdmin
           .from('outlet_settings')
-          .update({ value: notifications, updated_by: session.user.id, updated_at: new Date().toISOString() })
+          .update({ value: notifications, updated_by: userId, updated_at: new Date().toISOString() })
           .eq('id', existingNotif.id);
       } else {
         await supabaseAdmin
@@ -123,7 +121,7 @@ export async function POST(request) {
             key: 'notification_config',
             value: notifications,
             description: 'Notification Preferences',
-            updated_by: session.user.id
+            updated_by: userId
           });
       }
     }

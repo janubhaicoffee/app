@@ -48,16 +48,15 @@ export default function DailyReport() {
       }
 
       if (oid) {
-          try {
-            const res = await fetch(`/api/outlet/settings?outletId=${oid}`);
-            if (res.ok) {
-              const body = await res.json();
-              if (body.data?.outlet_name) {
-                oName = body.data.outlet_name;
-              }
+        try {
+          const res = await fetch(`/api/outlet/settings?outletId=${oid}`);
+          if (res.ok) {
+            const body = await res.json();
+            if (body.data?.outlet_name) {
+              oName = body.data.outlet_name;
             }
-          } catch (_) {}
-        }
+          }
+        } catch (_) {}
         setOutletId(oid);
         setOutletName(oName);
       } else {

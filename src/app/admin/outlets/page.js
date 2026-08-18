@@ -599,25 +599,24 @@ export default function AdminOutlets() {
                     <h4 style={{ margin: '1rem 0 0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>FSSAI Details</h4>
                     <div className="form-row">
                       <div className="form-group">
-                      <label>Upload FSSAI Certificate</label>
-                      <input 
-                        type="file" 
-                        accept="image/*,application/pdf"
-                        onChange={handleFssaiUpload}
-                      />
-                      {isExtractingFssai && <span style={{ fontSize: '0.8rem', color: 'var(--accent-gold)' }}>Analyzing with AI...</span>}
-                      {form.fssai_certificate_url && !fssaiFile && (
-                        <a href={form.fssai_certificate_url} target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--accent-gold)', marginTop: '4px', display: 'inline-block' }}>View Current Certificate</a>
-                      )}
-                    </div>
-                    <div className="form-group">
-                      <label>FSSAI Number</label>
-                      <input 
-                        value={form.fssai_number} 
-                        onChange={(e) => setForm({ ...form, fssai_number: e.target.value })} 
-                        placeholder="14-Digit Number" 
-                      />
-                    </div>
+                        <label>Upload FSSAI Certificate</label>
+                        <input 
+                          type="file" 
+                          accept="image/*,application/pdf"
+                          onChange={handleFssaiUpload}
+                        />
+                        {isExtractingFssai && <span style={{ fontSize: '0.8rem', color: 'var(--accent-gold)' }}>Analyzing with AI...</span>}
+                        {form.fssai_certificate_url && !fssaiFile && (
+                          <a href={form.fssai_certificate_url} target="_blank" rel="noreferrer" style={{ fontSize: '0.8rem', color: 'var(--accent-gold)', marginTop: '4px', display: 'inline-block' }}>View Current Certificate</a>
+                        )}
+                      </div>
+                      <div className="form-group">
+                        <label>FSSAI Number</label>
+                        <input 
+                          value={form.fssai_number} 
+                          onChange={(e) => setForm({ ...form, fssai_number: e.target.value })} 
+                          placeholder="14-Digit Number" 
+                        />
                       </div>
                     </div>
                   </div>
