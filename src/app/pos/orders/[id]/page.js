@@ -123,7 +123,7 @@ export default function PosOrderDetail() {
       });
 
       if (result.offline) {
-        toast.success('Payment recorded offline — will sync when connected');
+        toast.success('Payment recorded offline. Will sync when connected');
         setOrder((prev) =>
           prev ? { ...prev, payment_status: 'paid', status: 'completed' } : prev,
         );

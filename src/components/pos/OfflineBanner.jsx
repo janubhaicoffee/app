@@ -32,7 +32,7 @@ export default function OfflineBanner() {
       {!online ? (
         <>
           <WifiOff size={14} />
-          You are offline — orders will sync when connected
+          You are offline. Orders will sync when connected
         </>
       ) : pendingCount > 0 ? (
         <>

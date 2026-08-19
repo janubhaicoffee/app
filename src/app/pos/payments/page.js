@@ -84,7 +84,7 @@ export default function PosPayments() {
       const result = await processPayment(payload);
 
       if (result.offline) {
-        toast.success('Payment recorded offline — will sync when connected');
+        toast.success('Payment recorded offline. Will sync when connected');
       }
 
       if (online && method !== 'cash' && method !== 'upi') {
@@ -143,7 +143,7 @@ export default function PosPayments() {
           }}
         >
           <WifiOff size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-          Offline — cash and UPI payments accepted. Card payments may be delayed.
+          Offline: cash and UPI payments accepted. Card payments may be delayed.
         </div>
       )}
 

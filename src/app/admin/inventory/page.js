@@ -249,7 +249,7 @@ export default function AdminInventory() {
                         <strong>{product.name}</strong>
                       </td>
                       <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
-                        {product.sku || '—'}
+                        {product.sku || '-'}
                       </td>
                       <td style={{ fontWeight: 700, color }}>{product.stock}</td>
                       <td>{product.low_stock_threshold || 10}</td>
@@ -308,7 +308,7 @@ export default function AdminInventory() {
                     <div
                       style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: 4 }}
                     >
-                      SKU: {adjustModal.sku || '—'}
+                      SKU: {adjustModal.sku || '-'}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -383,7 +383,7 @@ export default function AdminInventory() {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: 600 }}>
             <div className="modal-header">
-              <h2>Stock History — {historyModal.name}</h2>
+              <h2>Stock History: {historyModal.name}</h2>
               <button className="modal-close" onClick={() => setHistoryModal(null)}>
                 &times;
               </button>
@@ -429,7 +429,7 @@ export default function AdminInventory() {
                               {(log.reason || 'manual_adjustment').replace(/_/g, ' ')}
                             </span>
                           </td>
-                          <td style={{ fontSize: '0.85rem', maxWidth: 200 }}>{log.note || '—'}</td>
+                          <td style={{ fontSize: '0.85rem', maxWidth: 200 }}>{log.note || '-'}</td>
                         </tr>
                       ))}
                     </tbody>

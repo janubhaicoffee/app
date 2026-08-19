@@ -22,7 +22,7 @@ function getFileTypeIcon(type) {
 }
 
 function formatFileSize(bytes) {
-  if (!bytes) return '—';
+  if (!bytes) return '-';
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / 1048576).toFixed(1) + ' MB';
@@ -370,7 +370,7 @@ export default function AdminMedia() {
             <tbody>
               {filteredMedia.map((item) => {
                 const inferredType = inferType(item.url, item.type);
-                const dims = item.width && item.height ? `${item.width}×${item.height}` : '—';
+                const dims = item.width && item.height ? `${item.width}×${item.height}` : '-';
                 return (
                   <tr key={item.id}>
                     <td style={{ width: 40 }}>
@@ -392,9 +392,9 @@ export default function AdminMedia() {
                     <td style={{ textTransform: 'capitalize' }}>{inferredType}</td>
                     <td>{formatFileSize(item.size)}</td>
                     <td style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{dims}</td>
-                    <td>{item.folder || <span style={{ color: '#bbb' }}>—</span>}</td>
+                    <td>{item.folder || <span style={{ color: '#bbb' }}>-</span>}</td>
                     <td style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                      {item.created_at ? new Date(item.created_at).toLocaleDateString() : '—'}
+                      {item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>

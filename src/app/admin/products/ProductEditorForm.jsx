@@ -799,7 +799,7 @@ export default function ProductEditorForm({ initialData, isNew }) {
                   {formData.compare_at_price &&
                     parseFloat(formData.compare_at_price) > parseFloat(formData.price) && (
                       <span className="form-hint form-hint-sale">
-                        Sale —{' '}
+                        Sale -{' '}
                         {Math.round(
                           (1 - parseFloat(formData.price) / parseFloat(formData.compare_at_price)) *
                             100,

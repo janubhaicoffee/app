@@ -1,5 +1,5 @@
 /* ==========================================================================
-   JANU BHAI COFFEE — FLAGSHIP D2C INSTANT COFFEE STOREFRONT
+   JANU BHAI COFFEE - FLAGSHIP D2C INSTANT COFFEE STOREFRONT
    Luxury Espresso & Gold Design System
    ========================================================================== */
 
@@ -943,18 +943,19 @@
   .d2c-mobile-sticky-bar {
     display: flex;
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(26, 15, 12, 0.95);
-    border-top: 1px solid rgba(216, 154, 30, 0.3);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    z-index: 999;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    right: 12px;
+    background: rgba(42, 26, 23, 0.92);
+    border: 1px solid rgba(216, 154, 30, 0.4);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    padding: 10px 14px;
+    border-radius: 20px;
+    z-index: 998;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .d2c-sticky-info {
@@ -963,13 +964,14 @@
   }
 
   .d2c-sticky-name {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
+    font-weight: 600;
   }
 
   .d2c-sticky-price {
-    font-size: 1.15rem;
-    font-weight: 900;
+    font-size: 1.1rem;
+    font-weight: 800;
     color: var(--accent-gold);
   }
 
@@ -980,30 +982,43 @@
   }
 
   .d2c-sticky-cart-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
     background: rgba(58, 36, 31, 0.8);
-    border: 1px solid rgba(245, 240, 234, 0.2);
+    border: 1px solid rgba(245, 240, 234, 0.15);
     color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .d2c-sticky-cart-btn:active {
+    transform: scale(0.92);
   }
 
   .d2c-sticky-buy-btn {
-    height: 44px;
+    height: 42px;
     padding: 0 18px;
-    border-radius: 10px;
-    background: var(--accent-gold);
+    border-radius: 12px;
+    background: linear-gradient(135deg, #d89a1e 0%, #c28717 100%);
     color: #1a0f0c;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     font-weight: 800;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     display: flex;
     align-items: center;
     gap: 6px;
     text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(216, 154, 30, 0.3);
+    transition: transform 0.2s;
+  }
+
+  .d2c-sticky-buy-btn:active {
+    transform: scale(0.95);
   }
 }
 

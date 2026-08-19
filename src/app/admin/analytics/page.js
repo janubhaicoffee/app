@@ -156,7 +156,7 @@ export default function AdminAnalytics() {
 
   const renderChange = (change) => {
     if (change === 0 || change === '0.0')
-      return <span style={{ color: '#999', fontSize: '0.78rem' }}>—</span>;
+      return <span style={{ color: '#999', fontSize: '0.78rem' }}>-</span>;
     const isUp = Number(change) > 0;
     return (
       <span style={{ color: isUp ? '#2e7d32' : '#c62828', fontWeight: 700, fontSize: '0.85rem' }}>

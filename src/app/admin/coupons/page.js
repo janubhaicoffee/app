@@ -198,7 +198,7 @@ export default function AdminCoupons() {
                           : `₹${c.discount_value}`}
                     </td>
                     <td>{typeLabel(c.discount_type)}</td>
-                    <td>{c.min_order_amount ? `₹${c.min_order_amount}` : '—'}</td>
+                    <td>{c.min_order_amount ? `₹${c.min_order_amount}` : '-'}</td>
                     <td>
                       {c.used_count || 0}
                       {c.usage_limit > 0 ? ` / ${c.usage_limit}` : ''}
@@ -209,7 +209,7 @@ export default function AdminCoupons() {
                       </span>
                     </td>
                     <td style={{ fontSize: '0.82rem' }}>
-                      {c.expiry_date ? new Date(c.expiry_date).toLocaleDateString() : '—'}
+                      {c.expiry_date ? new Date(c.expiry_date).toLocaleDateString() : '-'}
                     </td>
                     <td>
                       <button

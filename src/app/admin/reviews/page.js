@@ -12,7 +12,7 @@ function StarRating({ rating }) {
 }
 
 function truncate(text, len = 80) {
-  if (!text) return '—';
+  if (!text) return '-';
   return text.length > len ? text.substring(0, len) + '…' : text;
 }
 
@@ -172,7 +172,7 @@ export default function AdminReviews() {
                   <td>
                     <StarRating rating={r.rating} />
                   </td>
-                  <td style={{ fontWeight: 600 }}>{r.title || '—'}</td>
+                  <td style={{ fontWeight: 600 }}>{r.title || '-'}</td>
                   <td
                     style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', maxWidth: 200 }}
                   >

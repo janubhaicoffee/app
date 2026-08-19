@@ -330,12 +330,12 @@ export default function AdminStaff() {
                   }}
                 >
                   <Shield size={12} style={{ display: 'inline', marginRight: 3 }} />
-                  Outlet: {member.outlets?.name || getOutletName(member.outlet_id) || '—'}
+                  Outlet: {member.outlets?.name || getOutletName(member.outlet_id) || '-'}
                 </div>
 
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                   Joined:{' '}
-                  {member.created_at ? new Date(member.created_at).toLocaleDateString() : '—'}
+                  {member.created_at ? new Date(member.created_at).toLocaleDateString() : '-'}
                 </div>
 
                 <div

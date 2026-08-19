@@ -94,7 +94,7 @@ export default function DatePicker({ value, onChange, className = '' }) {
 
   const displayLabel = value?.preset
     ? value.preset === 'Custom Range'
-      ? `${value.start ? formatDate(value.start) : '?'} – ${value.end ? formatDate(value.end) : '?'}`
+      ? `${value.start ? formatDate(value.start) : '?'} - ${value.end ? formatDate(value.end) : '?'}`
       : value.preset
     : 'Select Date Range';
 

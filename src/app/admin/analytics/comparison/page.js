@@ -337,7 +337,7 @@ export default function OutletComparison() {
                               color: outlet?.status === 'active' ? '#155724' : '#383d41',
                             }}
                           >
-                            {outlet?.status || '—'}
+                            {outlet?.status || '-'}
                           </span>
                         </td>
                       );

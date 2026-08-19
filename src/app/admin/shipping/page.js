@@ -310,9 +310,9 @@ export default function AdminShipping() {
                       <td>₹{zone.base_rate}</td>
                       <td>₹{zone.rate_per_kg}</td>
                       <td>
-                        {zone.free_shipping_threshold ? `₹${zone.free_shipping_threshold}` : '—'}
+                        {zone.free_shipping_threshold ? `₹${zone.free_shipping_threshold}` : '-'}
                       </td>
-                      <td>{zone.estimated_days || '—'}</td>
+                      <td>{zone.estimated_days || '-'}</td>
                       <td>
                         <span
                           className="status-badge"

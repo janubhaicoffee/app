@@ -439,7 +439,7 @@ export default function ConsolidatedAnalytics() {
                     <td style={{ fontWeight: 700, color: '#2e7d32' }}>{formatINR(o.revenue)}</td>
                     <td>{o.orders}</td>
                     <td>{o.staff}</td>
-                    <td>{o.orders > 0 ? formatINR(o.revenue / o.orders) : '—'}</td>
+                    <td>{o.orders > 0 ? formatINR(o.revenue / o.orders) : '-'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -67,7 +67,7 @@ const BREW_METHODS = [
     steps: [
       'Add 1 tsp (2g) of Janu Bhai Coffee Powder to your cup.',
       'Pour 150ml of piping hot milk or boiled water.',
-      'Stir vigorously for 3 seconds — watch rich crema form instantly.',
+      'Stir vigorously for 3 seconds and watch rich crema form instantly.',
     ],
   },
   {
@@ -372,7 +372,7 @@ export default function Home() {
 
                 <button type="button" className="d2c-btn-buy-now" onClick={handleBuyNow}>
                   <Zap size={18} />
-                  <span>Buy Now — ₹{(selectedPack.price * quantity).toLocaleString('en-IN')}</span>
+                  <span>Buy Now • ₹{(selectedPack.price * quantity).toLocaleString('en-IN')}</span>
                 </button>
 
                 <button
@@ -449,7 +449,7 @@ export default function Home() {
           <div className="d2c-story-content">
             <span className="d2c-section-eyebrow">The Craft Behind Janu Bhai</span>
             <h2 className="d2c-section-title">
-              Why Regular Instant Coffee Tastes Bitter — <br />
+              Why Regular Instant Coffee Tastes Bitter & How We Fixed It: <br />
               <span className="d2c-highlight-text">And Why Ours Doesn’t.</span>
             </h2>
             <p className="d2c-story-para">
@@ -459,7 +459,7 @@ export default function Home() {
             </p>
             <p className="d2c-story-para">
               Janu Bhai takes single-estate Arabica cherries from Chikmagalur, Karnataka. We
-              medium-roast them at 210–220°C to activate natural Maillard caramelization, followed
+              medium-roast them at 210-220°C to activate natural Maillard caramelization, followed
               by gentle sub-zero freeze drying. The result is pure, smooth coffee crystals that
               produce a luscious crema the moment they meet milk or hot water.
             </p>

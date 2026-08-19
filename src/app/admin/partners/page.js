@@ -323,7 +323,7 @@ export default function AdminPartners() {
                 >
                   <span>
                     Created:{' '}
-                    {partner.created_at ? new Date(partner.created_at).toLocaleDateString() : '—'}
+                    {partner.created_at ? new Date(partner.created_at).toLocaleDateString() : '-'}
                   </span>
                   {stake >= 50 && (
                     <span style={{ color: '#2e7d32', fontWeight: 700 }}>

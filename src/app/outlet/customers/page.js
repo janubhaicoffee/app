@@ -301,7 +301,7 @@ export default function OutletCustomers() {
                   <div>
                     <span style={{ color: 'var(--text-secondary)' }}>Age:</span>{' '}
                     <span style={{ color: 'var(--text-warm-white)' }}>
-                      {selectedCustomer.age_range.min || '?'}–
+                      {selectedCustomer.age_range.min || '?'}-
                       {selectedCustomer.age_range.max || '?'}
                     </span>
                   </div>

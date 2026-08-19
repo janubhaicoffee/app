@@ -243,7 +243,7 @@ export default function AdminProducts() {
                     <td>{product.stock}</td>
                     <td>{getStatusBadge(product.status)}</td>
                     <td>
-                      <span className="cell-category">{product.category || '—'}</span>
+                      <span className="cell-category">{product.category || '-'}</span>
                     </td>
                     <td>
                       <div className="cell-actions">

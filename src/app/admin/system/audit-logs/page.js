@@ -236,7 +236,7 @@ export default function AuditLogs() {
               }}
               placeholder="From"
             />
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>—</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>-</span>
             <input
               type="date"
               value={dateTo}
@@ -312,7 +312,7 @@ export default function AuditLogs() {
                         </div>
                       </td>
                       <td style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                        {entry.admin_email || '—'}
+                        {entry.admin_email || '-'}
                       </td>
                       <td>
                         <span
@@ -327,7 +327,7 @@ export default function AuditLogs() {
                         </span>
                       </td>
                       <td style={{ fontSize: '0.85rem', textTransform: 'capitalize' }}>
-                        {entry.entity_type || entry.entity || '—'}
+                        {entry.entity_type || entry.entity || '-'}
                       </td>
                       <td
                         style={{
@@ -338,7 +338,7 @@ export default function AuditLogs() {
                           textOverflow: 'ellipsis',
                         }}
                       >
-                        {entry.entity_id || '—'}
+                        {entry.entity_id || '-'}
                       </td>
                       <td style={{ fontSize: '0.82rem', maxWidth: 300 }}>
                         <div
@@ -353,7 +353,7 @@ export default function AuditLogs() {
                             ? details.length > 100
                               ? details.slice(0, 100) + '...'
                               : details
-                            : '—'}
+                            : '-'}
                         </div>
                       </td>
                     </tr>

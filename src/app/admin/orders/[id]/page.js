@@ -209,10 +209,10 @@ export default function OrderDetailPage() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <p>
-              <strong>Email:</strong> {order.customer_email || '—'}
+              <strong>Email:</strong> {order.customer_email || '-'}
             </p>
             <p>
-              <strong>Phone:</strong> {order.customer_phone || '—'}
+              <strong>Phone:</strong> {order.customer_phone || '-'}
             </p>
             {order.shipping_address && (
               <div>
@@ -513,7 +513,7 @@ function renderTimeline(order) {
   if (order.refund_status && order.refund_status !== 'none') {
     events.push({
       time: order.updated_at || order.created_at,
-      label: `Refund ${order.refund_status} — ₹${order.refund_amount || 0}`,
+      label: `Refund ${order.refund_status} - ₹${order.refund_amount || 0}`,
     });
   }
 

@@ -559,10 +559,10 @@ export default function AdminSettings() {
                 <tr key={a.id} style={{ borderBottom: '1px solid #eee' }}>
                   <td style={{ padding: '8px' }}>{a.name}</td>
                   <td style={{ padding: '8px', color: a.email ? 'inherit' : '#999' }}>
-                    {a.email || '—'}
+                    {a.email || '-'}
                   </td>
                   <td style={{ padding: '8px', color: a.phone ? 'inherit' : '#999' }}>
-                    {a.phone || '—'}
+                    {a.phone || '-'}
                   </td>
                   <td style={{ padding: '8px' }}>
                     <button

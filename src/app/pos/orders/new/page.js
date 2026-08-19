@@ -172,7 +172,7 @@ export default function PosNewOrder() {
       const result = await createOrder(payload);
 
       if (result.offline) {
-        toast.success('Order saved offline — will sync when connected');
+        toast.success('Order saved offline. Will sync when connected');
       }
 
       router.push(`/pos/orders/${result.data?.id}`);
@@ -220,7 +220,7 @@ export default function PosNewOrder() {
             gap: 4,
           }}
         >
-          <WifiOff size={12} /> Offline — orders will be queued and synced automatically
+          <WifiOff size={12} /> Offline: orders will be queued and synced automatically
         </div>
       )}
 

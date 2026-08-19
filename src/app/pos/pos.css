@@ -1094,7 +1094,7 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ===== RESPONSIVE — POS (was ZERO responsive code) ===== */
+/* ===== RESPONSIVE - POS (was ZERO responsive code) ===== */
 
 @media (max-width: 1024px) {
   .pos-cart-sidebar {

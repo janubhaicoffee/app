@@ -466,13 +466,13 @@ export default function OutletDetailPortal() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {[
-                  { label: 'Address', value: outlet.address || '—' },
-                  { label: 'City', value: outlet.city || '—' },
-                  { label: 'State', value: outlet.state || '—' },
-                  { label: 'Pincode', value: outlet.pincode || '—' },
-                  { label: 'Phone', value: outlet.phone || '—' },
-                  { label: 'Email', value: outlet.email || '—' },
-                  { label: 'GSTIN', value: settings.gstin || '—' },
+                  { label: 'Address', value: outlet.address || '-' },
+                  { label: 'City', value: outlet.city || '-' },
+                  { label: 'State', value: outlet.state || '-' },
+                  { label: 'Pincode', value: outlet.pincode || '-' },
+                  { label: 'Phone', value: outlet.phone || '-' },
+                  { label: 'Email', value: outlet.email || '-' },
+                  { label: 'GSTIN', value: settings.gstin || '-' },
                 ].map((item, i) => (
                   <div
                     key={i}
@@ -650,7 +650,7 @@ export default function OutletDetailPortal() {
                         </span>
                       </td>
                       <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        {order.created_at ? new Date(order.created_at).toLocaleDateString() : '—'}
+                        {order.created_at ? new Date(order.created_at).toLocaleDateString() : '-'}
                       </td>
                     </tr>
                   ))}
@@ -715,7 +715,7 @@ export default function OutletDetailPortal() {
                       <div>
                         <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{member.name}</div>
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                          {member.email || member.phone || '—'}
+                          {member.email || member.phone || '-'}
                         </div>
                       </div>
                     </div>
