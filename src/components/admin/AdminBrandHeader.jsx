@@ -110,20 +110,20 @@ export default function AdminBrandHeader() {
                 window.location.href = e.target.value;
               }}
               style={{
-                padding: '5px 8px',
+                padding: '6px 10px',
                 fontSize: '11px',
                 fontWeight: '700',
-                borderRadius: '4px',
-                border: '1.5px solid rgba(255,255,255,0.2)',
-                background: '#1a110b',
-                color: '#F8F1E4',
+                borderRadius: '8px',
+                border: '1px solid rgba(245, 240, 234, 0.15)',
+                background: 'rgba(0, 0, 0, 0.5)',
+                color: 'var(--accent-gold, #d89a1e)',
                 outline: 'none',
                 cursor: 'pointer',
               }}
             >
-              <option value={siteUrls.admin}>ADMIN</option>
-              <option value={siteUrls.outlet}>OUTLET</option>
-              <option value={siteUrls.pos}>POS</option>
+              <option value={siteUrls.admin} style={{ background: '#1e1210', color: '#f5f0ea' }}>ADMIN</option>
+              <option value={siteUrls.outlet} style={{ background: '#1e1210', color: '#f5f0ea' }}>OUTLET</option>
+              <option value={siteUrls.pos} style={{ background: '#1e1210', color: '#f5f0ea' }}>POS</option>
             </select>
 
             {/* Outlet Switcher */}
@@ -131,21 +131,21 @@ export default function AdminBrandHeader() {
               value={selectedOutletId}
               onChange={handleOutletChange}
               style={{
-                padding: '5px 8px',
+                padding: '6px 10px',
                 fontSize: '11px',
                 fontWeight: '700',
-                borderRadius: '4px',
-                border: '1.5px solid rgba(255,255,255,0.2)',
-                background: '#1a110b',
-                color: '#F8F1E4',
+                borderRadius: '8px',
+                border: '1px solid rgba(245, 240, 234, 0.15)',
+                background: 'rgba(0, 0, 0, 0.5)',
+                color: 'var(--text-primary, #f5f0ea)',
                 outline: 'none',
                 cursor: 'pointer',
-                maxWidth: '100px',
+                maxWidth: '120px',
               }}
             >
-              <option value="create-new">➕ CREATE NEW</option>
+              <option value="create-new" style={{ background: '#1e1210', color: '#f5f0ea' }}>➕ CREATE NEW</option>
               {outletsList.map((o) => (
-                <option key={o.id} value={o.id}>
+                <option key={o.id} value={o.id} style={{ background: '#1e1210', color: '#f5f0ea' }}>
                   {o.name.toUpperCase()}
                 </option>
               ))}

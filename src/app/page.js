@@ -587,6 +587,107 @@ export default function Home() {
         </div>
       </section>
 
+      {/* 5.5. COFFEE MASTERCLASSES & EVENTS SHOWCASE */}
+      <section className="d2c-events-showcase-section" style={{ padding: '60px 0', background: 'radial-gradient(circle at center, rgba(46,30,20,0.4) 0%, transparent 80%)' }}>
+        <div className="container">
+          <div className="d2c-section-center-head" style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 40px' }}>
+            <span className="d2c-section-eyebrow" style={{ color: '#d4a359', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+              <Sparkles size={16} /> Brand Activations & Culture
+            </span>
+            <h2 className="d2c-section-title" style={{ fontSize: '2.2rem', fontWeight: 900, color: '#f7e7ce', margin: '8px 0 10px' }}>
+              Experience Coffee Beyond the Cup
+            </h2>
+            <p className="d2c-section-desc" style={{ color: '#a89f91', fontSize: '0.95rem', margin: 0 }}>
+              Join our weekend cupping masterclasses, latte art workshops, and intimate acoustic brew pop-ups in New Delhi.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', maxWidth: '1100px', margin: '0 auto 30px' }}>
+            <div style={{ background: 'linear-gradient(135deg, rgba(38,26,18,0.85) 0%, rgba(20,14,10,0.95) 100%)', border: '1px solid rgba(212,163,89,0.3)', borderRadius: '18px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <span style={{ background: 'rgba(212,163,89,0.2)', color: '#d4a359', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', display: 'inline-block', width: 'fit-content', marginBottom: '10px' }}>
+                Tasting Session
+              </span>
+              <h3 style={{ color: '#f7e7ce', fontSize: '1.2rem', margin: '0 0 6px' }}>
+                Janu Bhai Artisan Coffee Tasting Masterclass
+              </h3>
+              <p style={{ color: '#d4a359', fontSize: '0.82rem', fontWeight: 600, margin: '0 0 12px' }}>
+                Featuring: Master Roaster Arsalan & Barista Bilal
+              </p>
+              <p style={{ color: '#a89f91', fontSize: '0.84rem', lineHeight: 1.5, flex: 1, margin: '0 0 16px' }}>
+                Experience single-estate Chikmagalur beans, cupping notes, and manual pour-over techniques.
+              </p>
+              <Link
+                href="/events/artisan-tasting-masterclass"
+                style={{
+                  background: 'linear-gradient(135deg, #d4a359 0%, #b8863b 100%)',
+                  color: '#120b06',
+                  fontWeight: 700,
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  textDecoration: 'none',
+                  textAlign: 'center',
+                  fontSize: '0.86rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                RSVP for Free Pass →
+              </Link>
+            </div>
+
+            <div style={{ background: 'linear-gradient(135deg, rgba(38,26,18,0.85) 0%, rgba(20,14,10,0.95) 100%)', border: '1px solid rgba(212,163,89,0.3)', borderRadius: '18px', padding: '24px', display: 'flex', flexDirection: 'column' }}>
+              <span style={{ background: 'rgba(212,163,89,0.2)', color: '#d4a359', padding: '4px 10px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', display: 'inline-block', width: 'fit-content', marginBottom: '10px' }}>
+                Workshop
+              </span>
+              <h3 style={{ color: '#f7e7ce', fontSize: '1.2rem', margin: '0 0 6px' }}>
+                Latte Art & Microfoam: Pour Like a Pro
+              </h3>
+              <p style={{ color: '#d4a359', fontSize: '0.82rem', fontWeight: 600, margin: '0 0 12px' }}>
+                Featuring: Janu Bhai Lead Barista Team
+              </p>
+              <p style={{ color: '#a89f91', fontSize: '0.84rem', lineHeight: 1.5, flex: 1, margin: '0 0 16px' }}>
+                Learn hands-on milk texturing, silky microfoam, and pouring crisp rosettas on espresso.
+              </p>
+              <Link
+                href="/events/latte-art-workshop"
+                style={{
+                  background: 'linear-gradient(135deg, #d4a359 0%, #b8863b 100%)',
+                  color: '#120b06',
+                  fontWeight: 700,
+                  padding: '10px 16px',
+                  borderRadius: '10px',
+                  textDecoration: 'none',
+                  textAlign: 'center',
+                  fontSize: '0.86rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                }}
+              >
+                RSVP for Free Pass →
+              </Link>
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <Link
+              href="/events"
+              style={{
+                color: '#d4a359',
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                textDecoration: 'underline',
+              }}
+            >
+              View All Upcoming Cafe Events & Workshops →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* 6. VERIFIED REVIEWS */}
       <section className="d2c-reviews-section">
         <div className="container">

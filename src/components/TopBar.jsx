@@ -97,6 +97,12 @@ export default function TopBar() {
             <span>Shop Coffee</span>
           </Link>
           <Link
+            href="/events"
+            className={`nav-link-pill ${pathname.startsWith('/events') ? 'active' : ''}`}
+          >
+            <span>Events & RSVP</span>
+          </Link>
+          <Link
             href="/process"
             className={`nav-link-pill ${pathname === '/process' ? 'active' : ''}`}
           >
@@ -240,6 +246,22 @@ export default function TopBar() {
                   <ChevronRight size={16} />
                 </Link>
                 <Link
+                  href="/events"
+                  className="sidebar-link-item-apple"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span>Events & RSVP Activations</span>
+                  <ChevronRight size={16} />
+                </Link>
+                <Link
+                  href="/customer"
+                  className="sidebar-link-item-apple"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span>Customer & Audience Hub</span>
+                  <ChevronRight size={16} />
+                </Link>
+                <Link
                   href="/process"
                   className="sidebar-link-item-apple"
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -271,6 +293,23 @@ export default function TopBar() {
                   <span>{user ? 'My Account' : 'Sign In / Register'}</span>
                   <ChevronRight size={16} />
                 </Link>
+
+                <div style={{ margin: '14px 0 6px', padding: '10px 14px', background: 'rgba(212,163,89,0.1)', borderRadius: '10px', border: '1px solid rgba(212,163,89,0.2)' }}>
+                  <span style={{ fontSize: '0.72rem', color: '#d4a359', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
+                    Staff & Operations Portals
+                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <Link href="/manager" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#f5f0eb', fontSize: '0.82rem', textDecoration: 'none', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Manager Hub</span> →
+                    </Link>
+                    <Link href="/operations" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#f5f0eb', fontSize: '0.82rem', textDecoration: 'none', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Operations Head (Bilal)</span> →
+                    </Link>
+                    <Link href="/growth" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#f5f0eb', fontSize: '0.82rem', textDecoration: 'none', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Growth & BD (Arsalan)</span> →
+                    </Link>
+                  </div>
+                </div>
               </div>
 
               <div className="sidebar-footer-apple">

@@ -208,3 +208,225 @@ CREATE TABLE IF NOT EXISTS outlet_delivery_orders (
   coupon_used TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- ============================================================================
+-- Janu Bhai Worker, Operations & Brand Strategy Tables
+-- ============================================================================
+
+-- Events & Activations Engine
+CREATE TABLE IF NOT EXISTS events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  featuring_name TEXT,
+  event_type TEXT DEFAULT 'Workshop',
+  description TEXT,
+  outlet_id UUID REFERENCES outlets(id) ON DELETE SET NULL,
+  location_name TEXT DEFAULT 'Janu Bhai Cafe, Gafoor Nagar, Delhi',
+  event_date DATE NOT NULL,
+  start_time TEXT NOT NULL,
+  end_time TEXT,
+  capacity INTEGER DEFAULT 30,
+  rsvp_count INTEGER DEFAULT 0,
+  price NUMERIC DEFAULT 0,
+  status TEXT DEFAULT 'published' CHECK (status IN ('draft', 'published', 'completed', 'cancelled')),
+  banner_url TEXT,
+  host_name TEXT,
+  is_featured BOOLEAN DEFAULT false,
+  created_by TEXT DEFAULT 'Arsalan (Brand & Growth)',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Event RSVPs
+CREATE TABLE IF NOT EXISTS event_rsvps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id UUID REFERENCES events(id) ON DELETE CASCADE,
+  customer_name TEXT NOT NULL,
+  customer_email TEXT NOT NULL,
+  customer_phone TEXT,
+  guest_count INTEGER DEFAULT 1,
+  notes TEXT,
+  status TEXT DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'waitlisted', 'attended', 'cancelled')),
+  checked_in BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Manager Observations & AI Checklists
+CREATE TABLE IF NOT EXISTS manager_observations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE,
+  outlet_name TEXT,
+  manager_name TEXT,
+  observation_date DATE DEFAULT CURRENT_DATE,
+  observation_time TEXT,
+  visit_type TEXT DEFAULT 'daily' CHECK (visit_type IN ('daily', 'visit', 'other')),
+  checklist_items JSONB NOT NULL DEFAULT '[]',
+  issues_found JSONB NOT NULL DEFAULT '[]',
+  overall_score NUMERIC DEFAULT 100,
+  priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
+  raw_ai_analysis JSONB,
+  scanned_image_url TEXT,
+  manager_signature TEXT,
+  reviewed_by_oh BOOLEAN DEFAULT false,
+  oh_review_notes TEXT,
+  oh_reviewed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Observation Photos (Unmodified High-Res Proofs)
+CREATE TABLE IF NOT EXISTS observation_photos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  observation_id UUID REFERENCES manager_observations(id) ON DELETE CASCADE,
+  outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE,
+  category TEXT NOT NULL,
+  photo_url TEXT NOT NULL,
+  thumbnail_url TEXT,
+  caption TEXT,
+  severity TEXT DEFAULT 'medium',
+  resolved BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Manager Issue & Action Records
+CREATE TABLE IF NOT EXISTS manager_issue_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE,
+  outlet_name TEXT,
+  manager_name TEXT,
+  record_date DATE DEFAULT CURRENT_DATE,
+  issue_description TEXT NOT NULL,
+  action_taken TEXT,
+  vendor_contacted TEXT,
+  vendor_contact_phone TEXT,
+  approved_vendor_used BOOLEAN DEFAULT true,
+  vendor_name TEXT,
+  resolution_status TEXT DEFAULT 'pending' CHECK (resolution_status IN ('resolved', 'partially_resolved', 'pending')),
+  pending_work TEXT,
+  expected_completion_date DATE,
+  cost_required BOOLEAN DEFAULT false,
+  estimated_cost NUMERIC DEFAULT 0,
+  actual_cost NUMERIC DEFAULT 0,
+  whatsapp_sent_to_oh BOOLEAN DEFAULT false,
+  oh_informed BOOLEAN DEFAULT false,
+  oh_instructions TEXT,
+  follow_up_required BOOLEAN DEFAULT false,
+  follow_up_date DATE,
+  photo_urls JSONB DEFAULT '[]',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Cash Withdrawals & Counter Expenses
+CREATE TABLE IF NOT EXISTS cash_withdrawals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE,
+  withdrawal_date DATE DEFAULT CURRENT_DATE,
+  opening_cash NUMERIC DEFAULT 0,
+  reason TEXT NOT NULL,
+  amount NUMERIC NOT NULL,
+  paid_to TEXT NOT NULL,
+  cash_given_by TEXT NOT NULL,
+  receipt_url TEXT,
+  employee_sign TEXT,
+  manager_sign TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Staff Consumption Register
+CREATE TABLE IF NOT EXISTS staff_consumptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE,
+  consumption_date DATE DEFAULT CURRENT_DATE,
+  item_name TEXT NOT NULL,
+  amount_worth NUMERIC NOT NULL,
+  consumed_by TEXT NOT NULL,
+  designation TEXT,
+  purpose TEXT,
+  employee_sign TEXT,
+  manager_sign TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Operations Head 14-Area Control Audits
+CREATE TABLE IF NOT EXISTS operations_control_audits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE,
+  audit_date DATE DEFAULT CURRENT_DATE,
+  reviewed_by TEXT DEFAULT 'Bilal Muhammad (Operations Head)',
+  checklist_14_areas JSONB NOT NULL DEFAULT '[]',
+  overall_rating NUMERIC DEFAULT 100,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Manager Coordination & 5-Pillar Performance Reviews
+CREATE TABLE IF NOT EXISTS manager_coordination_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE,
+  review_date DATE DEFAULT CURRENT_DATE,
+  reviewed_by TEXT DEFAULT 'Bilal Muhammad (Operations Head)',
+  manager_name TEXT NOT NULL,
+  daily_updates_received BOOLEAN DEFAULT true,
+  prompt_whatsapp_response BOOLEAN DEFAULT true,
+  problems_escalated_on_time BOOLEAN DEFAULT true,
+  follows_instructions BOOLEAN DEFAULT true,
+  comments_notes TEXT,
+  rating_leadership INTEGER DEFAULT 5 CHECK (rating_leadership BETWEEN 1 AND 5),
+  rating_operations INTEGER DEFAULT 5 CHECK (rating_operations BETWEEN 1 AND 5),
+  rating_team_management INTEGER DEFAULT 5 CHECK (rating_team_management BETWEEN 1 AND 5),
+  rating_sales_targets INTEGER DEFAULT 5 CHECK (rating_sales_targets BETWEEN 1 AND 5),
+  rating_quality_service INTEGER DEFAULT 5 CHECK (rating_quality_service BETWEEN 1 AND 5),
+  overall_performance_comments TEXT,
+  action_items JSONB DEFAULT '[]',
+  support_provided JSONB DEFAULT '[]',
+  escalation JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Growth Strategic Priorities
+CREATE TABLE IF NOT EXISTS growth_strategic_priorities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  priority_number INTEGER NOT NULL,
+  priority_title TEXT NOT NULL,
+  objective TEXT NOT NULL,
+  key_actions TEXT,
+  success_measure TEXT,
+  target_date DATE,
+  status TEXT DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'completed', 'on_hold')),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Growth Opportunity Pipeline
+CREATE TABLE IF NOT EXISTS growth_opportunity_pipeline (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('Marketing', 'Partnership', 'Event', 'Product', 'Other')),
+  potential_impact TEXT NOT NULL CHECK (potential_impact IN ('High', 'Medium', 'Low')),
+  next_step TEXT NOT NULL,
+  owner TEXT DEFAULT 'Arsalan',
+  status TEXT DEFAULT 'New' CHECK (status IN ('New', 'In Progress', 'On Hold', 'Done')),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Monthly Operations Reviews
+CREATE TABLE IF NOT EXISTS monthly_operations_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  outlet_id UUID REFERENCES outlets(id) ON DELETE CASCADE,
+  month_year TEXT NOT NULL,
+  reviewed_by TEXT DEFAULT 'Bilal Muhammad',
+  total_sales NUMERIC DEFAULT 0,
+  avg_daily_sales NUMERIC DEFAULT 0,
+  total_transactions INTEGER DEFAULT 0,
+  top_selling_item TEXT,
+  customer_feedback_rating NUMERIC DEFAULT 5,
+  total_expenses NUMERIC DEFAULT 0,
+  net_result NUMERIC DEFAULT 0,
+  what_went_well TEXT,
+  challenges TEXT,
+  key_learnings TEXT,
+  improvement_plans JSONB DEFAULT '[]',
+  monthly_summary_answers JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now()
+);

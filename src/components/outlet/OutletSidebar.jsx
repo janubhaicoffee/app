@@ -68,6 +68,15 @@ const navItems = [
     items: [{ href: '/outlet/reports/daily', label: 'Daily Report', icon: FileText }],
   },
   {
+    section: 'Worker & Brand Hubs',
+    items: [
+      { href: '/manager', label: 'Manager Control Hub', icon: ClipboardList },
+      { href: '/operations', label: 'Operations Head (Bilal)', icon: FileText },
+      { href: '/growth', label: 'Growth & Strategy', icon: TrendingUp },
+      { href: '/events', label: 'Events & RSVPs', icon: Coffee },
+    ],
+  },
+  {
     section: 'Settings',
     items: [{ href: '/outlet/settings', label: 'Settings', icon: Settings }],
   },
@@ -485,17 +494,19 @@ export default function OutletSidebar() {
           left: 0;
           bottom: 0;
           width: 260px;
-          background: var(--primary-color, #3e2723);
-          color: #e0e0e0;
+          background: rgba(26, 15, 12, 0.96);
+          backdrop-filter: blur(28px) saturate(180%);
+          -webkit-backdrop-filter: blur(28px) saturate(180%);
+          color: var(--text-primary, #f5f0ea);
           display: flex;
           flex-direction: column;
           z-index: 100;
           overflow: hidden;
-          border-right: 1px solid var(--border-color, #d7ccc8);
+          border-right: 1px solid rgba(245, 240, 234, 0.1);
         }
         .outlet-sidebar-header {
           padding: 20px 16px 12px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          border-bottom: 1px solid rgba(245, 240, 234, 0.1);
         }
         .outlet-sidebar-brand {
           display: flex;
@@ -504,7 +515,7 @@ export default function OutletSidebar() {
           margin-bottom: 12px;
         }
         .outlet-sidebar-brand svg {
-          color: var(--accent-gold, #ffb300);
+          color: var(--accent-gold, #d89a1e);
         }
         .outlet-sidebar-brand-text {
           display: flex;
@@ -513,13 +524,13 @@ export default function OutletSidebar() {
         .outlet-sidebar-title {
           font-family: var(--font-playfair), serif;
           font-size: 18px;
-          font-weight: 700;
-          color: var(--accent-gold, #ffb300);
+          font-weight: 800;
+          color: var(--accent-gold, #d89a1e);
           line-height: 1.2;
         }
         .outlet-sidebar-subtitle {
           font-size: 11px;
-          color: #ccc;
+          color: var(--text-secondary, #cbb9a8);
           text-transform: uppercase;
           letter-spacing: 1px;
         }
@@ -528,55 +539,21 @@ export default function OutletSidebar() {
           align-items: center;
           gap: 6px;
           font-size: 12px;
-          color: #fff;
+          color: var(--text-primary, #f5f0ea);
           padding: 6px 10px;
-          background: rgba(255, 255, 255, 0.08);
-          border-radius: 6px;
+          background: rgba(255, 255, 255, 0.06);
+          border-radius: 8px;
           margin-bottom: 8px;
+          border: 1px solid rgba(245, 240, 234, 0.1);
         }
         .outlet-sidebar-outlet-name svg {
-          color: var(--accent-gold, #ffb300);
+          color: var(--accent-gold, #d89a1e);
           flex-shrink: 0;
-        }
-        .outlet-sidebar-selector {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-          color: #fff;
-          padding: 6px 10px;
-          background: rgba(255, 255, 255, 0.08);
-          border-radius: 6px;
-          margin-bottom: 8px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .outlet-sidebar-selector svg {
-          color: var(--accent-gold, #ffb300);
-          flex-shrink: 0;
-        }
-        .outlet-select-dropdown {
-          background: transparent;
-          border: none;
-          color: #fff;
-          font-size: 12px;
-          font-weight: 600;
-          width: 100%;
-          outline: none;
-          cursor: pointer;
-        }
-        .outlet-select-dropdown option {
-          background: var(--primary-color, #3e2723);
-          color: #fff;
-        }
-        .outlet-sidebar-time {
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.5);
-          font-variant-numeric: tabular-nums;
         }
         .outlet-sidebar-nav {
           flex: 1;
           overflow-y: auto;
-          padding: 12px 0;
+          padding: 12px 10px;
         }
         .outlet-sidebar-nav::-webkit-scrollbar {
           width: 4px;
@@ -586,25 +563,26 @@ export default function OutletSidebar() {
           border-radius: 4px;
         }
         .outlet-sidebar-group {
-          margin-bottom: 4px;
+          margin-bottom: 8px;
         }
         .outlet-sidebar-section-toggle {
           display: flex;
           align-items: center;
           justify-content: space-between;
           width: 100%;
-          padding: 8px 16px;
+          padding: 6px 10px;
           border: none;
           background: transparent;
-          color: rgba(255, 255, 255, 0.4);
+          color: var(--accent-gold, #d89a1e);
+          opacity: 0.75;
           font-size: 10px;
           text-transform: uppercase;
-          letter-spacing: 1px;
+          letter-spacing: 1.5px;
           cursor: pointer;
-          font-weight: 700;
+          font-weight: 800;
         }
         .outlet-sidebar-section-toggle:hover {
-          color: #fff;
+          opacity: 1;
         }
         .outlet-sidebar-chevron {
           transition: transform 0.2s;
@@ -616,6 +594,9 @@ export default function OutletSidebar() {
           overflow: hidden;
           max-height: 500px;
           transition: max-height 0.3s ease;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
         }
         .outlet-sidebar-items.collapsed {
           max-height: 0;
@@ -623,39 +604,31 @@ export default function OutletSidebar() {
         .outlet-sidebar-link {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 10px 16px 10px 24px;
-          color: rgba(255, 255, 255, 0.8);
+          gap: 10px;
+          padding: 8px 12px;
+          color: var(--text-secondary, #cbb9a8);
           text-decoration: none;
-          font-size: 14px;
-          transition: all 0.15s;
-          border-left: 3px solid transparent;
-          position: relative;
+          font-size: 13px;
+          font-weight: 600;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          border-radius: 10px;
+          border: 1px solid transparent;
         }
         .outlet-sidebar-link:hover {
-          color: var(--accent-gold, #ffb300);
+          color: var(--text-primary, #f5f0ea);
           background: rgba(255, 255, 255, 0.06);
+          transform: translateX(2px);
         }
         .outlet-sidebar-link.active {
-          color: var(--accent-gold, #ffb300);
-          background: rgba(255, 255, 255, 0.15);
-          border-left-color: var(--accent-gold, #ffb300);
-          font-weight: 600;
-        }
-        .outlet-sidebar-link.active::before {
-          content: '';
-          position: absolute;
-          right: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 3px;
-          height: 20px;
-          background: var(--accent-gold, #ffb300);
-          border-radius: 0 4px 4px 0;
+          color: var(--accent-gold, #d89a1e);
+          background: rgba(216, 154, 30, 0.18);
+          border-color: rgba(216, 154, 30, 0.35);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+          font-weight: 700;
         }
         .outlet-sidebar-footer {
           padding: 12px 16px;
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          border-top: 1px solid rgba(245, 240, 234, 0.1);
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -669,13 +642,13 @@ export default function OutletSidebar() {
           width: 32px;
           height: 32px;
           border-radius: 50%;
-          background: var(--accent-gold, #ffb300);
-          color: var(--primary-color, #3e2723);
+          background: var(--accent-gold, #d89a1e);
+          color: #1a0f0c;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 13px;
-          font-weight: 700;
+          font-weight: 800;
         }
         .outlet-sidebar-user-info {
           display: flex;
@@ -683,29 +656,30 @@ export default function OutletSidebar() {
         }
         .outlet-sidebar-user-name {
           font-size: 13px;
-          color: #e0e0e0;
-          font-weight: 600;
+          color: var(--text-primary, #f5f0ea);
+          font-weight: 700;
         }
         .outlet-sidebar-user-role {
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.5);
+          color: var(--text-secondary, #cbb9a8);
         }
         .outlet-sidebar-logout {
           background: rgba(255, 255, 255, 0.08);
-          border: none;
-          color: rgba(255, 255, 255, 0.6);
+          border: 1px solid rgba(245, 240, 234, 0.15);
+          color: var(--text-secondary, #cbb9a8);
           width: 34px;
           height: 34px;
-          border-radius: 8px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: all 0.15s;
+          transition: all 0.2s;
         }
         .outlet-sidebar-logout:hover {
-          background: rgba(255, 107, 107, 0.1);
-          color: #ff6b6b;
+          background: rgba(255, 107, 107, 0.2);
+          color: #ff8a80;
+          border-color: rgba(255, 107, 107, 0.4);
         }
         .outlet-mobile-menu-btn {
           display: none;
@@ -713,24 +687,26 @@ export default function OutletSidebar() {
           top: 12px;
           left: 12px;
           z-index: 200;
-          background: var(--primary-color, #3e2723);
-          color: #fff;
-          border: 1px solid var(--border-color, #d7ccc8);
+          background: rgba(26, 15, 12, 0.95);
+          color: var(--text-primary, #f5f0ea);
+          border: 1px solid rgba(245, 240, 234, 0.2);
           width: 40px;
           height: 40px;
-          border-radius: 8px;
+          border-radius: 10px;
           align-items: center;
           justify-content: center;
           cursor: pointer;
+          backdrop-filter: blur(10px);
         }
         .outlet-mobile-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.5);
+          background: rgba(0, 0, 0, 0.7);
           z-index: 300;
           opacity: 0;
           pointer-events: none;
           transition: opacity 0.2s ease;
+          backdrop-filter: blur(8px);
         }
         .outlet-mobile-overlay.open {
           opacity: 1;
@@ -740,9 +716,10 @@ export default function OutletSidebar() {
           width: 280px;
           height: 100vh;
           height: 100dvh;
-          background: var(--primary-color, #3e2723);
+          background: rgba(26, 15, 12, 0.98);
+          backdrop-filter: blur(28px);
           position: relative;
-          border-right: 1px solid var(--border-color, #d7ccc8);
+          border-right: 1px solid rgba(245, 240, 234, 0.15);
           transform: translateX(-100%);
           transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
           overscroll-behavior: contain;
@@ -760,7 +737,7 @@ export default function OutletSidebar() {
           color: #fff;
           width: 32px;
           height: 32px;
-          border-radius: 6px;
+          border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;

@@ -428,16 +428,31 @@ export default function OutletDashboard() {
               <AreaChart
                 data={revenueChart.length > 0 ? revenueChart : [{ date: 'No data', revenue: 0 }]}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => '₹' + v} />
-                <Tooltip formatter={(v) => formatCurrency(v)} />
+                <defs>
+                  <linearGradient id="outletRevGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#d89a1e" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#d89a1e" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(245, 240, 234, 0.06)" />
+                <XAxis dataKey="date" stroke="#cbb9a8" tick={{ fill: '#cbb9a8', fontSize: 12 }} />
+                <YAxis stroke="#cbb9a8" tick={{ fill: '#cbb9a8', fontSize: 12 }} tickFormatter={(v) => '₹' + v} />
+                <Tooltip
+                  contentStyle={{
+                    background: 'rgba(30, 18, 16, 0.95)',
+                    border: '1px solid rgba(216, 154, 30, 0.4)',
+                    borderRadius: 12,
+                    color: '#f5f0ea',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                  }}
+                  formatter={(v) => [formatCurrency(v), 'Revenue']}
+                />
                 <Area
                   type="monotone"
                   dataKey="revenue"
-                  stroke="#38a169"
-                  fill="#f0fff4"
-                  strokeWidth={2}
+                  stroke="#d89a1e"
+                  fill="url(#outletRevGrad)"
+                  strokeWidth={2.5}
                 />
               </AreaChart>
             </ResponsiveContainer>

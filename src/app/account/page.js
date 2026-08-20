@@ -445,6 +445,15 @@ export default function AccountPage() {
                 <span>Saved Addresses</span>
               </button>
 
+              <Link
+                href="/customer"
+                className="nav-item"
+                style={{ color: '#d4a359' }}
+              >
+                <Sparkles size={18} />
+                <span>Event Passes & Hub</span>
+              </Link>
+
               <button
                 className={`nav-item ${activeTab === 'subscriptions' ? 'active' : ''}`}
                 onClick={() => setActiveTab('subscriptions')}

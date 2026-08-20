@@ -24,6 +24,18 @@ export default async function sitemap() {
     priority: 0.6,
   }));
 
+  const { data: events } = await supabase
+    .from('events')
+    .select('slug, updated_at')
+    .eq('status', 'published');
+
+  const eventUrls = (events || []).map((event) => ({
+    url: `${baseUrl}/events/${event.slug}`,
+    lastModified: new Date(event.updated_at || new Date()),
+    changeFrequency: 'weekly',
+    priority: 0.85,
+  }));
+
   return [
     {
       url: baseUrl,
@@ -33,6 +45,19 @@ export default async function sitemap() {
     },
     ...productUrls,
     ...articleUrls,
+    ...eventUrls,
+    {
+      url: `${baseUrl}/events`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/customer`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
     {
       url: `${baseUrl}/process`,
       lastModified: new Date(),

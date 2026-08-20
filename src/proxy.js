@@ -18,6 +18,11 @@ const mainSitePaths = [
   '/menu',
   '/claim',
   '/track',
+  '/manager',
+  '/operations',
+  '/growth',
+  '/events',
+  '/customer',
 ];
 
 const BLOCKED_REFERRERS = ['spam-site', 'buy-traffic'];

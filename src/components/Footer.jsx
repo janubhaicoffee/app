@@ -45,12 +45,18 @@ export default function Footer() {
               </p>
             </div>
 
-            {/* Column 2: Shop */}
+            {/* Column 2: Experience & Shop */}
             <div className="footer-col-links">
-              <span className="footer-col-title">Shop</span>
+              <span className="footer-col-title">Experience & Shop</span>
               <ul>
                 <li>
                   <Link href="/product/instantcoffee">Instant Coffee (100g / 1kg)</Link>
+                </li>
+                <li>
+                  <Link href="/events">Events & RSVP Activations</Link>
+                </li>
+                <li>
+                  <Link href="/customer">Customer & Audience Hub</Link>
                 </li>
                 <li>
                   <Link href="/process">Our Sourcing & Process</Link>
@@ -62,7 +68,13 @@ export default function Footer() {
                   <Link href="/contact">Bulk / B2B Orders</Link>
                 </li>
                 <li>
-                  <Link href="/outlet" style={{ opacity: 0.6, fontSize: '0.8rem' }}>Partner / Outlet Hub</Link>
+                  <Link href="/manager" style={{ opacity: 0.7, fontSize: '0.8rem' }}>Manager Hub</Link>
+                </li>
+                <li>
+                  <Link href="/operations" style={{ opacity: 0.7, fontSize: '0.8rem' }}>Operations Head</Link>
+                </li>
+                <li>
+                  <Link href="/growth" style={{ opacity: 0.7, fontSize: '0.8rem' }}>Growth & BD</Link>
                 </li>
               </ul>
             </div>

@@ -75,6 +75,25 @@ export default function SidebarNav() {
       </div>
 
       <div className="admin-nav-group">
+        <span className="admin-nav-group-title">WORKER & STRATEGY HUBS</span>
+        <Link href="/operations" className="admin-nav-link" target="_blank">
+          <Shield size={20} /> Operations Head (Bilal)
+        </Link>
+        <Link href="/manager" className="admin-nav-link" target="_blank">
+          <Store size={20} /> Manager Control Hub
+        </Link>
+        <Link href="/growth" className="admin-nav-link" target="_blank">
+          <Activity size={20} /> Growth & Events (Arsalan)
+        </Link>
+        <Link href="/events" className="admin-nav-link" target="_blank">
+          <ClipboardList size={20} /> Public Events & RSVPs
+        </Link>
+        <Link href="/customer" className="admin-nav-link" target="_blank">
+          <Users size={20} /> Customer & Audience Hub
+        </Link>
+      </div>
+
+      <div className="admin-nav-group">
         <span className="admin-nav-group-title">OUTLETS & OPERATIONS</span>
         <Link
           href="/admin/outlets"

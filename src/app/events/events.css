@@ -1,0 +1,248 @@
+/* Events & RSVP Portal Styling - Janu Bhai Coffee */
+
+.events-directory-container {
+  min-height: 100vh;
+  background: radial-gradient(circle at top center, #1b120c 0%, #0c0805 100%);
+  color: #f5f0eb;
+  padding: 120px 24px 80px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.events-hero-header {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 50px;
+}
+
+.events-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(212, 163, 89, 0.15);
+  border: 1px solid rgba(212, 163, 89, 0.4);
+  color: #d4a359;
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.events-hero-title {
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: #f7e7ce;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+
+.events-hero-desc {
+  font-size: 1.05rem;
+  color: #a89f91;
+  line-height: 1.6;
+}
+
+/* Event Filter Pills */
+.events-filter-bar {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  padding: 8px 18px;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(26, 18, 13, 0.6);
+  color: #a89f91;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-pill:hover {
+  border-color: #d4a359;
+  color: #f5f0eb;
+}
+
+.filter-pill.active {
+  background: #d4a359;
+  color: #120b06;
+  border-color: #d4a359;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(212, 163, 89, 0.35);
+}
+
+/* Events Grid */
+.events-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.event-card {
+  background: linear-gradient(135deg, rgba(38, 26, 18, 0.8) 0%, rgba(20, 14, 10, 0.9) 100%);
+  border: 1px solid rgba(212, 163, 89, 0.25);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 163, 89, 0.6);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6);
+}
+
+.event-banner-wrap {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: #150f0b;
+}
+
+.event-card-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.event-type-badge {
+  background: rgba(212, 163, 89, 0.2);
+  color: #d4a359;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.event-card-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #f7e7ce;
+  margin: 0 0 6px;
+  line-height: 1.3;
+}
+
+.event-card-featuring {
+  color: #d4a359;
+  font-size: 0.86rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.event-meta-info {
+  font-size: 0.84rem;
+  color: #a89f91;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.event-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.event-rsvp-btn {
+  background: linear-gradient(135deg, #d4a359 0%, #b8863b 100%);
+  color: #120b06;
+  font-weight: 800;
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  width: 100%;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  box-shadow: 0 4px 16px rgba(212, 163, 89, 0.35);
+  margin-top: auto;
+  transition: all 0.2s ease;
+}
+
+.event-rsvp-btn:hover {
+  box-shadow: 0 6px 22px rgba(212, 163, 89, 0.55);
+}
+
+/* Modal RSVP Form */
+.rsvp-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.rsvp-modal-card {
+  background: linear-gradient(135deg, #1d140e 0%, #120c08 100%);
+  border: 1px solid #d4a359;
+  border-radius: 24px;
+  max-width: 520px;
+  width: 100%;
+  padding: 32px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.9);
+  position: relative;
+}
+
+.rsvp-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #f5f0eb;
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+  outline: none;
+}
+
+.rsvp-input:focus {
+  border-color: #d4a359;
+  box-shadow: 0 0 0 2px rgba(212, 163, 89, 0.25);
+}
+
+/* Confirmation Pass Ticket */
+.digital-ticket-pass {
+  background: linear-gradient(135deg, rgba(46, 30, 20, 0.9) 0%, rgba(20, 14, 10, 0.95) 100%);
+  border: 2px dashed #d4a359;
+  border-radius: 18px;
+  padding: 24px;
+  text-align: center;
+  margin-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .events-directory-container {
+    padding: 90px 16px 50px;
+  }
+  .events-hero-title {
+    font-size: 2rem;
+  }
+}

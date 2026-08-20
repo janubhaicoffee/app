@@ -1,0 +1,127 @@
+/* Unified Audience / Customer Hub Styling - Janu Bhai Coffee */
+
+.customer-hub-container {
+  min-height: 100vh;
+  background: radial-gradient(circle at top center, #1c130d 0%, #0c0805 100%);
+  color: #f5f0eb;
+  padding: 100px 24px 70px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.customer-header-card {
+  background: linear-gradient(135deg, rgba(46, 30, 20, 0.85) 0%, rgba(20, 14, 10, 0.95) 100%);
+  border: 1px solid rgba(212, 163, 89, 0.3);
+  border-radius: 20px;
+  padding: 28px 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(16px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.customer-brand-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #f7e7ce;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.customer-vip-badge {
+  background: rgba(212, 163, 89, 0.2);
+  color: #d4a359;
+  border: 1px solid rgba(212, 163, 89, 0.4);
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Tabs */
+.customer-tabs-bar {
+  display: flex;
+  gap: 8px;
+  background: rgba(22, 15, 10, 0.8);
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 28px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.customer-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #a89f91;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.customer-tab-btn:hover {
+  color: #f5f0eb;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.customer-tab-btn.active {
+  background: #d4a359;
+  color: #120b06;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(212, 163, 89, 0.35);
+}
+
+/* Panel */
+.customer-panel {
+  background: rgba(26, 18, 13, 0.7);
+  border: 1px solid rgba(212, 163, 89, 0.18);
+  border-radius: 18px;
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(14px);
+}
+
+/* Digital Pass Ticket Card */
+.digital-pass-card {
+  background: linear-gradient(135deg, rgba(46, 30, 20, 0.8) 0%, rgba(20, 14, 10, 0.9) 100%);
+  border: 1px solid rgba(212, 163, 89, 0.35);
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.digital-pass-card::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(212, 163, 89, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+  .customer-hub-container {
+    padding: 80px 14px 40px;
+  }
+  .customer-header-card {
+    padding: 20px;
+  }
+}

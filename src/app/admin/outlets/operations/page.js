@@ -29,10 +29,10 @@ import {
 } from 'lucide-react';
 
 const statusBadges = {
-  open: { bg: '#d4edda', color: '#155724', label: 'Open' },
-  busy: { bg: '#fff3cd', color: '#856404', label: 'Busy / High Volume' },
-  paused: { bg: '#f8d7da', color: '#721c24', label: 'Paused' },
-  closed: { bg: '#e2e3e5', color: '#383d41', label: 'Closed' },
+  open: { bg: 'rgba(46, 125, 50, 0.25)', color: '#69f0ae', border: '1px solid rgba(76, 175, 80, 0.4)', label: 'Open' },
+  busy: { bg: 'rgba(216, 154, 30, 0.2)', color: '#d89a1e', border: '1px solid rgba(216, 154, 30, 0.4)', label: 'Busy / Throttled' },
+  paused: { bg: 'rgba(198, 40, 40, 0.25)', color: '#ff8a80', border: '1px solid rgba(255, 82, 82, 0.4)', label: 'Paused' },
+  closed: { bg: 'rgba(255, 255, 255, 0.08)', color: '#cbb9a8', border: '1px solid rgba(245, 240, 234, 0.12)', label: 'Closed' },
 };
 
 export default function AdminOperationsHub() {
