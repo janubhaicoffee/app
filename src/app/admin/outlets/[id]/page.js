@@ -22,9 +22,20 @@ import {
   Receipt,
   Activity,
   CheckCircle,
+  CheckCircle2,
   Link2,
   Unlink,
   Search,
+  Truck,
+  Package,
+  Video,
+  AlertTriangle,
+  Trash2,
+  Plus,
+  Coffee,
+  ShieldAlert,
+  RefreshCw,
+  X,
 } from 'lucide-react';
 import {
   LineChart,
@@ -255,7 +266,7 @@ export default function OutletDetail() {
       </div>
 
       <div className="admin-tabs">
-        {['overview', 'orders', 'staff', 'expenses', 'sources', 'commissions'].map((tab) => (
+        {['overview', 'operations', 'inventory', 'orders', 'staff', 'expenses', 'sources', 'commissions'].map((tab) => (
           <button
             key={tab}
             className={`admin-tab ${activeTab === tab ? 'active' : ''}`}
@@ -434,6 +445,14 @@ export default function OutletDetail() {
             </div>
           </div>
         </>
+      )}
+
+      {activeTab === 'operations' && (
+        <OutletOperationsTab outlet={outlet} onReload={loadOutletData} />
+      )}
+
+      {activeTab === 'inventory' && (
+        <OutletInventoryTab outletId={params.id} />
       )}
 
       {activeTab === 'orders' && (
@@ -1170,6 +1189,650 @@ function OutletCommissionsTab({ outletId }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function OutletOperationsTab({ outlet, onReload }) {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    operational_status: outlet.operational_status || 'open',
+    accepting_orders: outlet.accepting_orders !== false,
+    dine_in_active: outlet.dine_in_active !== false,
+    takeaway_active: outlet.takeaway_active !== false,
+    delivery_active: outlet.delivery_active !== false,
+    delivery_radius_km: outlet.delivery_radius_km || 5,
+    opening_time: outlet.opening_time || '08:00',
+    closing_time: outlet.closing_time || '22:00',
+    fssai_number: outlet.fssai_number || outlet.settings?.fssai_number || '',
+  });
+  const [cameras, setCameras] = useState([]);
+  const [incidents, setIncidents] = useState([]);
+  const [showAddCam, setShowAddCam] = useState(false);
+  const [camName, setCamName] = useState('');
+  const [camUrl, setCamUrl] = useState('');
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  useEffect(() => {
+    loadOpsData();
+  }, [outlet.id]);
+
+  async function loadOpsData() {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const headers = { Authorization: `Bearer ${session.access_token}` };
+
+      const [camsRes, incRes] = await Promise.all([
+        fetch(`/api/outlet/cameras?outletId=${outlet.id}`, { headers }),
+        fetch(`/api/outlet/incidents?outletId=${outlet.id}`, { headers }),
+      ]);
+
+      if (camsRes.ok) {
+        const j = await camsRes.json();
+        setCameras(j.data || []);
+      }
+      if (incRes.ok) {
+        const j = await incRes.json();
+        setIncidents(j.data || []);
+      }
+    } catch (e) {
+      console.error('Error loading operations tab data:', e);
+    }
+  }
+
+  async function handleSaveSwitchboard(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const res = await fetch('/api/admin/outlets/operations', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          outletId: outlet.id,
+          ...form,
+        }),
+      });
+
+      if (res.ok) {
+        showToast('Operational switchboard settings updated successfully');
+        if (onReload) onReload();
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Failed to update settings', 'error');
+      }
+    } catch (err) {
+      showToast('Error saving settings', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleAddCamera(e) {
+    e.preventDefault();
+    if (!camName || !camUrl) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const res = await fetch('/api/outlet/cameras', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          outlet_id: outlet.id,
+          name: camName,
+          url: camUrl,
+        }),
+      });
+
+      if (res.ok) {
+        showToast('Camera feed added');
+        setShowAddCam(false);
+        setCamName('');
+        setCamUrl('');
+        loadOpsData();
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Failed to add camera', 'error');
+      }
+    } catch (err) {
+      showToast('Error adding camera', 'error');
+    }
+  }
+
+  async function handleDeleteCamera(id) {
+    if (!confirm('Remove this camera stream?')) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const res = await fetch(`/api/outlet/cameras?id=${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (res.ok) {
+        showToast('Camera removed');
+        loadOpsData();
+      }
+    } catch (err) {
+      showToast('Error removing camera', 'error');
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', padding: '0.75rem 1.25rem', borderRadius: 8, background: toast.type === 'error' ? '#c62828' : '#2e7d32', color: '#fff', fontWeight: 600, zIndex: 9999 }}>
+          {toast.message}
+        </div>
+      )}
+
+      <div className="admin-card">
+        <div className="admin-card-header">
+          <h2>Operational Switchboard & Controls</h2>
+          <span className="status-badge" style={{ background: form.operational_status === 'open' ? '#d4edda' : '#f8d7da', color: form.operational_status === 'open' ? '#155724' : '#721c24' }}>
+            {form.operational_status.toUpperCase()}
+          </span>
+        </div>
+
+        <form onSubmit={handleSaveSwitchboard}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+            <div className="form-group">
+              <label>Operational Status</label>
+              <select
+                value={form.operational_status}
+                onChange={(e) => setForm({ ...form, operational_status: e.target.value })}
+              >
+                <option value="open">Open (Normal)</option>
+                <option value="busy">Busy / High Demand</option>
+                <option value="paused">Paused (Temporarily Stopped)</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Delivery Radius (km)</label>
+              <input
+                type="number"
+                step="0.5"
+                min="0.5"
+                value={form.delivery_radius_km}
+                onChange={(e) => setForm({ ...form, delivery_radius_km: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Opening Time</label>
+              <input
+                type="time"
+                value={form.opening_time}
+                onChange={(e) => setForm({ ...form, opening_time: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Closing Time</label>
+              <input
+                type="time"
+                value={form.closing_time}
+                onChange={(e) => setForm({ ...form, closing_time: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 8, marginBottom: '1.25rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontWeight: 600, margin: 0 }}>
+              <input
+                type="checkbox"
+                checked={form.accepting_orders}
+                onChange={(e) => setForm({ ...form, accepting_orders: e.target.checked })}
+              />
+              Accepting Online Orders
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontWeight: 600, margin: 0 }}>
+              <input
+                type="checkbox"
+                checked={form.delivery_active}
+                onChange={(e) => setForm({ ...form, delivery_active: e.target.checked })}
+              />
+              Swiggy & Zomato Delivery Active
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontWeight: 600, margin: 0 }}>
+              <input
+                type="checkbox"
+                checked={form.dine_in_active}
+                onChange={(e) => setForm({ ...form, dine_in_active: e.target.checked })}
+              />
+              Dine-In Seating Open
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontWeight: 600, margin: 0 }}>
+              <input
+                type="checkbox"
+                checked={form.takeaway_active}
+                onChange={(e) => setForm({ ...form, takeaway_active: e.target.checked })}
+              />
+              Takeaway Counter Active
+            </label>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button type="submit" className="admin-btn" disabled={saving}>
+              {saving ? 'Saving...' : 'Save Switchboard Controls'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="admin-card">
+        <div className="admin-card-header">
+          <h2>Surveillance Cameras ({cameras.length})</h2>
+          <button className="admin-btn-outline admin-btn-sm" onClick={() => setShowAddCam(true)}>
+            <Plus size={14} /> Add Stream
+          </button>
+        </div>
+
+        {cameras.length === 0 ? (
+          <div className="empty-state" style={{ padding: '2rem' }}>
+            <Video size={36} />
+            <p>No camera feeds attached to this outlet.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
+            {cameras.map((c) => (
+              <div key={c.id} style={{ border: '1px solid var(--border-color)', borderRadius: 8, overflow: 'hidden' }}>
+                <div style={{ height: 140, background: '#111', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <Video size={28} color="#4caf50" />
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, marginTop: 4 }}>
+                      {c.active ? 'STREAM ONLINE' : 'STREAM PAUSED'}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ padding: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <strong>{c.name}</strong>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{c.url.slice(0, 25)}...</div>
+                  </div>
+                  <button onClick={() => handleDeleteCamera(c.id)} style={{ background: 'none', border: 'none', color: '#c62828', cursor: 'pointer' }}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {showAddCam && (
+          <form onSubmit={handleAddCamera} style={{ marginTop: '1.25rem', padding: '1rem', background: 'var(--bg-secondary)', borderRadius: 8 }}>
+            <h4 style={{ margin: '0 0 0.75rem' }}>Attach New CCTV Camera Feed</h4>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Camera Name</label>
+                <input required placeholder="e.g. Espresso Station Cam 1" value={camName} onChange={(e) => setCamName(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label>Stream URL (HLS / RTSP)</label>
+                <input required type="url" placeholder="https://stream.janubhai.com/cam1.m3u8" value={camUrl} onChange={(e) => setCamUrl(e.target.value)} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button type="button" className="admin-btn-outline admin-btn-sm" onClick={() => setShowAddCam(false)}>Cancel</button>
+              <button type="submit" className="admin-btn admin-btn-sm">Add Feed</button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      <div className="admin-card">
+        <div className="admin-card-header">
+          <h2>Active Incidents & Maintenance ({incidents.filter(i => i.status === 'open').length} open)</h2>
+          <Link href="/admin/outlets/surveillance" className="admin-btn-outline admin-btn-sm">
+            View All Incidents
+          </Link>
+        </div>
+
+        {incidents.length === 0 ? (
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            ✓ No incidents logged for this outlet.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {incidents.slice(0, 5).map((inc) => (
+              <div key={inc.id} style={{ padding: '0.6rem 0.85rem', borderRadius: 6, background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <strong style={{ fontSize: '0.9rem' }}>{inc.title || inc.description}</strong>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{inc.description} &middot; Severity: {inc.severity}</div>
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: 4, background: inc.status === 'resolved' ? '#d4edda' : '#fff3cd', color: inc.status === 'resolved' ? '#155724' : '#856404' }}>
+                  {inc.status || 'open'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OutletInventoryTab({ outletId }) {
+  const [items, setItems] = useState([]);
+  const [wasteLogs, setWasteLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showWasteModal, setShowWasteModal] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [newItem, setNewItem] = useState({ name: '', category: 'Coffee Beans', stock: 10, threshold: 5, auto_reorder: false });
+  const [wasteForm, setWasteForm] = useState({ inventory_id: '', quantity: 1, unit_cost: 0, reason: 'Expired', notes: '' });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [outletId]);
+
+  async function loadData() {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const headers = { Authorization: `Bearer ${session.access_token}` };
+
+      const [invRes, wasteRes] = await Promise.all([
+        fetch(`/api/outlet/inventory?outletId=${outletId}`, { headers }),
+        supabase.from('waste_log').select('*').eq('outlet_id', outletId).order('created_at', { ascending: false }),
+      ]);
+
+      if (invRes.ok) {
+        const j = await invRes.json();
+        setItems(j.data || []);
+      }
+      if (wasteRes.data) {
+        setWasteLogs(wasteRes.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function adjustStock(id, currentStock, delta) {
+    const nextStock = Math.max(0, currentStock + delta);
+    try {
+      const res = await fetch('/api/outlet/inventory', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, stock: nextStock }),
+      });
+      if (res.ok) {
+        showToast('Stock adjusted');
+        loadData();
+      }
+    } catch (err) {
+      showToast('Error adjusting stock', 'error');
+    }
+  }
+
+  async function handleAddItem(e) {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/outlet/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newItem, outlet_id: outletId }),
+      });
+      if (res.ok) {
+        showToast('Item added to outlet inventory');
+        setShowAddModal(false);
+        setNewItem({ name: '', category: 'Coffee Beans', stock: 10, threshold: 5, auto_reorder: false });
+        loadData();
+      }
+    } catch (err) {
+      showToast('Error adding item', 'error');
+    }
+  }
+
+  async function handleLogWaste(e) {
+    e.preventDefault();
+    const item = items.find(i => i.id === wasteForm.inventory_id);
+    const totalCost = (parseFloat(wasteForm.quantity) || 1) * (parseFloat(wasteForm.unit_cost) || 0);
+
+    try {
+      const { error } = await supabase.from('waste_log').insert([{
+        outlet_id: outletId,
+        inventory_id: wasteForm.inventory_id || null,
+        quantity: parseFloat(wasteForm.quantity) || 1,
+        unit_cost: parseFloat(wasteForm.unit_cost) || 0,
+        total_cost: totalCost,
+        reason: wasteForm.reason,
+        notes: wasteForm.notes || (item ? `Spoilage: ${item.name}` : null),
+      }]);
+
+      if (!error) {
+        if (item) {
+          await adjustStock(item.id, item.stock || 0, - (parseFloat(wasteForm.quantity) || 1));
+        }
+        showToast('Waste log recorded');
+        setShowWasteModal(false);
+        loadData();
+      }
+    } catch (err) {
+      showToast('Error recording waste', 'error');
+    }
+  }
+
+  if (loading) return <div className="admin-loading">Loading outlet inventory...</div>;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', padding: '0.75rem 1.25rem', borderRadius: 8, background: toast.type === 'error' ? '#c62828' : '#2e7d32', color: '#fff', fontWeight: 600, zIndex: 9999 }}>
+          {toast.message}
+        </div>
+      )}
+
+      <div className="admin-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)' }}>
+          <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Live Supplies & Stock ({items.length})</h2>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="admin-btn-outline admin-btn-sm" onClick={() => setShowWasteModal(true)}>
+              <Trash2 size={14} /> Log Waste
+            </button>
+            <button className="admin-btn admin-btn-sm" onClick={() => setShowAddModal(true)}>
+              <Plus size={14} /> Add Supply Item
+            </button>
+          </div>
+        </div>
+
+        {items.length === 0 ? (
+          <div className="empty-state" style={{ padding: '2.5rem' }}>
+            <Package size={40} />
+            <p>No inventory items tracked yet for this outlet.</p>
+          </div>
+        ) : (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>ITEM NAME</th>
+                <th>CATEGORY</th>
+                <th>CURRENT STOCK</th>
+                <th>THRESHOLD</th>
+                <th>AUTO-REORDER</th>
+                <th style={{ textAlign: 'right' }}>QUICK ADJUST</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => {
+                const isLow = (item.stock || 0) <= (item.threshold || 10);
+                return (
+                  <tr key={item.id}>
+                    <td style={{ fontWeight: 600 }}>
+                      {item.name}
+                      {isLow && (
+                        <span style={{ marginLeft: 8, fontSize: '0.7rem', padding: '0.15rem 0.4rem', borderRadius: 4, background: '#f8d7da', color: '#721c24', fontWeight: 700 }}>
+                          LOW STOCK
+                        </span>
+                      )}
+                    </td>
+                    <td>{item.category || 'Supplies'}</td>
+                    <td style={{ fontSize: '1rem', fontWeight: 700, color: isLow ? '#c62828' : 'inherit' }}>
+                      {item.stock || 0}
+                    </td>
+                    <td>{item.threshold || 10}</td>
+                    <td>{item.auto_reorder ? '✓ Active' : 'Off'}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'inline-flex', gap: '0.25rem' }}>
+                        <button className="admin-btn-outline admin-btn-sm" onClick={() => adjustStock(item.id, item.stock || 0, -1)}>-1</button>
+                        <button className="admin-btn-outline admin-btn-sm" onClick={() => adjustStock(item.id, item.stock || 0, +1)}>+1</button>
+                        <button className="admin-btn-outline admin-btn-sm" onClick={() => adjustStock(item.id, item.stock || 0, +5)}>+5</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <div className="admin-card">
+        <div className="admin-card-header">
+          <h2>Waste & Spoilage History ({wasteLogs.length})</h2>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            Total Loss: ₹ {wasteLogs.reduce((s, w) => s + (parseFloat(w.total_cost) || 0), 0).toLocaleString('en-IN')}
+          </span>
+        </div>
+
+        {wasteLogs.length === 0 ? (
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>✓ No waste logs recorded for this outlet.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {wasteLogs.slice(0, 8).map((w) => (
+              <div key={w.id} style={{ padding: '0.6rem 0.85rem', borderRadius: 6, background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+                <div>
+                  <strong>{w.reason || 'Spoilage'}</strong>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{w.notes || 'Routine discard'} &middot; Qty: {w.quantity}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 700, color: '#c62828' }}>- ₹{(parseFloat(w.total_cost) || 0).toFixed(2)}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{new Date(w.created_at).toLocaleDateString()}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showAddModal && (
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
+            <div className="modal-header">
+              <h2>Add Outlet Supply Item</h2>
+              <button className="modal-close" onClick={() => setShowAddModal(false)}><X size={20} /></button>
+            </div>
+            <form onSubmit={handleAddItem}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Supply Name *</label>
+                  <input required placeholder="e.g. Arabica Beans (5kg)" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Category</label>
+                    <select value={newItem.category} onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}>
+                      <option value="Coffee Beans">Coffee Beans</option>
+                      <option value="Dairy & Milk">Dairy & Milk</option>
+                      <option value="Syrups & Flavours">Syrups & Flavours</option>
+                      <option value="Packaging & Cups">Packaging & Cups</option>
+                      <option value="Cleaning & Chemicals">Cleaning & Chemicals</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Initial Stock</label>
+                    <input type="number" min="0" value={newItem.stock} onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Low Stock Warning Threshold</label>
+                  <input type="number" min="1" value={newItem.threshold} onChange={(e) => setNewItem({ ...newItem, threshold: e.target.value })} />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="admin-btn-outline" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="admin-btn">Add Supply</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showWasteModal && (
+        <div className="modal-overlay" onClick={() => setShowWasteModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
+            <div className="modal-header">
+              <h2>Record Spoilage / Waste Log</h2>
+              <button className="modal-close" onClick={() => setShowWasteModal(false)}><X size={20} /></button>
+            </div>
+            <form onSubmit={handleLogWaste}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Affected Supply Item</label>
+                  <select value={wasteForm.inventory_id} onChange={(e) => setWasteForm({ ...wasteForm, inventory_id: e.target.value })}>
+                    <option value="">Select supply item...</option>
+                    {items.map(i => <option key={i.id} value={i.id}>{i.name} ({i.stock} in stock)</option>)}
+                  </select>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Discarded Quantity *</label>
+                    <input required type="number" step="0.1" min="0.1" value={wasteForm.quantity} onChange={(e) => setWasteForm({ ...wasteForm, quantity: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Estimated Unit Cost (₹)</label>
+                    <input type="number" step="0.1" min="0" value={wasteForm.unit_cost} onChange={(e) => setWasteForm({ ...wasteForm, unit_cost: e.target.value })} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Waste Reason</label>
+                  <select value={wasteForm.reason} onChange={(e) => setWasteForm({ ...wasteForm, reason: e.target.value })}>
+                    <option value="Expired">Expired / Past Date</option>
+                    <option value="Spillage">Spillage / Dropped</option>
+                    <option value="Calibration">Espresso Calibration Dialing Discard</option>
+                    <option value="Damaged Packaging">Damaged Packaging</option>
+                    <option value="Quality Inspection">Failed Quality Inspection</option>
+                  </select>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="admin-btn-outline" onClick={() => setShowWasteModal(false)}>Cancel</button>
+                <button type="submit" className="admin-btn" style={{ background: '#c62828', borderColor: '#c62828' }}>Record Waste</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

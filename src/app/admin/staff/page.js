@@ -5,6 +5,7 @@ import { Users, Plus, X, Search, Filter, Shield, UserCheck, UserX } from 'lucide
 
 const roleBadgeColors = {
   superadmin: { bg: '#cce5ff', color: '#004085' },
+  operation_manager: { bg: '#e0f2fe', color: '#0369a1' },
   owner: { bg: '#e8d5f5', color: '#6a1b9a' },
   manager: { bg: '#bbdefb', color: '#1565c0' },
   cashier: { bg: '#c8e6c9', color: '#2e7d32' },
@@ -483,6 +484,7 @@ export default function AdminStaff() {
                       value={form.role}
                       onChange={(e) => setForm({ ...form, role: e.target.value })}
                     >
+                      <option value="operation_manager">Operation Manager</option>
                       <option value="manager">Manager</option>
                       <option value="cashier">Cashier</option>
                       <option value="barista">Barista</option>

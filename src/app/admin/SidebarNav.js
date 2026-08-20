@@ -21,10 +21,14 @@ import {
   Store,
   Users2,
   ClipboardList,
-  Audit,
   Building2,
   DollarSign,
   Link2,
+  Activity,
+  ArrowLeftRight,
+  ClipboardCheck,
+  Camera,
+  ShoppingBag,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -59,24 +63,54 @@ export default function SidebarNav() {
     setExpandedMenus((prev) => ({ ...prev, [menu]: !prev[menu] }));
   };
 
-  const isActive = (path) => pathname?.startsWith(path);
+  const isActive = (path) => pathname === path || (path !== '/admin' && pathname?.startsWith(path));
 
   return (
     <nav className="admin-nav">
       <div className="admin-nav-group">
         <span className="admin-nav-group-title">MAIN</span>
-        <Link href="/admin" className="admin-nav-link">
+        <Link href="/admin" className={`admin-nav-link ${pathname === '/admin' ? 'active' : ''}`}>
           <LayoutDashboard size={20} /> Dashboard
         </Link>
       </div>
 
       <div className="admin-nav-group">
-        <span className="admin-nav-group-title">OUTLETS</span>
+        <span className="admin-nav-group-title">OUTLETS & OPERATIONS</span>
         <Link
           href="/admin/outlets"
-          className={`admin-nav-link ${isActive('/admin/outlets') ? 'active' : ''}`}
+          className={`admin-nav-link ${pathname === '/admin/outlets' ? 'active' : ''}`}
         >
           <Store size={20} /> All Outlets
+        </Link>
+        <Link
+          href="/admin/outlets/operations"
+          className={`admin-nav-link ${isActive('/admin/outlets/operations') ? 'active' : ''}`}
+        >
+          <Activity size={20} /> Operations Hub
+        </Link>
+        <Link
+          href="/admin/outlets/transfers"
+          className={`admin-nav-link ${isActive('/admin/outlets/transfers') ? 'active' : ''}`}
+        >
+          <ArrowLeftRight size={20} /> Stock Transfers
+        </Link>
+        <Link
+          href="/admin/outlets/purchase-orders"
+          className={`admin-nav-link ${isActive('/admin/outlets/purchase-orders') ? 'active' : ''}`}
+        >
+          <ShoppingBag size={20} /> Purchase Orders
+        </Link>
+        <Link
+          href="/admin/outlets/checklists"
+          className={`admin-nav-link ${isActive('/admin/outlets/checklists') ? 'active' : ''}`}
+        >
+          <ClipboardCheck size={20} /> Checklists & Audits
+        </Link>
+        <Link
+          href="/admin/outlets/surveillance"
+          className={`admin-nav-link ${isActive('/admin/outlets/surveillance') ? 'active' : ''}`}
+        >
+          <Camera size={20} /> Live Surveillance
         </Link>
         <Link
           href="/admin/partners"

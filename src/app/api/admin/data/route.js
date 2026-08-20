@@ -25,9 +25,28 @@ async function verifyAdmin(request) {
     const { data: profile } = await supabaseAdmin
       .from('admin_profiles')
       .select('*')
-      .eq('phone', user.phone)
+      .eq('phone', user.phone || '')
       .maybeSingle();
-    if (!profile) return { error: 'Forbidden', status: 403 };
+
+    if (!profile) {
+      // Check if user is an Operation Manager, Partner, or Manager in outlet_staff
+      const emailFilter = user.email ? `email.eq.${user.email}` : '';
+      const phoneFilter = user.phone ? `phone.eq.${user.phone}` : '';
+      const userIdFilter = `user_id.eq.${user.id}`;
+      const orFilter = [userIdFilter, emailFilter, phoneFilter].filter(Boolean).join(',');
+
+      const { data: staff } = await supabaseAdmin
+        .from('outlet_staff')
+        .select('*')
+        .or(orFilter)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      const allowedRoles = ['operation_manager', 'operations_manager', 'area_manager', 'operations', 'manager', 'owner', 'partner', 'superadmin'];
+      if (!staff || !allowedRoles.includes(staff.role)) {
+        return { error: 'Forbidden', status: 403 };
+      }
+    }
   }
   const supabase = supabaseAdmin;
   return { supabase, user, adminEmail: user.email };

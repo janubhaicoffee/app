@@ -63,6 +63,9 @@ export async function GET(request) {
       if (['owner', 'partner'].includes(staff.role)) {
         return NextResponse.json({ role: 'partner', staffRole: staff.role, outletId: staff.outlet_id });
       }
+      if (['operation_manager', 'operations_manager', 'area_manager', 'operations'].includes(staff.role)) {
+        return NextResponse.json({ role: 'operation_manager', staffRole: staff.role, outletId: staff.outlet_id, isOperationManager: true });
+      }
       return NextResponse.json({ role: 'staff', staffRole: staff.role, outletId: staff.outlet_id });
     }
 

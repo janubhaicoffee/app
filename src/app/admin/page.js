@@ -26,6 +26,11 @@ import {
   Clock,
   RefreshCw,
   BarChart3,
+  Store,
+  ArrowLeftRight,
+  ClipboardCheck,
+  Video,
+  ShoppingBag,
 } from 'lucide-react';
 
 function AnimatedNumber({ value, isCurrency = false }) {
@@ -230,6 +235,46 @@ export default function AdminDashboard() {
             <AnimatedNumber value={data.pendingReviews} />
           </p>
           <p className="stat-sub">Awaiting moderation</p>
+        </div>
+      </div>
+
+      {/* Operations Quick Launch Bar */}
+      <div
+        className="admin-card"
+        style={{
+          padding: '1rem 1.25rem',
+          marginBottom: '1.5rem',
+          background: 'linear-gradient(135deg, rgba(58, 36, 31, 0.04) 0%, rgba(216, 154, 30, 0.08) 100%)',
+          border: '1px solid var(--border-color)',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Store size={18} color="var(--accent-gold, #d89a1e)" />
+              Operations Command Suite
+            </div>
+            <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Manage multi-outlet live switchboards, inter-cafe stock transfers, purchase orders, SOP audits, and CCTV streams.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <Link href="/admin/outlets/operations" className="admin-btn admin-btn-sm" style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}>
+              <Store size={14} /> Operations Hub
+            </Link>
+            <Link href="/admin/outlets/transfers" className="admin-btn-outline admin-btn-sm" style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}>
+              <ArrowLeftRight size={14} /> Stock Transfers
+            </Link>
+            <Link href="/admin/outlets/purchase-orders" className="admin-btn-outline admin-btn-sm" style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}>
+              <ShoppingBag size={14} /> Purchase Orders
+            </Link>
+            <Link href="/admin/outlets/checklists" className="admin-btn-outline admin-btn-sm" style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}>
+              <ClipboardCheck size={14} /> SOP Audits
+            </Link>
+            <Link href="/admin/outlets/surveillance" className="admin-btn-outline admin-btn-sm" style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}>
+              <Video size={14} /> Surveillance
+            </Link>
+          </div>
         </div>
       </div>
 
