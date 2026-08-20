@@ -1032,11 +1032,11 @@
   }
 
   .d2c-hero-visual-col {
-    order: 2;
+    order: 1;
   }
 
   .d2c-hero-details-col {
-    order: 1;
+    order: 2;
     text-align: center;
     align-items: center;
   }

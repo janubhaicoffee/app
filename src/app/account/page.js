@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   LayoutDashboard,
   Package,
@@ -16,11 +17,21 @@ import {
   Zap,
   AlertTriangle,
   Key,
+  ShieldCheck,
+  Sparkles,
+  Truck,
+  ArrowRight,
+  Clock,
+  Check,
+  X,
+  Phone,
+  RefreshCw,
 } from 'lucide-react';
 import { getUserProgression, awardPoints } from '@/actions/progression';
 import { getTierInfo } from '@/lib/progressionUtils';
 import { optimizeDeliverySchedule } from '@/actions/schedule';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import './account.css';
 
 export default function AccountPage() {
@@ -41,7 +52,7 @@ export default function AccountPage() {
   const [agendaForm, setAgendaForm] = useState({
     busyDays: ['Monday', 'Wednesday'],
     peakHours: '14:00',
-    sleepHours: 6,
+    sleepHours: 7,
   });
   const [optimizationMatrix, setOptimizationMatrix] = useState(null);
   const [optimizing, setOptimizing] = useState(false);
@@ -57,33 +68,39 @@ export default function AccountPage() {
   // Phone Verification State
   const [phoneToVerify, setPhoneToVerify] = useState('');
   const [otpCode, setOtpCode] = useState('');
-  const [phoneStep, setPhoneStep] = useState('input'); // input | otp
+  const [phoneStep, setPhoneStep] = useState('input'); // 'input' | 'otp'
   const [phoneVerifying, setPhoneVerifying] = useState(false);
   const [phoneError, setPhoneError] = useState('');
   const [phoneMessage, setPhoneMessage] = useState('');
+
+  // Subscription Plan State
+  const [selectedSubFrequency, setSelectedSubFrequency] = useState('4weeks');
+  const [selectedSubPack, setSelectedSubPack] = useState('100g');
+
+  const router = useRouter();
 
   // Auto-award points for linked identities on load
   useEffect(() => {
     if (user && progressionData && sessionToken) {
       const checkAndAwardIdentityPoints = async () => {
-        const hasGoogle = user.identities?.some(id => id.provider === 'google');
-        const hasFacebook = user.identities?.some(id => id.provider === 'facebook');
+        const hasGoogle = user.identities?.some((id) => id.provider === 'google');
+        const hasFacebook = user.identities?.some((id) => id.provider === 'facebook');
         const hasPhone = !!user.phone;
-        
+
         const ledger = progressionData.ledger || [];
         let shouldReload = false;
-        
-        if (hasGoogle && !ledger.some(l => l.action_type === 'Link Google Account')) {
+
+        if (hasGoogle && !ledger.some((l) => l.action_type === 'Link Google Account')) {
           await awardPoints(sessionToken, 50, 'Link Google Account');
           shouldReload = true;
         }
-        
-        if (hasFacebook && !ledger.some(l => l.action_type === 'Link Facebook Account')) {
+
+        if (hasFacebook && !ledger.some((l) => l.action_type === 'Link Facebook Account')) {
           await awardPoints(sessionToken, 50, 'Link Facebook Account');
           shouldReload = true;
         }
 
-        if (hasPhone && !ledger.some(l => l.action_type === 'Verify Phone')) {
+        if (hasPhone && !ledger.some((l) => l.action_type === 'Verify Phone')) {
           await awardPoints(sessionToken, 100, 'Verify Phone');
           shouldReload = true;
         }
@@ -99,8 +116,6 @@ export default function AccountPage() {
     }
   }, [user, progressionData, sessionToken]);
 
-  const router = useRouter();
-
   useEffect(() => {
     let mounted = true;
 
@@ -113,7 +128,7 @@ export default function AccountPage() {
 
         setUser(session.user);
         setSessionToken(session.access_token);
-        setLoading(false); // <-- FIXED: Set loading false after we have session
+        setLoading(false);
 
         // Fetch Profile for Address
         const { data: profile } = await supabase
@@ -130,7 +145,7 @@ export default function AccountPage() {
           });
         }
 
-        // Fetch Progression live from Supabase via Server Action
+        // Fetch Progression live from Supabase
         const progRes = await getUserProgression(session.access_token);
         if (progRes.success && mounted) {
           setProgressionData({
@@ -170,14 +185,12 @@ export default function AccountPage() {
       }
     };
 
-    // First check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         fetchUserData(session);
       }
     });
 
-    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -193,25 +206,23 @@ export default function AccountPage() {
       }
     });
 
-    const timeout = setTimeout(() => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (!session && mounted) {
-          router.push('/auth/login');
-        }
-      });
-    }, 2000);
-
     return () => {
       mounted = false;
       subscription.unsubscribe();
-      clearTimeout(timeout);
     };
   }, [router]);
 
+  // Phone verification handlers
   const handleSendPhoneOtp = async () => {
+    if (!phoneToVerify || phoneToVerify.trim().length < 10) {
+      setPhoneError('Please enter a valid 10-digit phone number.');
+      return;
+    }
+
     setPhoneVerifying(true);
     setPhoneError('');
     setPhoneMessage('');
+
     try {
       let formattedPhone = phoneToVerify.replace(/[\s()-]/g, '');
       if (/^\d{10}$/.test(formattedPhone)) {
@@ -219,22 +230,30 @@ export default function AccountPage() {
       } else if (/^\d+$/.test(formattedPhone) && !formattedPhone.startsWith('+')) {
         formattedPhone = `+${formattedPhone}`;
       }
-      
+
       const { error } = await supabase.auth.updateUser({ phone: formattedPhone });
       if (error) throw error;
       setPhoneStep('otp');
       setPhoneMessage('OTP code sent successfully!');
+      toast.success('Verification code dispatched!');
     } catch (err) {
       setPhoneError(err.message || 'Failed to send OTP code.');
+      toast.error('Failed to send OTP.');
     } finally {
       setPhoneVerifying(false);
     }
   };
 
   const handleVerifyPhoneOtp = async () => {
+    if (!otpCode || otpCode.trim().length < 4) {
+      setPhoneError('Please enter the verification code.');
+      return;
+    }
+
     setPhoneVerifying(true);
     setPhoneError('');
     setPhoneMessage('');
+
     try {
       let formattedPhone = phoneToVerify.replace(/[\s()-]/g, '');
       if (/^\d{10}$/.test(formattedPhone)) {
@@ -246,19 +265,20 @@ export default function AccountPage() {
       const { error } = await supabase.auth.verifyOtp({
         phone: formattedPhone,
         token: otpCode,
-        type: 'phone_change'
+        type: 'phone_change',
       });
       if (error) throw error;
 
-      // Reload auth session to update local user object
-      const { data: { user: updatedUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: updatedUser },
+      } = await supabase.auth.getUser();
       setUser(updatedUser);
       setPhoneStep('input');
       setPhoneToVerify('');
       setOtpCode('');
       setPhoneMessage('Phone successfully verified!');
+      toast.success('Phone verified! +100 Loyalty Points awarded.');
 
-      // Award points
       if (sessionToken) {
         const res = await awardPoints(sessionToken, 100, 'Verify Phone');
         if (res.success) {
@@ -270,6 +290,7 @@ export default function AccountPage() {
       }
     } catch (err) {
       setPhoneError(err.message || 'OTP verification failed.');
+      toast.error('Invalid OTP code.');
     } finally {
       setPhoneVerifying(false);
     }
@@ -277,10 +298,10 @@ export default function AccountPage() {
 
   const handleRegisterPasskey = async () => {
     try {
-      const { data, error } = await supabase.auth.registerPasskey();
+      const { error } = await supabase.auth.registerPasskey();
       if (error) throw error;
-      alert('Passkey successfully registered on this device!');
-      
+      toast.success('Passkey enrolled! +150 Loyalty Points awarded.');
+
       if (sessionToken) {
         const res = await awardPoints(sessionToken, 150, 'Register Passkey');
         if (res.success) {
@@ -291,7 +312,65 @@ export default function AccountPage() {
         }
       }
     } catch (err) {
-      alert(err.message || 'Failed to register passkey. Ensure your browser/device supports WebAuthn.');
+      toast.error(err.message || 'Passkey enrollment canceled or unsupported.');
+    }
+  };
+
+  const handleSaveAddress = async (e) => {
+    e.preventDefault();
+    if (!user) return;
+    setSavingAddress(true);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          address: addressForm.address,
+          city: addressForm.city,
+          pincode: addressForm.pincode,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      toast.success('Saved address updated successfully!');
+    } catch (err) {
+      toast.error(err.message || 'Failed to save address.');
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
+  const toggleBusyDay = (day) => {
+    setAgendaForm((prev) => {
+      const current = prev.busyDays;
+      if (current.includes(day)) {
+        return { ...prev, busyDays: current.filter((d) => d !== day) };
+      } else {
+        return { ...prev, busyDays: [...current, day] };
+      }
+    });
+  };
+
+  const handleOptimizeSchedule = async (e) => {
+    e.preventDefault();
+    setOptimizing(true);
+    try {
+      const res = await optimizeDeliverySchedule({
+        busyDays: agendaForm.busyDays,
+        peakHours: agendaForm.peakHours,
+        sleepHours: agendaForm.sleepHours,
+      });
+      if (res.success) {
+        setOptimizationMatrix(res.data);
+        toast.success('Schedule optimized!');
+      } else {
+        toast.error(res.error || 'Optimization failed');
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setOptimizing(false);
     }
   };
 
@@ -300,174 +379,122 @@ export default function AccountPage() {
     router.push('/');
   };
 
-  const handleSaveAddress = async (e) => {
-    e.preventDefault();
-    setSavingAddress(true);
-
-    const { error } = await supabase.from('profiles').upsert({
-      id: user.id,
-      email: user.email,
-      full_name: user.user_metadata?.full_name || '',
-      address: addressForm.address,
-      city: addressForm.city,
-      pincode: addressForm.pincode,
-    });
-
-    if (error) {
-      alert('Failed to save address. Please try again.');
-      console.error(error);
-    } else {
-      alert('Address saved successfully!');
-    }
-    setSavingAddress(false);
-  };
-
-  // Submit Agenda for Scheduling Optimization
-  const handleOptimizeSchedule = async (e) => {
-    e.preventDefault();
-    setOptimizing(true);
-    try {
-      const res = await optimizeDeliverySchedule(agendaForm);
-      if (res.success) {
-        setOptimizationMatrix(res.matrix);
-      }
-    } catch (e) {
-      console.error('Optimization failed:', e);
-    } finally {
-      setOptimizing(false);
-    }
-  };
-
-  const toggleBusyDay = (day) => {
-    setAgendaForm((prev) => {
-      const busy = prev.busyDays.includes(day)
-        ? prev.busyDays.filter((d) => d !== day)
-        : [...prev.busyDays, day];
-      return { ...prev, busyDays: busy };
-    });
-  };
+  const tierInfo = getTierInfo(progressionData.profile?.total_points || 0);
 
   if (loading) {
     return (
-      <main className="account-page text-center">
-        <p>Loading your portal...</p>
-      </main>
+      <div
+        className="account-page"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}
+      >
+        <div style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+          <RefreshCw className="animate-spin" size={32} color="var(--accent-gold)" />
+          <p style={{ marginTop: '12px', fontSize: '0.9rem' }}>Loading VIP Account Hub...</p>
+        </div>
+      </div>
     );
   }
 
-  if (!user) return null;
-
-  // Compute tier progression parameters
-  const tierInfo = getTierInfo(progressionData.profile.total_points);
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   return (
     <main className="account-page">
       <div className="container">
         <div className="account-layout">
-          {/* Sidebar */}
+          
+          {/* 1. SIDEBAR NAVIGATION */}
           <aside className="sidebar">
             <nav className="sidebar-nav">
-              <div
+              <button
                 className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
                 onClick={() => setActiveTab('overview')}
               >
-                <LayoutDashboard size={20} />
+                <LayoutDashboard size={18} />
                 <span>Overview</span>
-              </div>
-              <div
+              </button>
+
+              <button
                 className={`nav-item ${activeTab === 'progression' ? 'active' : ''}`}
                 onClick={() => setActiveTab('progression')}
               >
-                <Award size={20} />
+                <Award size={18} />
                 <span>Lore & Progression</span>
-              </div>
-              <div
+              </button>
+
+              <button
                 className={`nav-item ${activeTab === 'optimizer' ? 'active' : ''}`}
                 onClick={() => setActiveTab('optimizer')}
               >
-                <Compass size={20} />
+                <Compass size={18} />
                 <span>Delivery Optimizer</span>
-              </div>
-              <div
+              </button>
+
+              <button
                 className={`nav-item ${activeTab === 'orders' ? 'active' : ''}`}
                 onClick={() => setActiveTab('orders')}
               >
-                <Package size={20} />
+                <Package size={18} />
                 <span>Order History</span>
-              </div>
-              <div
+              </button>
+
+              <button
                 className={`nav-item ${activeTab === 'addresses' ? 'active' : ''}`}
                 onClick={() => setActiveTab('addresses')}
               >
-                <MapPin size={20} />
-                <span>Addresses</span>
-              </div>
-              <div
+                <MapPin size={18} />
+                <span>Saved Addresses</span>
+              </button>
+
+              <button
                 className={`nav-item ${activeTab === 'subscriptions' ? 'active' : ''}`}
                 onClick={() => setActiveTab('subscriptions')}
               >
-                <Coffee size={20} />
+                <Coffee size={18} />
                 <span>Subscriptions</span>
-              </div>
+              </button>
 
               {isAdmin && (
-                <div
+                <Link
+                  href="/admin"
                   className="nav-item"
-                  onClick={() => router.push('/admin')}
-                  style={{ color: 'var(--accent-red)', fontWeight: 'bold' }}
+                  style={{ color: 'var(--accent-gold)', border: '1px dashed var(--accent-gold)' }}
                 >
-                  <Settings size={20} />
-                  <span>Admin Panel</span>
-                </div>
+                  <Settings size={18} />
+                  <span>Admin Command</span>
+                </Link>
               )}
 
-              <div className="nav-item logout" onClick={handleLogout}>
-                <LogOut size={20} />
-                <span>Logout</span>
-              </div>
+              <button className="nav-item logout" onClick={handleLogout}>
+                <LogOut size={18} />
+                <span>Sign Out</span>
+              </button>
             </nav>
           </aside>
 
-          {/* Main Content */}
+          {/* 2. MAIN CONTENT TABS */}
           <section className="main-content">
+            
+            {/* TAB 1: OVERVIEW */}
             {activeTab === 'overview' && (
-              <div className="tab-content fade-in">
+              <div className="tab-content">
                 <h2 className="tab-header">
-                  Welcome back, {user.user_metadata?.full_name?.split(' ')[0] || 'Coffee Lover'}!
+                  Welcome back, {user?.user_metadata?.full_name?.split(' ')[0] || 'Coffee Connoisseur'}!
                 </h2>
 
-                {/* Gamified Setup Banner */}
-                {(() => {
-                  const hasPhone = !!user.phone;
-                  const hasGoogle = user.identities?.some(id => id.provider === 'google');
-                  const hasFacebook = user.identities?.some(id => id.provider === 'facebook');
-                  const milestonesCount = (hasPhone ? 1 : 0) + (hasGoogle ? 1 : 0) + (hasFacebook ? 1 : 0);
-                  
-                  if (milestonesCount < 3) {
-                    return (
-                      <div style={{
-                        padding: '16px',
-                        background: 'rgba(216, 154, 30, 0.08)',
-                        border: '1.5px dashed var(--accent-gold)',
-                        borderRadius: '12px',
-                        marginBottom: '20px',
-                        color: 'var(--text-primary)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px'
-                      }}>
-                        <div style={{ fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          🛡️ Level Up Your Account Security & Get Free Coffee Points!
-                        </div>
-                        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.4' }}>
-                          We recommend linking multiple login methods (Google, Facebook, or Phone). Link them below to secure your identity and instantly earn up to <strong>350 loyalty points</strong> + unlock <strong>biometric Passkeys</strong>!
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
+                {/* Banner */}
+                <div className="welcome-banner">
+                  <div>
+                    <h4>
+                      <ShieldCheck size={18} /> Level Up Your Account Security & Get Free Points!
+                    </h4>
+                    <p>
+                      Link multiple login methods below to secure your identity and earn up to{' '}
+                      <strong style={{ color: 'var(--accent-gold)' }}>350 loyalty points</strong> + unlock biometric Passkeys!
+                    </p>
+                  </div>
+                </div>
 
+                {/* 3 KPI Cards */}
                 <div className="overview-cards">
                   <div className="stat-card">
                     <h3>Total Orders</h3>
@@ -475,64 +502,67 @@ export default function AccountPage() {
                   </div>
                   <div className="stat-card">
                     <h3>Lore Tier</h3>
-                    <div className="stat-value" style={{ fontSize: '1.2rem', marginTop: '10px' }}>
-                      <span className="tier-badge">{tierInfo.currentTier.name}</span>
+                    <div className="stat-value" style={{ fontSize: '1.5rem', marginTop: '6px' }}>
+                      {tierInfo.currentTier.name}
                     </div>
                   </div>
                   <div className="stat-card">
                     <h3>Janu Bhai Points</h3>
-                    <div className="stat-value">{tierInfo.totalPoints}</div>
+                    <div className="stat-value">{progressionData.profile?.total_points || 0}</div>
                   </div>
                 </div>
 
-                <div className="profile-details">
-                  <h3 style={{ marginBottom: '15px', color: 'var(--text-primary)' }}>
+                {/* Profile Details */}
+                <div style={{ marginBottom: '24px' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-playfair)', margin: '0 0 12px' }}>
                     Account Details
                   </h3>
-                  <p>
-                    <strong>Name:</strong> {user.user_metadata?.full_name || 'N/A'}
+                  <p style={{ margin: '0 0 4px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                    <strong style={{ color: 'var(--text-primary)' }}>Name:</strong>{' '}
+                    {user?.user_metadata?.full_name || 'Janu Bhai Member'}
                   </p>
-                  <p>
-                    <strong>Email:</strong> {user.email}
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                    <strong style={{ color: 'var(--text-primary)' }}>Email:</strong> {user?.email || 'N/A'}
                   </p>
                 </div>
 
-                <div className="profile-details" style={{ marginTop: '20px' }}>
-                  <h3 style={{ marginBottom: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Key size={18} /> 🛡️ Security Milestones & Trust Score
+                {/* Security Milestones Panel */}
+                <div className="security-milestone-panel">
+                  <h3 style={{ margin: '0 0 14px', fontSize: '1.1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Key size={18} color="var(--accent-gold)" /> Security Milestones & Trust Score
                   </h3>
-                  
+
                   {/* Trust Score Progress */}
                   {(() => {
-                    const hasPhone = !!user.phone;
-                    const hasGoogle = user.identities?.some(id => id.provider === 'google');
-                    const hasFacebook = user.identities?.some(id => id.provider === 'facebook');
-                    const hasPasskey = progressionData.ledger?.some(l => l.action_type === 'Register Passkey');
-                    
+                    const hasPhone = !!user?.phone;
+                    const hasGoogle = user?.identities?.some((id) => id.provider === 'google');
+                    const hasFacebook = user?.identities?.some((id) => id.provider === 'facebook');
+                    const hasPasskey = progressionData.ledger?.some((l) => l.action_type === 'Register Passkey');
+
                     let milestonesCount = 0;
                     if (hasPhone) milestonesCount++;
                     if (hasGoogle) milestonesCount++;
                     if (hasFacebook) milestonesCount++;
                     if (hasPasskey) milestonesCount++;
-                    
+
                     const ranks = [
-                      "🥚 Coffee Seedling (Low Trust)",
-                      "🌱 Sprouting Espresso (Basic Trust)",
-                      "🌿 Roasted Bean (Medium Trust)",
-                      "☕ Secure Barista (High Trust)",
-                      "🔏 Coffee Cryptographer (Maximum Trust!)"
+                      'Coffee Seedling (Basic Trust)',
+                      'Sprouting Espresso (Basic Trust)',
+                      'Roasted Bean (Medium Trust)',
+                      'Secure Barista (High Trust)',
+                      'Coffee Cryptographer (Maximum Trust!)',
                     ];
                     const currentRank = ranks[milestonesCount];
                     const progressPercent = (milestonesCount / 4) * 100;
-                    
+
                     return (
-                      <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '8px' }}>
+                      <div className="security-meter-wrap">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                           <span style={{ color: 'var(--text-secondary)' }}>Security Level:</span>
                           <strong style={{ color: 'var(--accent-gold)' }}>{currentRank}</strong>
                         </div>
-                        <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden', marginBottom: '6px' }}>
-                          <div style={{ width: `${progressPercent}%`, height: '100%', background: 'var(--accent-gold)', transition: 'width 0.5s ease-in-out' }} />
+                        <div className="security-meter-bar">
+                          <div className="security-meter-fill" style={{ width: `${progressPercent}%` }} />
                         </div>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                           Completed {milestonesCount} of 4 security achievements
@@ -541,104 +571,107 @@ export default function AccountPage() {
                     );
                   })()}
 
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '15px', lineHeight: '1.4' }}>
-                    Complete these verification tasks to lock down your account and unlock the ultimate passwordless coffee convenience (biometric Passkeys). You earn instant Loyalty Points for each step!
-                  </p>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    
-                    {/* Milestone 1: Phone Verification */}
+                  <div className="milestones-list">
+                    {/* Phone Verification Item */}
                     {(() => {
-                      const hasPhone = !!user.phone;
-                      
+                      const hasPhone = !!user?.phone;
                       return (
-                        <div style={{ padding: '12px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                              📱 Phone Verification <span style={{ color: 'var(--accent-gold)', marginLeft: '6px' }}>+100 Points</span>
+                        <div className="milestone-item">
+                          <div style={{ flex: 1 }}>
+                            <div className="milestone-title">
+                              <Phone size={15} /> Phone Verification
+                              <span className="milestone-points-badge">+100 Points</span>
                             </div>
-                            <span style={{ fontSize: '0.8rem', color: hasPhone ? '#66bb6a' : 'var(--text-secondary)', fontWeight: 600 }}>
-                              {hasPhone ? '✅ Verified (+100 XP)' : '❌ Not Verified'}
-                            </span>
+                            <div className="milestone-desc">
+                              {hasPhone ? `Verified: ${user.phone}` : 'Protect orders and enable SMS dispatch updates'}
+                            </div>
+                            {!hasPhone && (
+                              <div style={{ marginTop: '10px' }}>
+                                {phoneError && <p style={{ color: '#ff8a80', fontSize: '0.75rem', margin: '0 0 6px' }}>{phoneError}</p>}
+                                {phoneMessage && <p style={{ color: '#69f0ae', fontSize: '0.75rem', margin: '0 0 6px' }}>{phoneMessage}</p>}
+                                
+                                {phoneStep === 'input' ? (
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <input
+                                      type="tel"
+                                      placeholder="+91 98765 43210"
+                                      value={phoneToVerify}
+                                      onChange={(e) => setPhoneToVerify(e.target.value)}
+                                      className="glass-input"
+                                      style={{ maxWidth: '240px', padding: '8px 12px', fontSize: '0.85rem' }}
+                                    />
+                                    <button
+                                      type="button"
+                                      disabled={phoneVerifying}
+                                      onClick={handleSendPhoneOtp}
+                                      className="btn-gold-action"
+                                      style={{ padding: '8px 16px', fontSize: '0.82rem' }}
+                                    >
+                                      {phoneVerifying ? 'Sending...' : 'Send OTP'}
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div style={{ display: 'flex', gap: '8px' }}>
+                                    <input
+                                      type="text"
+                                      placeholder="Enter OTP"
+                                      value={otpCode}
+                                      onChange={(e) => setOtpCode(e.target.value)}
+                                      className="glass-input"
+                                      style={{ maxWidth: '160px', padding: '8px 12px', fontSize: '0.85rem' }}
+                                    />
+                                    <button
+                                      type="button"
+                                      disabled={phoneVerifying}
+                                      onClick={handleVerifyPhoneOtp}
+                                      className="btn-gold-action"
+                                      style={{ padding: '8px 16px', fontSize: '0.82rem' }}
+                                    >
+                                      {phoneVerifying ? 'Verifying...' : 'Verify'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => { setPhoneStep('input'); setPhoneError(''); setPhoneMessage(''); }}
+                                      className="btn-glass-secondary"
+                                      style={{ padding: '8px 12px', fontSize: '0.82rem' }}
+                                    >
+                                      Back
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          
-                          {!hasPhone && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-                              {phoneError && <span style={{ fontSize: '0.75rem', color: '#ef5350' }}>{phoneError}</span>}
-                              {phoneMessage && <span style={{ fontSize: '0.75rem', color: '#66bb6a' }}>{phoneMessage}</span>}
-                              
-                              {phoneStep === 'input' ? (
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                  <input
-                                    type="tel"
-                                    placeholder="+91 98765 43210"
-                                    value={phoneToVerify}
-                                    onChange={(e) => setPhoneToVerify(e.target.value)}
-                                    style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: '#fff' }}
-                                  />
-                                  <button
-                                    type="button"
-                                    disabled={phoneVerifying}
-                                    onClick={handleSendPhoneOtp}
-                                    style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', background: 'var(--accent-gold)', border: 'none', color: '#fff', borderRadius: '4px' }}
-                                  >
-                                    {phoneVerifying ? 'Sending...' : 'Send OTP'}
-                                  </button>
-                                </div>
-                              ) : (
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                  <input
-                                    type="text"
-                                    placeholder="Enter OTP"
-                                    value={otpCode}
-                                    onChange={(e) => setOtpCode(e.target.value)}
-                                    style={{ flex: 1, padding: '6px 10px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: '#fff' }}
-                                  />
-                                  <button
-                                    type="button"
-                                    disabled={phoneVerifying}
-                                    onClick={handleVerifyPhoneOtp}
-                                    style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', background: 'var(--accent-gold)', border: 'none', color: '#fff', borderRadius: '4px' }}
-                                  >
-                                    {phoneVerifying ? 'Verifying...' : 'Verify'}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => { setPhoneStep('input'); setPhoneError(''); setPhoneMessage(''); }}
-                                    style={{ padding: '6px 8px', fontSize: '0.8rem', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '4px' }}
-                                  >
-                                    Back
-                                  </button>
-                                </div>
-                              )}
-                            </div>
+                          {hasPhone && (
+                            <span style={{ fontSize: '0.8rem', color: '#69f0ae', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Check size={14} /> Linked (+100 XP)
+                            </span>
                           )}
                         </div>
                       );
                     })()}
 
-                    {/* Milestone 2: Social Account Google */}
+                    {/* Google Item */}
                     {(() => {
-                      const hasGoogle = user.identities?.some(id => id.provider === 'google');
+                      const hasGoogle = user?.identities?.some((id) => id.provider === 'google');
                       return (
-                        <div style={{ padding: '12px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="milestone-item">
                           <div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                              🌐 Link Google Account <span style={{ color: 'var(--accent-gold)', marginLeft: '6px' }}>+50 Points</span>
+                            <div className="milestone-title">
+                              Link Google Account
+                              <span className="milestone-points-badge">+50 Points</span>
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                              Sign in faster with your Google identity
-                            </div>
+                            <div className="milestone-desc">Sign in faster with your Google identity</div>
                           </div>
                           {hasGoogle ? (
-                            <span style={{ fontSize: '0.8rem', color: '#66bb6a', fontWeight: 600 }}>
-                              ✅ Linked (+50 XP)
+                            <span style={{ fontSize: '0.8rem', color: '#69f0ae', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Check size={14} /> Linked (+50 XP)
                             </span>
                           ) : (
                             <button
                               type="button"
                               onClick={() => supabase.auth.linkIdentity({ provider: 'google', options: { redirectTo: window.location.href } })}
-                              style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '4px' }}
+                              className="btn-glass-secondary"
                             >
                               Link Google
                             </button>
@@ -647,28 +680,27 @@ export default function AccountPage() {
                       );
                     })()}
 
-                    {/* Milestone 3: Social Account Facebook */}
+                    {/* Facebook Item */}
                     {(() => {
-                      const hasFacebook = user.identities?.some(id => id.provider === 'facebook');
+                      const hasFacebook = user?.identities?.some((id) => id.provider === 'facebook');
                       return (
-                        <div style={{ padding: '12px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="milestone-item">
                           <div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                              🌐 Link Facebook Account <span style={{ color: 'var(--accent-gold)', marginLeft: '6px' }}>+50 Points</span>
+                            <div className="milestone-title">
+                              Link Facebook Account
+                              <span className="milestone-points-badge">+50 Points</span>
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                              Sign in faster with your Facebook identity
-                            </div>
+                            <div className="milestone-desc">Sign in faster with your Facebook identity</div>
                           </div>
                           {hasFacebook ? (
-                            <span style={{ fontSize: '0.8rem', color: '#66bb6a', fontWeight: 600 }}>
-                              ✅ Linked (+50 XP)
+                            <span style={{ fontSize: '0.8rem', color: '#69f0ae', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Check size={14} /> Linked (+50 XP)
                             </span>
                           ) : (
                             <button
                               type="button"
                               onClick={() => supabase.auth.linkIdentity({ provider: 'facebook', options: { redirectTo: window.location.href } })}
-                              style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '4px' }}
+                              className="btn-glass-secondary"
                             >
                               Link Facebook
                             </button>
@@ -677,35 +709,33 @@ export default function AccountPage() {
                       );
                     })()}
 
-                    {/* Milestone 4: biometric Passkey */}
+                    {/* Passkey Item */}
                     {(() => {
-                      const hasPhone = !!user.phone;
-                      const hasPasskey = progressionData.ledger?.some(l => l.action_type === 'Register Passkey');
-                      
+                      const hasPhone = !!user?.phone;
+                      const hasPasskey = progressionData.ledger?.some((l) => l.action_type === 'Register Passkey');
                       return (
-                        <div style={{ padding: '12px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: hasPhone ? 1 : 0.6 }}>
+                        <div className="milestone-item">
                           <div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              🔑 Enable Passkey Login <span style={{ color: 'var(--accent-gold)' }}>+150 Points</span>
+                            <div className="milestone-title">
+                              Enable Passkey Login
+                              <span className="milestone-points-badge">+150 Points</span>
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                              Use Touch ID / Face ID for passwordless logins
-                            </div>
+                            <div className="milestone-desc">Use Touch ID / Face ID for passwordless logins</div>
                           </div>
-                          
                           {hasPasskey ? (
-                            <span style={{ fontSize: '0.8rem', color: '#66bb6a', fontWeight: 600 }}>
-                              ✅ Enrolled (+150 XP)
+                            <span style={{ fontSize: '0.8rem', color: '#69f0ae', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Check size={14} /> Enrolled (+150 XP)
                             </span>
                           ) : !hasPhone ? (
-                            <span style={{ fontSize: '0.78rem', color: '#ef5350', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                              🔒 Verify Phone First
+                            <span style={{ fontSize: '0.78rem', color: '#ff8a80', fontWeight: 600 }}>
+                              Verify Phone First
                             </span>
                           ) : (
                             <button
                               type="button"
                               onClick={handleRegisterPasskey}
-                              style={{ padding: '6px 12px', fontSize: '0.8rem', cursor: 'pointer', background: 'var(--accent-gold)', border: 'none', color: '#fff', borderRadius: '4px', fontWeight: 600 }}
+                              className="btn-gold-action"
+                              style={{ padding: '8px 16px', fontSize: '0.82rem' }}
                             >
                               Enroll Passkey
                             </button>
@@ -718,101 +748,71 @@ export default function AccountPage() {
               </div>
             )}
 
-            {/* Feature 5: Native Account Progression & Lore Dashboard */}
+            {/* TAB 2: LORE & PROGRESSION */}
             {activeTab === 'progression' && (
-              <div className="tab-content fade-in progression-container">
+              <div className="tab-content">
                 <h2 className="tab-header">Coffee Lore & Progression</h2>
 
                 <div className="lore-card">
                   <div className="tier-title-container">
-                    <h3 style={{ margin: 0, fontSize: '1.4rem' }}>{tierInfo.currentTier.name}</h3>
+                    <h3 style={{ margin: 0, fontSize: '1.5rem', fontFamily: 'var(--font-playfair)' }}>
+                      {tierInfo.currentTier.name}
+                    </h3>
                     <span className="tier-badge">Rank Tier</span>
                   </div>
 
-                  <p
-                    style={{
-                      fontStyle: 'italic',
-                      fontSize: '0.95rem',
-                      color: 'var(--text-secondary)',
-                    }}
-                  >
+                  <p style={{ fontStyle: 'italic', fontSize: '0.95rem', color: 'var(--text-secondary)', margin: '4px 0 16px' }}>
                     &ldquo;{tierInfo.currentTier.description}&rdquo;
                   </p>
 
-                  <div style={{ marginTop: '20px' }}>
-                    <div className="progress-bar-outer">
-                      <motion.div
-                        className="progress-bar-inner"
-                        initial={{ width: '0%' }}
-                        animate={{ width: `${tierInfo.progressPercent}%` }}
-                        transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
-                      />
-                      <motion.div
-                        className="progress-bar-glow"
-                        initial={{ left: '-40%' }}
-                        animate={{ left: '140%' }}
-                        transition={{
-                          duration: 0.8,
-                          ease: 'easeInOut',
-                          delay: 1.5,
-                          repeat: Infinity,
-                          repeatDelay: 3,
-                        }}
-                      />
-                    </div>
+                  <div className="progress-bar-outer">
+                    <motion.div
+                      className="progress-bar-inner"
+                      initial={{ width: '0%' }}
+                      animate={{ width: `${tierInfo.progressPercent}%` }}
+                      transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
+                    />
+                  </div>
 
-                    <div className="points-text-summary">
-                      <span>{tierInfo.totalPoints} Points Accumulated</span>
-                      {tierInfo.nextTier ? (
-                        <span>
-                          {tierInfo.pointsToNext} points to {tierInfo.nextTier.name}
-                        </span>
-                      ) : (
-                        <span>Max Lore Level Achieved</span>
-                      )}
-                    </div>
+                  {/* Clean Formatted Points Summary without text concatenation bug */}
+                  <div className="points-text-summary">
+                    <span className="pts-accumulated">{tierInfo.totalPoints} Points Accumulated</span>
+                    <span className="pts-separator">·</span>
+                    {tierInfo.nextTier ? (
+                      <span className="pts-next">
+                        <strong>{tierInfo.pointsToNext} points</strong> needed to unlock{' '}
+                        <strong>{tierInfo.nextTier.name}</strong>
+                      </span>
+                    ) : (
+                      <span className="pts-next" style={{ color: 'var(--accent-gold)' }}>
+                        ✨ Max Lore Level Achieved!
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                <div className="ledger-card-container">
-                  <h3
-                    style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}
-                  >
+                {/* Points Ledger */}
+                <div style={{ marginTop: '32px' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-playfair)', margin: '0 0 12px' }}>
                     Points Ledger
                   </h3>
                   {progressionData.ledger.length === 0 ? (
-                    <p
-                      style={{
-                        padding: '20px',
-                        textAlign: 'center',
-                        color: 'var(--text-secondary)',
-                      }}
-                    >
-                      No ledger history available. Complete orders to earn coffee lore points!
-                    </p>
+                    <div style={{ padding: '36px', textAlign: 'center', color: 'var(--text-secondary)', background: 'rgba(0,0,0,0.2)', borderRadius: '16px' }}>
+                      <Coffee size={32} color="var(--accent-gold)" style={{ margin: '0 auto 8px' }} />
+                      <p style={{ margin: 0 }}>No ledger history yet. Complete orders and verify security milestones to earn coffee points!</p>
+                    </div>
                   ) : (
                     <div className="ledger-cards">
                       {progressionData.ledger.map((entry) => (
-                        <motion.div
-                          key={entry.id}
-                          className="ledger-card-item"
-                          whileHover={{
-                            scale: 1.02,
-                            boxShadow: '4px 6px 0px var(--text-primary)',
-                            y: -2,
-                          }}
-                          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                        >
-                          <div className="ledger-card-left">
+                        <div key={entry.id} className="ledger-card-item">
+                          <div>
                             <span className="ledger-action-type">{entry.action_type}</span>
                             <span className="ledger-date">
-                              {new Date(entry.created_at).toLocaleDateString()}
+                              {new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </span>
                           </div>
-                          <div className="ledger-card-right">
-                            <span className="ledger-points">+{entry.points_awarded}</span>
-                          </div>
-                        </motion.div>
+                          <span className="ledger-points">+{entry.points_awarded} XP</span>
+                        </div>
                       ))}
                     </div>
                   )}
@@ -820,169 +820,96 @@ export default function AccountPage() {
               </div>
             )}
 
-            {/* Feature 8: Next.js Server-Side Scheduling Optimization Panel */}
+            {/* TAB 3: SMART DELIVERY AGENDA OPTIMIZER */}
             {activeTab === 'optimizer' && (
-              <div className="tab-content fade-in">
+              <div className="tab-content">
                 <h2 className="tab-header">Smart Delivery Agenda Optimizer</h2>
-                <p
-                  style={{
-                    marginBottom: '25px',
-                    fontSize: '0.95rem',
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  Provide your weekly schedule agenda and daily peak focus workloads. Our edge
-                  algorithms will calculate optimal batch roast times, local shipping dispatch
-                  windows, and a precise caffeine timeline custom-suited to your active agenda.
+                <p style={{ marginBottom: '24px', fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Select your active weekly busy days and daily workload schedule. Our edge algorithms will calculate optimal batch roast timing, express dispatch windows, and a personalized caffeine focus timeline.
                 </p>
 
-                <form className="optimizer-form" onSubmit={handleOptimizeSchedule}>
-                  <div className="form-group" style={{ marginBottom: '20px' }}>
-                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>
-                      Select Weekly Busy Days
-                    </label>
-                    <div className="checkbox-grid">
-                      {[
-                        'Monday',
-                        'Tuesday',
-                        'Wednesday',
-                        'Thursday',
-                        'Friday',
-                        'Saturday',
-                        'Sunday',
-                      ].map((day) => (
-                        <label key={day} className="checkbox-item">
-                          <input
-                            type="checkbox"
-                            checked={agendaForm.busyDays.includes(day)}
-                            onChange={() => toggleBusyDay(day)}
-                          />
-                          <span>{day}</span>
-                        </label>
-                      ))}
+                <form onSubmit={handleOptimizeSchedule} style={{ maxWidth: '640px' }}>
+                  <div className="form-group">
+                    <label>Select Weekly Busy Days</label>
+                    {/* Interactive Day Chips */}
+                    <div className="day-chips-grid">
+                      {daysOfWeek.map((day) => {
+                        const isSelected = agendaForm.busyDays.includes(day);
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            className={`day-chip-btn ${isSelected ? 'active' : ''}`}
+                            onClick={() => toggleBusyDay(day)}
+                          >
+                            {isSelected ? '✓ ' : ''}{day}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
-                  <div
-                    className="form-grid"
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '20px',
-                      marginBottom: '20px',
-                    }}
-                  >
+                  <div className="form-grid-2" style={{ marginTop: '16px' }}>
                     <div className="form-group">
-                      <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>
-                        Peak Focus / Workload Hour
-                      </label>
+                      <label>Peak Focus / Workload Hour</label>
                       <input
                         type="time"
                         required
                         value={agendaForm.peakHours}
-                        onChange={(e) =>
-                          setAgendaForm({ ...agendaForm, peakHours: e.target.value })
-                        }
-                        style={{
-                          width: '100%',
-                          padding: '10px',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: '4px',
-                        }}
+                        onChange={(e) => setAgendaForm({ ...agendaForm, peakHours: e.target.value })}
+                        className="glass-input"
                       />
                     </div>
                     <div className="form-group">
-                      <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>
-                        Sleep Target (Hours)
-                      </label>
+                      <label>Sleep Target (Hours)</label>
                       <input
                         type="number"
-                        min="3"
+                        min="4"
                         max="12"
                         required
                         value={agendaForm.sleepHours}
-                        onChange={(e) =>
-                          setAgendaForm({ ...agendaForm, sleepHours: Number(e.target.value) })
-                        }
-                        style={{
-                          width: '100%',
-                          padding: '10px',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: '4px',
-                        }}
+                        onChange={(e) => setAgendaForm({ ...agendaForm, sleepHours: Number(e.target.value) })}
+                        className="glass-input"
                       />
                     </div>
                   </div>
 
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                    style={{ width: '100%' }}
-                    disabled={optimizing}
-                  >
-                    {optimizing ? 'RUNNING EDGE COMPUTATIONS...' : 'COMPUTE SCHEDULING MATRIX'}
+                  <button type="submit" className="btn-gold-action" style={{ width: '100%', marginTop: '12px' }} disabled={optimizing}>
+                    {optimizing ? 'Computing Schedule Matrix...' : 'Compute Scheduling Matrix'}
                   </button>
                 </form>
 
                 {optimizationMatrix && (
                   <div className="matrix-grid">
-                    {/* Logistical adjustments */}
                     <div className="matrix-card">
                       <h3>Logistical Dispatch Matrix</h3>
-                      <p>
-                        <strong>Primary Dispatch Day:</strong>{' '}
-                        {optimizationMatrix.primaryDeliveryDay}
+                      <p style={{ margin: '0 0 6px', fontSize: '0.9rem' }}>
+                        <strong style={{ color: 'var(--text-primary)' }}>Primary Dispatch Day:</strong>{' '}
+                        <span style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>{optimizationMatrix.primaryDeliveryDay}</span>
                       </p>
-                      <p>
-                        <strong>Secondary Backup Day:</strong>{' '}
+                      <p style={{ margin: '0 0 16px', fontSize: '0.9rem' }}>
+                        <strong style={{ color: 'var(--text-primary)' }}>Secondary Backup Day:</strong>{' '}
                         {optimizationMatrix.backupDeliveryDay}
                       </p>
-                      <hr
-                        style={{
-                          margin: '15px 0',
-                          border: 0,
-                          borderTop: '1px solid var(--border-color)',
-                        }}
-                      />
-
-                      {optimizationMatrix.logisticalAdjustments.map((adj, i) => (
-                        <div key={i} style={{ marginBottom: '12px' }}>
-                          <span
-                            style={{ fontWeight: 'bold', display: 'block', fontSize: '0.9rem' }}
-                          >
-                            {adj.factor}
-                          </span>
-                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                            {adj.adjustment}
-                          </span>
+                      {optimizationMatrix.logisticalAdjustments?.map((adj, i) => (
+                        <div key={i} style={{ marginBottom: '12px', fontSize: '0.85rem' }}>
+                          <strong style={{ display: 'block', color: 'var(--text-primary)' }}>{adj.factor}</strong>
+                          <span style={{ color: 'var(--text-secondary)' }}>{adj.adjustment}</span>
                         </div>
                       ))}
                     </div>
 
-                    {/* Caffeine schedule */}
                     <div className="matrix-card">
                       <h3>Agenda Caffeine Timeline</h3>
-                      {optimizationMatrix.brewTimeline.map((item, i) => (
+                      {optimizationMatrix.brewTimeline?.map((item, i) => (
                         <div key={i} className="timeline-item-matrix">
-                          <span
-                            style={{
-                              fontWeight: 'bold',
-                              color: 'var(--accent-red)',
-                              display: 'block',
-                            }}
-                          >
-                            {item.time} - {item.action}
+                          <span style={{ fontWeight: 700, color: 'var(--accent-gold)', display: 'block', fontSize: '0.88rem' }}>
+                            {item.time} — {item.action}
                           </span>
-                          <p style={{ margin: '3px 0', fontSize: '0.9rem', fontWeight: '500' }}>
+                          <p style={{ margin: '3px 0', fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>
                             {item.recommendedBlend}
                           </p>
-                          <p
-                            style={{
-                              margin: 0,
-                              fontSize: '0.8rem',
-                              color: 'var(--text-secondary)',
-                            }}
-                          >
+                          <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                             {item.rationale}
                           </p>
                         </div>
@@ -993,109 +920,82 @@ export default function AccountPage() {
               </div>
             )}
 
+            {/* TAB 4: ORDER HISTORY */}
             {activeTab === 'orders' && (
-              <div className="tab-content fade-in">
-                <h2 className="tab-header">Your Orders</h2>
-                <div className="orders-list">
-                  {orders.length === 0 ? (
-                    <p className="no-orders" style={{ textAlign: 'center', padding: '40px' }}>
-                      You haven&apos;t placed any orders yet. Start your journey with Janu Bhai!
-                    </p>
-                  ) : (
-                    orders.map((order) => (
+              <div className="tab-content">
+                <h2 className="tab-header">Your Order History</h2>
+                {orders.length === 0 ? (
+                  <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)', background: 'rgba(0,0,0,0.2)', borderRadius: '16px' }}>
+                    <Package size={36} color="var(--accent-gold)" style={{ margin: '0 auto 12px' }} />
+                    <p style={{ margin: '0 0 16px' }}>You haven&apos;t placed any orders yet. Start your journey with Janu Bhai!</p>
+                    <Link href="/product/instantcoffee" className="btn-gold-action">
+                      Explore Coffee Blends <ArrowRight size={16} />
+                    </Link>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {orders.map((order) => (
                       <div
                         key={order.id}
-                        className="order-card"
                         style={{
-                          marginBottom: '1.5rem',
-                          padding: '1.5rem',
-                          background: '#fdfdfd',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: '8px',
+                          background: 'rgba(0, 0, 0, 0.28)',
+                          border: '1px solid rgba(245, 240, 234, 0.1)',
+                          borderRadius: '18px',
+                          padding: '22px',
                         }}
                       >
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                          }}
-                        >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                           <div>
-                            <p style={{ margin: 0, fontWeight: 'bold', fontSize: '1.1rem' }}>
-                              Order #{order.id.split('-')[0]}
+                            <p style={{ margin: '0 0 4px', fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                              Order #{order.id.slice(0, 8).toUpperCase()}
                             </p>
-                            <p
-                              style={{
-                                margin: '5px 0 0 0',
-                                fontSize: '0.9rem',
-                                color: 'var(--text-secondary)',
-                              }}
-                            >
-                              {new Date(order.created_at).toLocaleDateString()}
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                              Placed on {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </p>
                           </div>
                           <div style={{ textAlign: 'right' }}>
-                            <p
-                              style={{
-                                margin: 0,
-                                fontWeight: 'bold',
-                                color: 'var(--primary-color)',
-                                fontSize: '1.1rem',
-                              }}
-                            >
-                              ₹ {order.total_amount}
+                            <p style={{ margin: '0 0 4px', fontWeight: 900, color: 'var(--accent-gold)', fontSize: '1.2rem', fontFamily: 'var(--font-playfair)' }}>
+                              ₹{order.total_amount}
                             </p>
-                            <p
+                            <span
                               style={{
-                                margin: '5px 0 0 0',
-                                fontSize: '0.9rem',
+                                display: 'inline-block',
+                                background: 'rgba(216, 154, 30, 0.15)',
+                                color: 'var(--accent-gold)',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                padding: '3px 10px',
+                                borderRadius: '12px',
                                 textTransform: 'capitalize',
-                                color: 'var(--accent-red)',
                               }}
                             >
-                              {order.status.replace(/_/g, ' ')}
-                            </p>
+                              {order.status ? order.status.replace(/_/g, ' ') : 'Confirmed'}
+                            </span>
                           </div>
                         </div>
-                        {order.awb_number && (
-                          <div
-                            style={{
-                              marginTop: '1.5rem',
-                              paddingTop: '1rem',
-                              borderTop: '1px solid var(--border-color)',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}
+
+                        <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(245, 240, 234, 0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                            Items: {order.items?.length || 1} pack(s)
+                          </span>
+                          <Link
+                            href={`/track?order=${encodeURIComponent(order.id)}`}
+                            className="btn-glass-secondary"
+                            style={{ fontSize: '0.82rem', padding: '6px 14px' }}
                           >
-                            <p
-                              style={{
-                                margin: 0,
-                                fontSize: '0.9rem',
-                                color: 'var(--text-secondary)',
-                              }}
-                            >
-                              AWB: {order.awb_number}
-                            </p>
-                            <button
-                              className="btn-secondary"
-                              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                              onClick={() => router.push(`/track?awb=${order.awb_number}`)}
-                            >
-                              Track Order
-                            </button>
-                          </div>
-                        )}
+                            <Truck size={14} /> Track Delivery
+                          </Link>
+                        </div>
                       </div>
-                    ))
-                  )}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
+            {/* TAB 5: SAVED ADDRESSES */}
             {activeTab === 'addresses' && (
-              <div className="tab-content fade-in">
+              <div className="tab-content">
                 <h2 className="tab-header">Saved Addresses</h2>
                 <form className="address-form" onSubmit={handleSaveAddress}>
                   <div className="form-group">
@@ -1106,10 +1006,11 @@ export default function AccountPage() {
                       placeholder="123 Coffee Bean Lane, Near Roastery..."
                       value={addressForm.address}
                       onChange={(e) => setAddressForm({ ...addressForm, address: e.target.value })}
-                    ></textarea>
+                      className="glass-textarea"
+                    />
                   </div>
 
-                  <div className="form-grid">
+                  <div className="form-grid-2">
                     <div className="form-group">
                       <label>City</label>
                       <input
@@ -1118,6 +1019,7 @@ export default function AccountPage() {
                         placeholder="Chikmagaluru"
                         value={addressForm.city}
                         onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                        className="glass-input"
                       />
                     </div>
                     <div className="form-group">
@@ -1125,54 +1027,86 @@ export default function AccountPage() {
                       <input
                         type="text"
                         required
+                        maxLength={6}
                         placeholder="577101"
                         value={addressForm.pincode}
-                        onChange={(e) =>
-                          setAddressForm({ ...addressForm, pincode: e.target.value })
-                        }
+                        onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value })}
+                        className="glass-input"
                       />
                     </div>
                   </div>
 
-                  <button type="submit" className="btn-primary" disabled={savingAddress}>
-                    {savingAddress ? 'SAVING...' : 'SAVE ADDRESS'}
+                  <button type="submit" className="btn-gold-action" disabled={savingAddress} style={{ marginTop: '12px' }}>
+                    {savingAddress ? 'Saving Address...' : 'Save Default Address'}
                   </button>
                 </form>
               </div>
             )}
 
+            {/* TAB 6: COFFEE SUBSCRIPTIONS */}
             {activeTab === 'subscriptions' && (
-              <div className="tab-content fade-in">
-                <h2 className="tab-header">Coffee Subscriptions</h2>
+              <div className="tab-content">
+                <h2 className="tab-header">Coffee on Autopilot</h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '20px' }}>
+                  Never run out of freshly roasted single-origin coffee. Get your customized batch delivered automatically with exclusive VIP subscriber perks.
+                </p>
 
-                <div className="subscription-card">
-                  <h3>Coffee On Autopilot</h3>
-                  <p>
-                    Never run out of freshly roasted single-origin coffee again. Get your favorite
-                    blend delivered right to your door every 2 or 4 weeks.
-                  </p>
+                <div className="subscription-features-row">
+                  <span className="feature-badge-gold">
+                    <CheckCircle2 size={16} color="var(--accent-gold)" /> 15% Off Every Order
+                  </span>
+                  <span className="feature-badge-gold">
+                    <Truck size={16} color="var(--accent-gold)" /> Free Express Pan-India Shipping
+                  </span>
+                  <span className="feature-badge-gold">
+                    <Sparkles size={16} color="var(--accent-gold)" /> Pause or Cancel Anytime
+                  </span>
+                </div>
 
-                  <div className="subscription-features">
-                    <span className="feature-badge">
-                      <CheckCircle2 size={16} /> 15% Off Every Order
-                    </span>
-                    <span className="feature-badge">
-                      <CheckCircle2 size={16} /> Free Shipping
-                    </span>
-                    <span className="feature-badge">
-                      <CheckCircle2 size={16} /> Pause or Cancel Anytime
-                    </span>
+                {/* Subscription Frequency Cards */}
+                <h4 style={{ margin: '0 0 10px', fontSize: '1rem', color: 'var(--text-primary)' }}>Select Delivery Frequency:</h4>
+                <div className="sub-plan-cards-grid">
+                  <div
+                    className={`sub-plan-card ${selectedSubFrequency === '2weeks' ? 'active' : ''}`}
+                    onClick={() => setSelectedSubFrequency('2weeks')}
+                  >
+                    <div className="sub-plan-title">Every 2 Weeks</div>
+                    <div className="sub-plan-discount">15% RECURRING SAVINGS</div>
+                    <p className="sub-plan-desc">For active daily coffee connoisseurs and multiple cup households.</p>
                   </div>
 
-                  <button
-                    className="subscribe-btn"
-                    onClick={() => alert('Subscription Engine coming soon!')}
+                  <div
+                    className={`sub-plan-card ${selectedSubFrequency === '4weeks' ? 'active' : ''}`}
+                    onClick={() => setSelectedSubFrequency('4weeks')}
                   >
-                    Explore Plans
-                  </button>
+                    <div className="sub-popular-badge">Most Popular</div>
+                    <div className="sub-plan-title">Every 4 Weeks</div>
+                    <div className="sub-plan-discount">15% RECURRING SAVINGS</div>
+                    <p className="sub-plan-desc">The standard monthly coffee ritual for single-cup daily brewers.</p>
+                  </div>
+
+                  <div
+                    className={`sub-plan-card ${selectedSubFrequency === '8weeks' ? 'active' : ''}`}
+                    onClick={() => setSelectedSubFrequency('8weeks')}
+                  >
+                    <div className="sub-plan-title">Every 8 Weeks</div>
+                    <div className="sub-plan-discount">15% RECURRING SAVINGS</div>
+                    <p className="sub-plan-desc">For casual sippers and iced coffee weekend enthusiasts.</p>
+                  </div>
                 </div>
+
+                {/* CTA Button */}
+                <Link
+                  href={`/checkout?mode=subscription&frequency=${selectedSubFrequency}`}
+                  className="btn-gold-action"
+                  style={{ display: 'inline-flex', padding: '14px 32px' }}
+                >
+                  <Coffee size={18} />
+                  <span>Start Coffee Subscription (15% OFF)</span>
+                </Link>
               </div>
             )}
+
           </section>
         </div>
       </div>
