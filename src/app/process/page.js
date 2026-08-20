@@ -98,7 +98,7 @@ const PROCESS_STEPS = [
     title: 'Optical & Manual Density Sorting',
     subtitle: 'Zero-tolerance sorting for uniform bean density',
     desc: 'Sorting is where true specialty coffee is won. Every harvest batch undergoes meticulous optical and hand sorting. Defective, chipped, insect-damaged, and under-dense beans are removed to guarantee a pure, velvety, non-bitter cup profile.',
-    imageUrl: 'https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&q=80&w=1200',
+    imageUrl: '/sorted_beans.jpg',
     icon: Filter,
     isSorting: true,
     badgeText: 'Screen 19 AAA Grade',
@@ -148,7 +148,7 @@ const PROCESS_STEPS = [
     title: 'Sub-Zero Freeze Drying (-40°C)',
     subtitle: 'Sublimating water to lock in aromatic oils',
     desc: 'Unlike conventional instant coffees that blast coffee extract with scorching 250°C spray-dry heat (destroying the aroma), Janu Bhai uses cryogenic freeze drying. The fresh brew is frozen at -40°C and placed in a high-vacuum chamber where ice sublimates directly to vapor, permanently locking in 100% of the coffee’s natural oils and delicate aromatics.',
-    imageUrl: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&q=80&w=1200',
+    imageUrl: '/freeze_drying.jpg',
     icon: Snowflake,
     isFreezeDry: true,
     badgeText: '-40°C Vacuum Cryo-Lock',
@@ -493,7 +493,8 @@ function FlavorCompass() {
                   initial={{ width: 0 }}
                   whileInView={{ width: `${attr.percentage}%` }}
                   viewport={{ once: true }}
-                  transition={{ duration: 1, delay: idx * 0.15 }}
+                  style={{ width: `${attr.percentage}%` }}
+                  transition={{ duration: 0.8, delay: idx * 0.1 }}
                 />
               </div>
               <span className="flavor-note">{attr.note}</span>
