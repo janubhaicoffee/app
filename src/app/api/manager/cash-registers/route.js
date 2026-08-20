@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { verifyStaffAuth } from '@/lib/staffAuth';
 
 export async function GET(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['manager', 'store_manager', 'operations_head', 'operations', 'operation_manager', 'growth', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const { searchParams } = new URL(req.url);
     const type = searchParams.get('type') || 'withdrawals'; // 'withdrawals' | 'staff_consumption' | 'daily_sales'
     const outletId = searchParams.get('outlet_id');
@@ -52,6 +58,11 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['manager', 'store_manager', 'operations_head', 'operations', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const { type, outlet_id, ...payload } = body;
 
@@ -74,7 +85,7 @@ export async function POST(req) {
           cash_given_by: payload.cash_given_by,
           receipt_url: payload.receipt_url || null,
           employee_sign: payload.employee_sign || '',
-          manager_sign: payload.manager_sign || 'Arsalan',
+          manager_sign: payload.manager_sign || 'Store Manager',
         })
         .select()
         .single();
@@ -94,7 +105,7 @@ export async function POST(req) {
           designation: payload.designation || 'Staff / Barista',
           purpose: payload.purpose || 'Shift drink / meal allowance',
           employee_sign: payload.employee_sign || '',
-          manager_sign: payload.manager_sign || 'Arsalan',
+          manager_sign: payload.manager_sign || 'Store Manager',
         })
         .select()
         .single();

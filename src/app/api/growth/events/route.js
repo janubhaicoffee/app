@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { verifyStaffAuth } from '@/lib/staffAuth';
 
 export async function GET(req) {
   try {
@@ -43,6 +44,11 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['growth', 'brand_leader', 'operations_head', 'operations', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const {
       title,
@@ -59,7 +65,7 @@ export async function POST(req) {
       price = 0,
       status = 'published',
       banner_url = '/affogato_cup.png',
-      host_name = 'Arsalan Azad',
+      host_name = 'Host / Roaster',
       is_featured = false,
       created_by = 'Growth & Brand Leader',
     } = body;
@@ -110,6 +116,11 @@ export async function POST(req) {
 
 export async function PUT(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['operations_head', 'operations', 'operation_manager', 'growth', 'brand_leader', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const { id, ...updates } = body;
 
@@ -138,6 +149,11 @@ export async function PUT(req) {
 
 export async function DELETE(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['growth', 'brand_leader', 'operations_head', 'operations', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 

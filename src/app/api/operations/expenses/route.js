@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { verifyStaffAuth } from '@/lib/staffAuth';
 
 export const EXPENSE_CATEGORIES = [
   'Rent',
@@ -18,6 +19,11 @@ export const EXPENSE_CATEGORIES = [
 
 export async function GET(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['operations_head', 'operations', 'operation_manager', 'manager', 'growth', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const { searchParams } = new URL(req.url);
     const outletId = searchParams.get('outlet_id');
 
@@ -61,6 +67,11 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['operations_head', 'operations', 'operation_manager', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const {
       outlet_id,
@@ -72,7 +83,7 @@ export async function POST(req) {
       proof_url = null,
       notes = '',
       expense_date = new Date().toISOString().split('T')[0],
-      verified_by = 'Bilal Muhammad (Operations Head)',
+      verified_by = 'Operations Head',
     } = body;
 
     if (!category || !amount) {
@@ -112,6 +123,11 @@ export async function POST(req) {
 
 export async function PATCH(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['operations_head', 'operations', 'operation_manager', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const { id, status, receipt_url, notes } = body;
 

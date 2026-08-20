@@ -26,7 +26,13 @@ function CallbackContent() {
             router.push(searchParams.get('redirect'));
           } else if (role === 'superadmin') {
             router.push('/admin');
-          } else if (role === 'partner' || role === 'staff') {
+          } else if (role === 'operations_head' || role === 'operations') {
+            router.push('/operations');
+          } else if (role === 'growth') {
+            router.push('/growth');
+          } else if (role === 'manager') {
+            router.push('/manager');
+          } else if (role === 'staff') {
             router.push('/pos/dashboard');
           } else {
             router.push('/account');

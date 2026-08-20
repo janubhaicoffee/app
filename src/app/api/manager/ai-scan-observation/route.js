@@ -20,7 +20,7 @@ const STANDARD_CHECKPOINTS = [
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { imageBase64, imageUrl, outletName = 'Janu Bhai Cafe - Gafoor Nagar', managerName = 'Arsalan' } = body;
+    const { imageBase64, imageUrl, outletName = 'Janu Bhai Cafe - Gafoor Nagar', managerName = 'Store Manager' } = body;
 
     if (!imageBase64 && !imageUrl) {
       return NextResponse.json({ error: 'Image is required for AI observation scan' }, { status: 400 });
@@ -62,7 +62,7 @@ Return a strictly valid JSON object (NO markdown blocks, NO backticks) with:
   "date": "${new Date().toISOString().split('T')[0]}",
   "overall_score": 92,
   "priority": "low",
-  "summary": "Short 2-3 sentence executive summary of findings for Operations Head Bilal Muhammad",
+  "summary": "Short 2-3 sentence executive summary of findings for Operations Head",
   "checkpoints": [
     {
       "id": "shop_cleanliness",
@@ -79,7 +79,7 @@ Return a strictly valid JSON object (NO markdown blocks, NO backticks) with:
       "title": "Minor leak near prep sink",
       "description": "Slow drip observed beneath prep sink tap connection",
       "severity": "medium",
-      "suggested_action": "Contact approved plumber Anis / tighten brass valve"
+      "suggested_action": "Tighten valve / schedule plumbing repair"
     }
   ],
   "missing_photos_requested": [
@@ -146,7 +146,7 @@ Return a strictly valid JSON object (NO markdown blocks, NO backticks) with:
       .map((c) => ({
         checkpoint_id: c.id,
         checkpoint_name: c.name,
-        reason: `Marked "${c.status === 'not_ok' ? 'Not OK' : 'Needs Attention'}". Photo proof required for Operations Head Bilal.`,
+        reason: `Marked "${c.status === 'not_ok' ? 'Not OK' : 'Needs Attention'}". Photo proof required for Operations Head review.`,
       }));
 
     const fallbackData = {

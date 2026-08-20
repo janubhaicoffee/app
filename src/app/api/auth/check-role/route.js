@@ -39,7 +39,7 @@ export async function GET(request) {
       return NextResponse.json({ role: 'superadmin' });
     }
 
-    // 2. Check if partner or staff
+    // 2. Check if Janu Bhai staff / worker
     const emailFilter = user.email ? `email.eq.${user.email}` : '';
     const phoneFilter = user.phone ? `phone.eq.${user.phone}` : '';
     const userIdFilter = `user_id.eq.${user.id}`;
@@ -49,6 +49,7 @@ export async function GET(request) {
       .from('outlet_staff')
       .select('*')
       .or(orFilter)
+      .eq('is_active', true)
       .maybeSingle();
 
     if (staff) {
@@ -60,13 +61,40 @@ export async function GET(request) {
           .eq('id', staff.id);
       }
 
-      if (['owner', 'partner'].includes(staff.role)) {
-        return NextResponse.json({ role: 'partner', staffRole: staff.role, outletId: staff.outlet_id });
+      if (['operations_head', 'operations', 'operation_manager', 'area_manager'].includes(staff.role)) {
+        return NextResponse.json({
+          role: 'operations_head',
+          staffRole: staff.role,
+          staffName: staff.display_name,
+          outletId: staff.outlet_id,
+          isOperationManager: true,
+        });
       }
-      if (['operation_manager', 'operations_manager', 'area_manager', 'operations'].includes(staff.role)) {
-        return NextResponse.json({ role: 'operation_manager', staffRole: staff.role, outletId: staff.outlet_id, isOperationManager: true });
+
+      if (['growth', 'brand_leader'].includes(staff.role)) {
+        return NextResponse.json({
+          role: 'growth',
+          staffRole: staff.role,
+          staffName: staff.display_name,
+          outletId: staff.outlet_id,
+        });
       }
-      return NextResponse.json({ role: 'staff', staffRole: staff.role, outletId: staff.outlet_id });
+
+      if (['manager', 'store_manager'].includes(staff.role)) {
+        return NextResponse.json({
+          role: 'manager',
+          staffRole: staff.role,
+          staffName: staff.display_name,
+          outletId: staff.outlet_id,
+        });
+      }
+
+      return NextResponse.json({
+        role: 'staff',
+        staffRole: staff.role,
+        staffName: staff.display_name,
+        outletId: staff.outlet_id,
+      });
     }
 
     return NextResponse.json({ role: 'customer' });

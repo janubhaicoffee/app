@@ -611,7 +611,7 @@ export default function Home() {
                 Janu Bhai Artisan Coffee Tasting Masterclass
               </h3>
               <p style={{ color: '#d4a359', fontSize: '0.82rem', fontWeight: 600, margin: '0 0 12px' }}>
-                Featuring: Master Roaster Arsalan & Barista Bilal
+                Featuring: Master Roasters & Artisan Baristas
               </p>
               <p style={{ color: '#a89f91', fontSize: '0.84rem', lineHeight: 1.5, flex: 1, margin: '0 0 16px' }}>
                 Experience single-estate Chikmagalur beans, cupping notes, and manual pour-over techniques.

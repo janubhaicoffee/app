@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import StaffGuard from '@/components/StaffGuard';
 import './manager.css';
 
 const DEFAULT_CHECKPOINTS = [
@@ -52,7 +53,7 @@ export default function ManagerDashboard() {
 
   // Store metadata
   const [outletName, setOutletName] = useState('Janu Bhai Cafe - Gafoor Nagar');
-  const [managerName, setManagerName] = useState('Arsalan Azad');
+  const [managerName, setManagerName] = useState('');
   const [observationDate, setObservationDate] = useState(new Date().toISOString().split('T')[0]);
   const [observationTime, setObservationTime] = useState('10:00 AM');
   const [visitType, setVisitType] = useState('daily');
@@ -77,7 +78,7 @@ export default function ManagerDashboard() {
     vendor_contacted: '',
     vendor_contact_phone: '',
     approved_vendor_used: true,
-    vendor_name: 'Anis (Electrician) / In-House',
+    vendor_name: 'In-House / Approved Vendor',
     resolution_status: 'pending',
     pending_work: '',
     expected_completion_date: '',
@@ -96,7 +97,7 @@ export default function ManagerDashboard() {
     reason: '',
     amount: '',
     paid_to: '',
-    cash_given_by: 'Arsalan',
+    cash_given_by: '',
     receipt_url: '',
     employee_sign: '',
   });
@@ -232,7 +233,7 @@ export default function ManagerDashboard() {
         if (data.data.missing_photos_requested && data.data.missing_photos_requested.length > 0) {
           setMissingPhotosPrompts(data.data.missing_photos_requested);
           toast(
-            `📸 Defect/Issue detected! Photo proof requested for Operations Head Bilal.`,
+            `📸 Defect/Issue detected! Photo proof requested for Operations Head.`,
             { icon: '⚠️', duration: 6000 }
           );
         }
@@ -370,7 +371,7 @@ export default function ManagerDashboard() {
 
       const data = await res.json();
       if (data.success) {
-        toast.success('Observation Checklist successfully reported to Operations Head Bilal!');
+        toast.success('Observation Checklist successfully reported to Operations Head!');
         fetchObservations();
         // Reset or switch tab
         setActiveTab('checklist');
@@ -437,8 +438,8 @@ export default function ManagerDashboard() {
   // Submit Cash Withdrawal
   const handleAddWithdrawal = async (e) => {
     e.preventDefault();
-    if (!newWithdrawal.reason || !newWithdrawal.amount || !newWithdrawal.paid_to) {
-      toast.error('Fill required withdrawal fields');
+    if (!newWithdrawal.reason || !newWithdrawal.amount) {
+      toast.error('Fill in all required withdrawal fields');
       return;
     }
     setLoading(true);
@@ -453,12 +454,12 @@ export default function ManagerDashboard() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Cash withdrawal recorded with audit trail!');
+        toast.success('Withdrawal logged successfully!');
         setNewWithdrawal({
           reason: '',
           amount: '',
           paid_to: '',
-          cash_given_by: 'Arsalan',
+          cash_given_by: '',
           receipt_url: '',
           employee_sign: '',
         });
@@ -512,7 +513,11 @@ export default function ManagerDashboard() {
   };
 
   return (
-    <div className="manager-dashboard-container">
+    <StaffGuard
+      allowedRoles={['manager', 'store_manager', 'operations_head', 'operations', 'superadmin', 'owner']}
+      title="Manager Store Control"
+    >
+      <div className="manager-dashboard-container">
       {/* Hidden file inputs */}
       <input
         type="file"
@@ -629,7 +634,7 @@ export default function ManagerDashboard() {
                 AI Vision Store Observation Reader
               </h3>
               <p style={{ color: '#a89f91', fontSize: '0.88rem', margin: 0 }}>
-                Snap a photo of your paper register or cafe inspection. Gemini Vision will read handwritten ticks, marks, defects, and prepare an audit for Operations Head Bilal.
+                Snap a photo of your paper register or cafe inspection. Gemini Vision will read handwritten ticks, marks, defects, and prepare an audit for Operations Head.
               </p>
             </div>
             {aiResult && (
@@ -709,7 +714,7 @@ export default function ManagerDashboard() {
                   <div style={{ flex: 1 }}>
                     <h4>Photo Proof Required for Operations Head Review</h4>
                     <p>
-                      The following checkpoints have defects/issues marked. Please take a clear photograph of the defect so Operations Head Bilal can inspect and authorize vendor action:
+                      The following checkpoints have defects/issues marked. Please take a clear photograph of the defect so Operations Head can inspect and authorize vendor action:
                     </p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                       {missingPhotosPrompts.map((item) => (
@@ -1142,7 +1147,7 @@ export default function ManagerDashboard() {
                   onChange={(e) => setNewIssueForm({ ...newIssueForm, whatsapp_sent_to_oh: e.target.checked })}
                 />
                 <label htmlFor="whatsappSent" style={{ fontSize: '0.85rem', color: '#e5dfd8' }}>
-                  WhatsApp / Photos sent to Operations Head Bilal
+                  WhatsApp / Photos sent to Operations Head
                 </label>
               </div>
             </div>
@@ -1403,8 +1408,8 @@ export default function ManagerDashboard() {
 
             <div className="emergency-card">
               <div>
-                <strong style={{ color: '#d4a359', display: 'block' }}>Bilal (Operations Head)</strong>
-                <span style={{ fontSize: '0.84rem', color: '#a89f91' }}>Best Time: 10:00 AM – 7:00 PM</span>
+                <strong style={{ color: '#d4a359', display: 'block' }}>Operations Head Desk</strong>
+                <span style={{ fontSize: '0.84rem', color: '#a89f91' }}>Operational Escalations & Approvals</span>
               </div>
               <a href="https://wa.me/918527976791" target="_blank" rel="noreferrer" className="call-btn">
                 <Phone size={14} /> WhatsApp
@@ -1541,6 +1546,7 @@ export default function ManagerDashboard() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </StaffGuard>
   );
 }

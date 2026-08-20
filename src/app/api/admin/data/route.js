@@ -42,7 +42,7 @@ async function verifyAdmin(request) {
         .eq('is_active', true)
         .maybeSingle();
 
-      const allowedRoles = ['operation_manager', 'operations_manager', 'area_manager', 'operations', 'manager', 'owner', 'partner', 'superadmin'];
+      const allowedRoles = ['operations_head', 'operation_manager', 'operations_manager', 'area_manager', 'operations', 'growth', 'brand_leader', 'manager', 'store_manager', 'owner', 'superadmin'];
       if (!staff || !allowedRoles.includes(staff.role)) {
         return { error: 'Forbidden', status: 403 };
       }

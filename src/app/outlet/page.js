@@ -49,7 +49,7 @@ export default function OutletPortalPage() {
           });
           if (response.ok) {
             const data = await response.json();
-            if (['superadmin', 'partner', 'staff'].includes(data.role)) {
+            if (['superadmin', 'owner', 'operations_head', 'operations', 'manager', 'growth', 'staff'].includes(data.role)) {
               setIsAuthorizedAdmin(true);
               redirectAdmin();
             } else {
@@ -256,7 +256,7 @@ export default function OutletPortalPage() {
 
       if (response.ok) {
         const checkData = await response.json();
-        if (['superadmin', 'partner', 'staff'].includes(checkData.role)) {
+        if (['superadmin', 'owner', 'operations_head', 'operations', 'manager', 'growth', 'staff'].includes(checkData.role)) {
           localStorage.removeItem('outlet_login_attempts');
           localStorage.removeItem('outlet_login_lockout');
           setIsAuthenticated(true);

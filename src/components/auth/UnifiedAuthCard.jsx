@@ -97,7 +97,19 @@ export default function UnifiedAuthCard({ defaultTab = 'phone', defaultMode = 'l
           router.push('/admin');
           return;
         }
-        if (data.role === 'partner' || data.role === 'staff') {
+        if (data.role === 'operations_head' || data.role === 'operations') {
+          router.push('/operations');
+          return;
+        }
+        if (data.role === 'growth') {
+          router.push('/growth');
+          return;
+        }
+        if (data.role === 'manager') {
+          router.push('/manager');
+          return;
+        }
+        if (data.role === 'staff') {
           const isLocal =
             window.location.hostname.includes('localhost') ||
             window.location.hostname.includes('127.0.0.1');

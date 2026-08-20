@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { verifyStaffAuth } from '@/lib/staffAuth';
 
 export async function GET(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['manager', 'store_manager', 'operations_head', 'operations', 'operation_manager', 'growth', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const { searchParams } = new URL(req.url);
     const outletId = searchParams.get('outlet_id');
     const status = searchParams.get('status');
@@ -31,11 +37,16 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['manager', 'store_manager', 'operations_head', 'operations', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const {
       outlet_id,
       outlet_name = 'Janu Bhai Cafe - Gafoor Nagar',
-      manager_name = 'Arsalan',
+      manager_name = 'Store Manager',
       record_date = new Date().toISOString().split('T')[0],
       issue_description,
       action_taken = '',
@@ -107,6 +118,11 @@ export async function POST(req) {
 
 export async function PATCH(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['manager', 'store_manager', 'operations_head', 'operations', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const { id, ...updates } = body;
 

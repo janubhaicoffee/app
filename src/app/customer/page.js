@@ -97,7 +97,7 @@ export default function CustomerUnifiedHub() {
       toast.error('Please share your thoughts');
       return;
     }
-    toast.success('Thank you! Your feedback has been sent directly to Operations Head Bilal Muhammad.');
+    toast.success('Thank you! Your feedback has been sent directly to our Operations Team.');
     setFeedbackSubmitted(true);
   };
 
@@ -464,7 +464,7 @@ export default function CustomerUnifiedHub() {
               Guest Experience & Barista Feedback
             </h3>
             <p style={{ color: '#a89f91', fontSize: '0.88rem', margin: 0 }}>
-              Your feedback goes directly to Operations Head Bilal Muhammad and Founder Janu Bhai.
+              Your feedback goes directly to our Operations Team and Founder Janu Bhai.
             </p>
           </div>
 

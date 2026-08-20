@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { verifyStaffAuth } from '@/lib/staffAuth';
 
 export const OPERATIONS_14_AREAS = [
   { id: 'outlet_status', num: 1, name: 'Outlet Status', desc: 'Shop is open and functioning normally. All key systems are working.' },
@@ -20,6 +21,11 @@ export const OPERATIONS_14_AREAS = [
 
 export async function GET(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['operations_head', 'operations', 'operation_manager', 'manager', 'growth', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const { searchParams } = new URL(req.url);
     const outletId = searchParams.get('outlet_id');
 
@@ -44,11 +50,16 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['operations_head', 'operations', 'operation_manager', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const {
       outlet_id,
       audit_date = new Date().toISOString().split('T')[0],
-      reviewed_by = 'Bilal Muhammad (Operations Head)',
+      reviewed_by = 'Operations Head',
       checklist_14_areas = [],
       overall_rating = 100,
       observation_id_reviewed = null,

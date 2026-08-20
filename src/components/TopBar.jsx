@@ -303,10 +303,10 @@ export default function TopBar() {
                       <span>Manager Hub</span> →
                     </Link>
                     <Link href="/operations" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#f5f0eb', fontSize: '0.82rem', textDecoration: 'none', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Operations Head (Bilal)</span> →
+                      <span>Operations Head</span> →
                     </Link>
                     <Link href="/growth" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#f5f0eb', fontSize: '0.82rem', textDecoration: 'none', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Growth & BD (Arsalan)</span> →
+                      <span>Growth & Strategy</span> →
                     </Link>
                   </div>
                 </div>

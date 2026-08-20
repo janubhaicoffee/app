@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { verifyStaffAuth } from '@/lib/staffAuth';
 
 export async function GET(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['growth', 'brand_leader', 'operations_head', 'operations', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const { data: priorities, error: pErr } = await supabaseAdmin
       .from('growth_strategic_priorities')
       .select('*')
@@ -30,6 +36,11 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['growth', 'brand_leader', 'operations_head', 'operations', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const { type, ...payload } = body;
 
@@ -60,7 +71,7 @@ export async function POST(req) {
           type: payload.type || 'Marketing',
           potential_impact: payload.potential_impact || 'Medium',
           next_step: payload.next_step,
-          owner: payload.owner || 'Arsalan',
+          owner: payload.owner || 'Growth Lead',
           status: payload.status || 'New',
           notes: payload.notes || '',
         })
@@ -80,6 +91,11 @@ export async function POST(req) {
 
 export async function PATCH(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['growth', 'brand_leader', 'operations_head', 'operations', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const { type, id, ...updates } = body;
 

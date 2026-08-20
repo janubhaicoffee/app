@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { verifyStaffAuth } from '@/lib/staffAuth';
 
 export async function GET(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['operations_head', 'operations', 'operation_manager', 'growth', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const { searchParams } = new URL(req.url);
     const outletId = searchParams.get('outlet_id');
 
@@ -27,12 +33,17 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const auth = await verifyStaffAuth(req, ['operations_head', 'operations', 'operation_manager', 'superadmin', 'owner']);
+    if (!auth.isAuthorized) {
+      return auth.response;
+    }
+
     const body = await req.json();
     const {
       outlet_id,
       review_date = new Date().toISOString().split('T')[0],
-      reviewed_by = 'Bilal Muhammad (Operations Head)',
-      manager_name = 'Arsalan',
+      reviewed_by = 'Operations Head',
+      manager_name = 'Store Manager',
       daily_updates_received = true,
       prompt_whatsapp_response = true,
       problems_escalated_on_time = true,

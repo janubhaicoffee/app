@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import StaffGuard from '@/components/StaffGuard';
 import './growth.css';
 
 export default function GrowthDashboard() {
@@ -46,7 +47,7 @@ export default function GrowthDashboard() {
     capacity: 30,
     price: 0,
     banner_url: '/affogato_cup.png',
-    host_name: 'Arsalan Azad',
+    host_name: '',
     is_featured: true,
   });
 
@@ -68,7 +69,7 @@ export default function GrowthDashboard() {
     type: 'Partnership',
     potential_impact: 'High',
     next_step: '',
-    owner: 'Arsalan',
+    owner: '',
     status: 'New',
     notes: '',
   });
@@ -144,7 +145,7 @@ export default function GrowthDashboard() {
           capacity: 30,
           price: 0,
           banner_url: '/affogato_cup.png',
-          host_name: 'Arsalan Azad',
+          host_name: 'Growth & Strategy Team',
           is_featured: true,
         });
         fetchGrowthData();
@@ -158,14 +159,39 @@ export default function GrowthDashboard() {
     }
   };
 
-  // Delete Event
+  const handleUpdateEvent = async (e) => {
+    e.preventDefault();
+    if (!editingEvent) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/growth/events', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingEvent),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Event updated successfully!');
+        setShowNewEventModal(false);
+        setEditingEvent(null);
+        fetchGrowthData();
+      } else {
+        toast.error(data.error || 'Failed to update event');
+      }
+    } catch (err) {
+      toast.error('Network error updating event');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteEvent = async (id) => {
-    if (!confirm('Are you sure you want to cancel and delete this event?')) return;
+    if (!confirm('Are you sure you want to delete this event?')) return;
     try {
       const res = await fetch(`/api/growth/events?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        toast.success('Event deleted');
+        toast.success('Event removed');
         fetchGrowthData();
       }
     } catch (err) {
@@ -173,15 +199,18 @@ export default function GrowthDashboard() {
     }
   };
 
-  // Add Priority
+  // Submit Strategic Priority
   const handleAddPriority = async (e) => {
     e.preventDefault();
-    if (!newPriorityForm.priority_title || !newPriorityForm.objective) return;
+    if (!newPriorityForm.priority_title) return;
     try {
       const res = await fetch('/api/growth/pipeline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'priority', ...newPriorityForm }),
+        body: JSON.stringify({
+          type: 'priority',
+          ...newPriorityForm,
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -197,19 +226,22 @@ export default function GrowthDashboard() {
         fetchGrowthData();
       }
     } catch (err) {
-      toast.error('Failed to save priority');
+      toast.error('Failed to add priority');
     }
   };
 
-  // Add Opportunity
+  // Submit Opportunity
   const handleAddOpportunity = async (e) => {
     e.preventDefault();
-    if (!newOpportunityForm.title || !newOpportunityForm.next_step) return;
+    if (!newOpportunityForm.title) return;
     try {
       const res = await fetch('/api/growth/pipeline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'opportunity', ...newOpportunityForm }),
+        body: JSON.stringify({
+          type: 'opportunity',
+          ...newOpportunityForm,
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -219,7 +251,7 @@ export default function GrowthDashboard() {
           type: 'Partnership',
           potential_impact: 'High',
           next_step: '',
-          owner: 'Arsalan',
+          owner: '',
           status: 'New',
           notes: '',
         });
@@ -231,7 +263,11 @@ export default function GrowthDashboard() {
   };
 
   return (
-    <div className="growth-dashboard-container">
+    <StaffGuard
+      allowedRoles={['growth', 'brand_leader', 'operations_head', 'operations', 'superadmin', 'owner']}
+      title="Brand & Growth Leader Hub"
+    >
+      <div className="growth-dashboard-container">
       {/* 1. Header Card */}
       <motion.div
         className="growth-header-card"
@@ -242,7 +278,7 @@ export default function GrowthDashboard() {
           <div className="growth-brand-title">
             <Sparkles size={30} color="#d4a359" />
             <span>Brand, Growth & Business Development Hub</span>
-            <span className="growth-badge">Arsalan Azad</span>
+            <span className="growth-badge">Growth & Strategy</span>
           </div>
           <p style={{ color: '#a89f91', fontSize: '0.9rem', margin: '4px 0 0' }}>
             Bring ideas · Create opportunities · Build the brand · Drive revenue.
@@ -863,7 +899,7 @@ export default function GrowthDashboard() {
                         ? setEditingEvent({ ...editingEvent, featuring_name: e.target.value })
                         : setNewEventForm({ ...newEventForm, featuring_name: e.target.value })
                     }
-                    placeholder="e.g. Master Roaster Arsalan & Barista Bilal"
+                    placeholder="e.g. Master Roaster & Lead Barista"
                   />
                 </div>
                 <div>
@@ -977,6 +1013,7 @@ export default function GrowthDashboard() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </StaffGuard>
   );
 }

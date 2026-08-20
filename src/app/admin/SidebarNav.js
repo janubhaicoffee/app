@@ -77,13 +77,13 @@ export default function SidebarNav() {
       <div className="admin-nav-group">
         <span className="admin-nav-group-title">WORKER & STRATEGY HUBS</span>
         <Link href="/operations" className="admin-nav-link" target="_blank">
-          <Shield size={20} /> Operations Head (Bilal)
+          <Shield size={20} /> Operations Head Hub
         </Link>
         <Link href="/manager" className="admin-nav-link" target="_blank">
           <Store size={20} /> Manager Control Hub
         </Link>
         <Link href="/growth" className="admin-nav-link" target="_blank">
-          <Activity size={20} /> Growth & Events (Arsalan)
+          <Activity size={20} /> Growth & BD Hub
         </Link>
         <Link href="/events" className="admin-nav-link" target="_blank">
           <ClipboardList size={20} /> Public Events & RSVPs
@@ -130,12 +130,6 @@ export default function SidebarNav() {
           className={`admin-nav-link ${isActive('/admin/outlets/surveillance') ? 'active' : ''}`}
         >
           <Camera size={20} /> Live Surveillance
-        </Link>
-        <Link
-          href="/admin/partners"
-          className={`admin-nav-link ${isActive('/admin/partners') ? 'active' : ''}`}
-        >
-          <Users2 size={20} /> Partners
         </Link>
         <Link
           href="/admin/outlets/commissions"

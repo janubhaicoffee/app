@@ -5,6 +5,10 @@ import { Users, Plus, X, Search, Filter, Shield, UserCheck, UserX } from 'lucide
 
 const roleBadgeColors = {
   superadmin: { bg: '#cce5ff', color: '#004085' },
+  operations_head: { bg: '#fef3c7', color: '#92400e' },
+  operations: { bg: '#fef3c7', color: '#92400e' },
+  growth: { bg: '#f3e8ff', color: '#6b21a8' },
+  brand_leader: { bg: '#f3e8ff', color: '#6b21a8' },
   operation_manager: { bg: '#e0f2fe', color: '#0369a1' },
   owner: { bg: '#e8d5f5', color: '#6a1b9a' },
   manager: { bg: '#bbdefb', color: '#1565c0' },
@@ -484,12 +488,15 @@ export default function AdminStaff() {
                       value={form.role}
                       onChange={(e) => setForm({ ...form, role: e.target.value })}
                     >
+                      <option value="operations_head">Operations Head (/operations)</option>
+                      <option value="growth">Brand & Growth Leader (/growth)</option>
+                      <option value="manager">Store Manager (/manager)</option>
                       <option value="operation_manager">Operation Manager</option>
-                      <option value="manager">Manager</option>
-                      <option value="cashier">Cashier</option>
-                      <option value="barista">Barista</option>
-                      <option value="kitchen">Kitchen</option>
-                      <option value="staff">Staff</option>
+                      <option value="superadmin">Superadmin / Owner</option>
+                      <option value="barista">Lead Barista</option>
+                      <option value="cashier">Cashier / Billing</option>
+                      <option value="kitchen">Kitchen / Prep</option>
+                      <option value="staff">General Cafe Staff</option>
                     </select>
                   </div>
                   <div className="form-group">

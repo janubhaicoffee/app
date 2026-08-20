@@ -1,0 +1,154 @@
+/* Staff & Operations Auth Portal - Janu Bhai Coffee */
+
+.staff-auth-container {
+  min-height: 100vh;
+  background: radial-gradient(circle at top center, #1b120c 0%, #0c0805 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #f5f0eb;
+}
+
+.staff-auth-card {
+  max-width: 480px;
+  width: 100%;
+  background: linear-gradient(135deg, rgba(38, 26, 18, 0.95) 0%, rgba(18, 12, 8, 0.98) 100%);
+  border: 1px solid rgba(212, 163, 89, 0.35);
+  border-radius: 24px;
+  padding: 36px 32px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px);
+  position: relative;
+}
+
+.staff-auth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(212, 163, 89, 0.15);
+  border: 1px solid rgba(212, 163, 89, 0.4);
+  color: #d4a359;
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+
+.staff-auth-title {
+  font-size: 1.65rem;
+  font-weight: 900;
+  color: #f7e7ce;
+  margin: 0 0 6px;
+}
+
+.staff-auth-desc {
+  font-size: 0.86rem;
+  color: #a89f91;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+/* Tabs */
+.staff-auth-tabs {
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 22px;
+}
+
+.staff-tab-btn {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  background: transparent;
+  color: #a89f91;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.staff-tab-btn.active {
+  background: #d4a359;
+  color: #120b06;
+  font-weight: 700;
+}
+
+.staff-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #f5f0eb;
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.staff-input:focus {
+  border-color: #d4a359;
+  box-shadow: 0 0 0 2px rgba(212, 163, 89, 0.2);
+}
+
+.staff-submit-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #d4a359 0%, #b8863b 100%);
+  color: #120b06;
+  font-weight: 800;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  box-shadow: 0 4px 16px rgba(212, 163, 89, 0.35);
+  transition: all 0.2s ease;
+}
+
+.staff-submit-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 24px rgba(212, 163, 89, 0.55);
+}
+
+.staff-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Quick staff preset card */
+.staff-preset-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.staff-preset-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 163, 89, 0.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.staff-preset-card:hover {
+  background: rgba(212, 163, 89, 0.1);
+  border-color: #d4a359;
+}

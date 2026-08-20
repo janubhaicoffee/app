@@ -71,7 +71,7 @@ const navItems = [
     section: 'Worker & Brand Hubs',
     items: [
       { href: '/manager', label: 'Manager Control Hub', icon: ClipboardList },
-      { href: '/operations', label: 'Operations Head (Bilal)', icon: FileText },
+      { href: '/operations', label: 'Operations Head Hub', icon: FileText },
       { href: '/growth', label: 'Growth & Strategy', icon: TrendingUp },
       { href: '/events', label: 'Events & RSVPs', icon: Coffee },
     ],
@@ -246,7 +246,7 @@ export default function OutletSidebar() {
   };
 
   const getFilteredNavItems = (role) => {
-    if (!role || ['superuser', 'manager', 'superadmin', 'owner', 'partner'].includes(role)) {
+    if (!role || ['superuser', 'manager', 'superadmin', 'owner', 'operations_head', 'operations', 'growth'].includes(role)) {
       return navItems;
     }
     const restrictedSections = ['Analytics', 'Operations', 'Financials', 'Settings'];
@@ -276,7 +276,7 @@ export default function OutletSidebar() {
               <Clock size={12} /> <span>{currentTime || '...'}</span>
             </div>
             {/* Site Switcher Select */}
-            {(isSuperAdmin || activeRole === 'owner' || activeRole === 'partner') && (
+            {(isSuperAdmin || activeRole === 'owner' || activeRole === 'operations_head') && (
               <select
                 value={getSiteUrls().outlet}
                 onChange={(e) => { window.location.href = e.target.value; }}

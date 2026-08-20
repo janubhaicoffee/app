@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import StaffGuard from '@/components/StaffGuard';
 import './operations.css';
 
 const DEFAULT_14_AREAS = [
@@ -62,7 +63,7 @@ export default function OperationsHeadDashboard() {
   // Manager Coordination & 5-Pillar Review State
   const [managerReviews, setManagerReviews] = useState([]);
   const [newReviewForm, setNewReviewForm] = useState({
-    manager_name: 'Arsalan Azad',
+    manager_name: '',
     daily_updates_received: true,
     prompt_whatsapp_response: true,
     problems_escalated_on_time: true,
@@ -323,7 +324,11 @@ export default function OperationsHeadDashboard() {
   };
 
   return (
-    <div className="operations-dashboard-container">
+    <StaffGuard
+      allowedRoles={['operations_head', 'operations', 'operation_manager', 'superadmin', 'owner']}
+      title="Operations Head Control Book"
+    >
+      <div className="operations-dashboard-container">
       {/* 1. Header Card */}
       <motion.div
         className="operations-header-card"
@@ -334,7 +339,7 @@ export default function OperationsHeadDashboard() {
           <div className="operations-brand-title">
             <ShieldCheck size={32} color="#d4a359" />
             <span>Operations Head · Control Book</span>
-            <span className="operations-head-badge">Bilal Muhammad</span>
+            <span className="operations-head-badge">Operations Command</span>
           </div>
           <p style={{ color: '#a89f91', fontSize: '0.9rem', margin: '4px 0 0' }}>
             One standard. Every outlet. Every day. Quality · Consistency · Discipline.
@@ -630,7 +635,7 @@ export default function OperationsHeadDashboard() {
                   {/* Operations Head Verification Box */}
                   <div style={{ marginTop: '16px', background: 'rgba(0,0,0,0.4)', padding: '14px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                     <span style={{ fontSize: '0.82rem', color: '#a89f91' }}>
-                      Status: {obs.reviewed_by_oh ? <strong style={{ color: '#34d399' }}>✓ Verified by Bilal Muhammad</strong> : <span style={{ color: '#fbbf24' }}>Pending OH Review</span>}
+                      Status: {obs.reviewed_by_oh ? <strong style={{ color: '#34d399' }}>✓ Verified by Operations Head</strong> : <span style={{ color: '#fbbf24' }}>Pending OH Review</span>}
                     </span>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <input
@@ -650,7 +655,7 @@ export default function OperationsHeadDashboard() {
                       />
                       <button
                         onClick={async () => {
-                          const note = ohReviewNotesMap[obs.id] || 'Verified and approved by Operations Head Bilal Muhammad';
+                          const note = ohReviewNotesMap[obs.id] || 'Verified and approved by Operations Head';
                           await fetch('/api/operations/audits', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -983,7 +988,7 @@ export default function OperationsHeadDashboard() {
               Operational Expenses & Vendor Control
             </h3>
             <p style={{ color: '#a89f91', fontSize: '0.88rem', margin: 0 }}>
-              Track. Verify. Control. Save. Make payments only if approved by Operations Head Bilal and keep proof for every payment.
+              Track. Verify. Control. Save. Make payments only if approved by Operations Head and keep proof for every payment.
             </p>
           </div>
 
@@ -1123,7 +1128,7 @@ export default function OperationsHeadDashboard() {
                       </td>
                       <td style={{ padding: '12px' }}>
                         <span style={{ fontSize: '0.76rem', color: '#10b981', fontWeight: 600 }}>
-                          Verified by OH Bilal
+                          Verified by Operations Head
                         </span>
                       </td>
                     </tr>
@@ -1478,6 +1483,7 @@ export default function OperationsHeadDashboard() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </StaffGuard>
   );
 }

@@ -87,7 +87,7 @@ export default function OutletGuard({ children }) {
         const data = await response.json();
         if (!active) return;
 
-        if (['superadmin', 'partner', 'staff'].includes(data.role)) {
+        if (['superadmin', 'owner', 'operations_head', 'operations', 'manager', 'growth', 'staff'].includes(data.role)) {
           verifiedTokenRef.current = token;
           setIsAuthorized(true);
         } else {

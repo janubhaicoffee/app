@@ -57,7 +57,7 @@ export async function POST(request) {
           // Create new user in Supabase Auth
           const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email,
-            password: password || 'JanuBhaiPartner123!',
+            password: password || 'JanuBhaiStaff123!',
             email_confirm: true,
             user_metadata: { full_name: name },
           });
