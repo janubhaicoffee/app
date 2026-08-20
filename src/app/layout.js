@@ -72,6 +72,11 @@ export const metadata = {
     description: 'Authentic, small-batch roasted Chikmagalur coffee. Retail & wholesale.',
     images: ['https://janubhai.com/arsalanazad.png'],
   },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-icon.png',
+  },
   alternates: {
     canonical: '/',
   },
