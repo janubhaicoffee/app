@@ -22,6 +22,7 @@ import {
   Flame,
   Droplets,
   Clock,
+  Calendar,
   ChevronDown,
   HelpCircle,
 } from 'lucide-react';
