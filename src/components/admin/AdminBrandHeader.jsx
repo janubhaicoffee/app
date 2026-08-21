@@ -313,6 +313,28 @@ export default function AdminBrandHeader() {
               style={{ position: 'absolute', right: '8px', pointerEvents: 'none' }}
             />
           </div>
+
+          {/* Row 3: Role Status Pill */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '4px 8px',
+              borderRadius: '6px',
+              background: 'rgba(216, 154, 30, 0.12)',
+              border: `1px solid ${roleBadge.color}40`,
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              color: roleBadge.color,
+            }}
+          >
+            {roleBadge.icon}
+            <span>{roleBadge.label}</span>
+          </div>
         </div>
       )}
     </div>

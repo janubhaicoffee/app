@@ -36,22 +36,29 @@ import {
   Info,
   Check,
   AlertCircle,
+  ShieldCheck,
+  Award,
+  Coffee,
+  CreditCard,
+  ChefHat,
+  Sliders,
 } from 'lucide-react';
 
 const roleBadgeColors = {
   superadmin: { bg: 'rgba(216, 154, 30, 0.2)', color: '#d89a1e', border: 'rgba(216, 154, 30, 0.4)', label: 'Super Admin' },
-  owner: { bg: 'rgba(168, 85, 247, 0.2)', color: '#c084fc', border: 'rgba(168, 85, 247, 0.4)', label: 'Owner' },
+  owner: { bg: 'rgba(216, 154, 30, 0.2)', color: '#d89a1e', border: 'rgba(216, 154, 30, 0.4)', label: 'Super Admin' },
   operations_head: { bg: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.4)', label: 'Operations Head' },
-  operations: { bg: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.4)', label: 'Operations' },
-  operation_manager: { bg: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', border: 'rgba(56, 189, 248, 0.4)', label: 'Operations Manager' },
-  growth: { bg: 'rgba(236, 72, 153, 0.2)', color: '#f472b6', border: 'rgba(236, 72, 153, 0.4)', label: 'Growth Lead' },
-  brand_leader: { bg: 'rgba(236, 72, 153, 0.2)', color: '#f472b6', border: 'rgba(236, 72, 153, 0.4)', label: 'Brand Leader' },
+  operations: { bg: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.4)', label: 'Operations Head' },
+  operation_manager: { bg: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.4)', label: 'Operations Head' },
+  growth: { bg: 'rgba(236, 72, 153, 0.2)', color: '#f472b6', border: 'rgba(236, 72, 153, 0.4)', label: 'Growth & Strategy' },
+  brand_leader: { bg: 'rgba(236, 72, 153, 0.2)', color: '#f472b6', border: 'rgba(236, 72, 153, 0.4)', label: 'Growth & Strategy' },
   manager: { bg: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: 'rgba(59, 130, 246, 0.4)', label: 'Store Manager' },
   store_manager: { bg: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: 'rgba(59, 130, 246, 0.4)', label: 'Store Manager' },
   cashier: { bg: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', border: 'rgba(34, 197, 94, 0.4)', label: 'Cashier' },
   barista: { bg: 'rgba(249, 115, 22, 0.2)', color: '#fb923c', border: 'rgba(249, 115, 22, 0.4)', label: 'Barista' },
   kitchen: { bg: 'rgba(234, 179, 8, 0.2)', color: '#facc15', border: 'rgba(234, 179, 8, 0.4)', label: 'Kitchen Crew' },
   staff: { bg: 'rgba(156, 163, 175, 0.2)', color: '#d1d5db', border: 'rgba(156, 163, 175, 0.4)', label: 'General Staff' },
+  customer: { bg: 'rgba(255, 255, 255, 0.08)', color: '#cbb9a8', border: 'rgba(245, 240, 234, 0.12)', label: 'Customer' },
 };
 
 function UsersDashboardContent() {
@@ -86,37 +93,26 @@ function UsersDashboardContent() {
   const [customerTagsInput, setCustomerTagsInput] = useState('');
   const [savingCustomer, setSavingCustomer] = useState(false);
 
-  // Staff Filters & Modal
+  // Staff Filters
   const [staffSearch, setStaffSearch] = useState('');
   const [staffOutletFilter, setStaffOutletFilter] = useState('all');
   const [staffRoleFilter, setStaffRoleFilter] = useState('all');
   const [staffStatusFilter, setStaffStatusFilter] = useState('all');
-  const [showStaffModal, setShowStaffModal] = useState(searchParams.get('action') === 'add-staff');
-  const [editStaffMember, setEditStaffMember] = useState(null);
-  const [savingStaff, setSavingStaff] = useState(false);
-  const [staffForm, setStaffForm] = useState({
-    outlet_id: '',
+
+  // Unified Role & Permissions Editor Modal (Super Admin only)
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [savingRole, setSavingRole] = useState(false);
+  const [roleForm, setRoleForm] = useState({
+    user_id: '',
     name: '',
     email: '',
     phone: '',
-    role: 'staff',
+    role: 'customer',
+    outlet_id: '',
     pin: '',
-    password: '',
     monthly_salary: '',
     commission_on_profit: false,
-    aadhaar_number: '',
-    pan_number: '',
     notes: '',
-  });
-
-  // Admin Profiles Modal
-  const [showAdminModal, setShowAdminModal] = useState(false);
-  const [savingAdmin, setSavingAdmin] = useState(false);
-  const [adminForm, setAdminForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    role: 'superadmin',
   });
 
   // Audit Logs Filter
@@ -138,7 +134,7 @@ function UsersDashboardContent() {
     router.replace(`${pathname}?${params.toString()}`);
   };
 
-  // Initial Data Fetching
+  // Initial Data Fetching from Live Supabase
   const fetchAllData = async () => {
     try {
       setLoading(true);
@@ -161,33 +157,73 @@ function UsersDashboardContent() {
         fetch('/api/admin/data?type=audit_log', { headers }),
       ]);
 
-      if (custRes.ok) {
-        const json = await custRes.json();
-        setCustomers(json.data || []);
-      }
-      if (ordRes.ok) {
-        const json = await ordRes.json();
-        setOrders(json.data || []);
-      }
+      let staffList = [];
+      let adminList = [];
+
       if (staffRes.ok) {
         const json = await staffRes.json();
-        setStaff(json.data || []);
+        staffList = json.data || [];
+        setStaff(staffList);
+      }
+      if (profilesRes.ok) {
+        const json = await profilesRes.json();
+        adminList = json.data || [];
+        setAdminProfiles(adminList);
       }
       if (outletsRes.ok) {
         const json = await outletsRes.json();
         setOutlets(json.data || []);
       }
-      if (profilesRes.ok) {
-        const json = await profilesRes.json();
-        setAdminProfiles(json.data || []);
+      if (ordRes.ok) {
+        const json = await ordRes.json();
+        setOrders(json.data || []);
       }
       if (auditRes.ok) {
         const json = await auditRes.json();
         setAuditLogs(json.data || []);
       }
+
+      if (custRes.ok) {
+        const json = await custRes.json();
+        const rawCustomers = json.data || [];
+
+        // Enrich customers with their live role from staff/admin tables
+        const enriched = rawCustomers.map((c) => {
+          const emailLower = (c.email || '').toLowerCase();
+          const phoneTrimmed = c.phone || '';
+
+          // Check admin profiles
+          const matchedAdmin = adminList.find(
+            (a) => (a.email && a.email.toLowerCase() === emailLower) || (a.phone && a.phone === phoneTrimmed)
+          );
+          if (matchedAdmin) {
+            return { ...c, computedRole: matchedAdmin.role || 'superadmin' };
+          }
+
+          // Check staff profiles
+          const matchedStaff = staffList.find(
+            (s) =>
+              (s.user_id && s.user_id === c.id) ||
+              (s.email && s.email.toLowerCase() === emailLower) ||
+              (s.phone && s.phone === phoneTrimmed)
+          );
+          if (matchedStaff) {
+            return {
+              ...c,
+              computedRole: matchedStaff.role || 'staff',
+              outlet_id: matchedStaff.outlet_id,
+              staffRecordId: matchedStaff.id,
+            };
+          }
+
+          return { ...c, computedRole: 'customer' };
+        });
+
+        setCustomers(enriched);
+      }
     } catch (err) {
       console.error('Failed to load user management data', err);
-      showToast('Error loading user data', 'error');
+      showToast('Error loading live user data', 'error');
     } finally {
       setLoading(false);
     }
@@ -205,7 +241,7 @@ function UsersDashboardContent() {
       if (!uid) return;
       if (!stats[uid]) stats[uid] = { count: 0, total: 0, lastOrderDate: null };
       stats[uid].count += 1;
-      stats[uid].total += o.total_amount || 0;
+      stats[uid].total += Number(o.total_amount || 0);
       if (!stats[uid].lastOrderDate || new Date(o.created_at) > new Date(stats[uid].lastOrderDate)) {
         stats[uid].lastOrderDate = o.created_at;
       }
@@ -258,13 +294,11 @@ function UsersDashboardContent() {
         if (res.ok) {
           const json = await res.json();
           setSelectedCustomerData(json.data);
-          setCustomerNotes(json.data.notes || '');
-          setCustomerTagsInput((json.data.tags || []).join(', '));
-        } else {
-          showToast('Failed to load customer profile details', 'error');
+          setCustomerNotes(json.data?.notes || '');
+          setCustomerTagsInput((json.data?.tags || []).join(', '));
         }
       } catch (err) {
-        showToast('Error loading customer', 'error');
+        showToast('Error loading customer details', 'error');
       } finally {
         setCustomerDetailLoading(false);
       }
@@ -273,9 +307,9 @@ function UsersDashboardContent() {
     fetchCustomerDetail();
   }, [selectedCustomerId]);
 
-  // Save Customer Tags & Notes
+  // Save Customer Notes and Tags
   const handleSaveCustomerNotes = async () => {
-    if (!selectedCustomerId) return;
+    if (!selectedCustomerData) return;
     try {
       setSavingCustomer(true);
       const {
@@ -283,7 +317,7 @@ function UsersDashboardContent() {
       } = await supabase.auth.getSession();
       if (!session) return;
 
-      const tags = customerTagsInput
+      const tagsArray = customerTagsInput
         .split(',')
         .map((t) => t.trim())
         .filter(Boolean);
@@ -296,226 +330,101 @@ function UsersDashboardContent() {
         },
         body: JSON.stringify({
           action: 'update_customer',
-          id: selectedCustomerId,
-          payload: { tags, notes: customerNotes },
+          id: selectedCustomerData.id,
+          payload: {
+            notes: customerNotes,
+            tags: tagsArray,
+          },
         }),
       });
 
       if (res.ok) {
         showToast('Customer profile updated');
-        setSelectedCustomerData((prev) => ({ ...prev, tags, notes: customerNotes }));
         setCustomers((prev) =>
-          prev.map((c) => (c.id === selectedCustomerId ? { ...c, tags, notes: customerNotes } : c))
+          prev.map((c) =>
+            c.id === selectedCustomerData.id ? { ...c, notes: customerNotes, tags: tagsArray } : c
+          )
         );
       } else {
-        const json = await res.json();
-        showToast(json.error || 'Failed to update customer', 'error');
+        showToast('Failed to update customer', 'error');
       }
     } catch (err) {
-      showToast('Error updating customer', 'error');
+      showToast('Error saving customer info', 'error');
     } finally {
       setSavingCustomer(false);
     }
   };
 
-  // Filtered & Sorted Customers
-  const filteredCustomers = useMemo(() => {
-    let result = [...customers];
+  // Open Role & Permissions Editor Modal for ANY User / Staff / Admin
+  const openRoleEditor = (user) => {
+    const matchedStaff = staff.find(
+      (s) =>
+        (s.user_id && s.user_id === user.id) ||
+        (s.email && s.email.toLowerCase() === (user.email || '').toLowerCase()) ||
+        (s.phone && s.phone === user.phone)
+    );
 
-    // Search query
-    if (customerSearch.trim()) {
-      const q = customerSearch.toLowerCase();
-      result = result.filter(
-        (c) =>
-          (c.name || '').toLowerCase().includes(q) ||
-          (c.email || '').toLowerCase().includes(q) ||
-          (c.phone || '').toLowerCase().includes(q) ||
-          (c.current_location || '').toLowerCase().includes(q) ||
-          (c.tags || []).some((t) => t.toLowerCase().includes(q))
-      );
-    }
+    const matchedAdmin = adminProfiles.find(
+      (a) =>
+        (a.email && a.email.toLowerCase() === (user.email || '').toLowerCase()) ||
+        (a.phone && a.phone === user.phone)
+    );
 
-    // Filter Chips
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
+    const currentRole = user.role || user.computedRole || (matchedAdmin ? 'superadmin' : matchedStaff ? matchedStaff.role : 'customer');
 
-    if (customerFilterType === 'spenders') {
-      result = result.filter((c) => (orderStats[c.id]?.total || 0) >= 1000);
-    } else if (customerFilterType === 'repeat') {
-      result = result.filter((c) => (orderStats[c.id]?.count || 0) >= 2);
-    } else if (customerFilterType === 'social') {
-      result = result.filter((c) => c.auth_provider === 'google' || c.auth_provider === 'facebook');
-    } else if (customerFilterType === 'new') {
-      result = result.filter((c) => new Date(c.created_at) >= thirtyDaysAgo);
-    }
-
-    // Sorting
-    result.sort((a, b) => {
-      const statsA = orderStats[a.id] || { count: 0, total: 0 };
-      const statsB = orderStats[b.id] || { count: 0, total: 0 };
-
-      if (customerSortBy === 'spent_desc') return statsB.total - statsA.total;
-      if (customerSortBy === 'orders_desc') return statsB.count - statsA.count;
-      if (customerSortBy === 'name_asc') return (a.name || '').localeCompare(b.name || '');
-      // newest
-      return new Date(b.created_at) - new Date(a.created_at);
+    setRoleForm({
+      user_id: user.id || matchedStaff?.user_id || '',
+      name: user.name || user.display_name || 'User',
+      email: user.email || '',
+      phone: user.phone || '',
+      role: currentRole,
+      outlet_id: user.outlet_id || matchedStaff?.outlet_id || outlets[0]?.id || '',
+      pin: matchedStaff?.pin || matchedStaff?.pin_code || '',
+      monthly_salary: matchedStaff?.monthly_salary || '',
+      commission_on_profit: !!matchedStaff?.commission_on_profit,
+      notes: matchedStaff?.notes || '',
     });
-
-    return result;
-  }, [customers, customerSearch, customerFilterType, customerSortBy, orderStats]);
-
-  // Export Customers CSV
-  const exportCustomersCSV = () => {
-    if (customers.length === 0) return;
-    const headers = [
-      'Customer ID',
-      'Name',
-      'Email',
-      'Phone',
-      'Auth Provider',
-      'Location',
-      'Total Orders',
-      'Total Spent (INR)',
-      'Tags',
-      'Joined Date',
-    ];
-    const rows = filteredCustomers.map((c) => {
-      const stats = orderStats[c.id] || { count: 0, total: 0 };
-      return [
-        c.id,
-        `"${(c.name || '').replace(/"/g, '""')}"`,
-        `"${(c.email || '').replace(/"/g, '""')}"`,
-        `"${(c.phone || '').replace(/"/g, '""')}"`,
-        c.auth_provider || 'Email',
-        `"${(c.current_location || c.hometown || '').replace(/"/g, '""')}"`,
-        stats.count,
-        stats.total,
-        `"${(c.tags || []).join('; ')}"`,
-        new Date(c.created_at).toISOString().split('T')[0],
-      ].join(',');
-    });
-
-    const csvContent = [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `customers_export_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-    showToast(`Exported ${filteredCustomers.length} customers`);
+    setShowRoleModal(true);
   };
 
-  // Staff Management Actions
-  const openAddStaffModal = () => {
-    setEditStaffMember(null);
-    setStaffForm({
-      outlet_id: outlets[0]?.id || '',
-      name: '',
-      email: '',
-      phone: '',
-      role: 'staff',
-      pin: '',
-      password: '',
-      monthly_salary: '',
-      commission_on_profit: false,
-      aadhaar_number: '',
-      pan_number: '',
-      notes: '',
-    });
-    setShowStaffModal(true);
-  };
-
-  const openEditStaffModal = (member) => {
-    setEditStaffMember(member);
-    setStaffForm({
-      outlet_id: member.outlet_id || '',
-      name: member.display_name || member.name || '',
-      email: member.email || '',
-      phone: member.phone || '',
-      role: member.role || 'staff',
-      pin: member.pin_code || member.pin || '',
-      password: '',
-      monthly_salary: member.monthly_salary !== null ? member.monthly_salary : '',
-      commission_on_profit: !!member.commission_on_profit,
-      aadhaar_number: member.aadhaar_number || '',
-      pan_number: member.pan_number || '',
-      notes: member.notes || '',
-    });
-    setShowStaffModal(true);
-  };
-
-  const handleSaveStaff = async (e) => {
+  // Submit Role & Permissions Update to /api/admin/users/role
+  const handleSaveRole = async (e) => {
     e.preventDefault();
-    if (!staffForm.name.trim()) {
-      showToast('Staff name is required', 'error');
-      return;
-    }
-    if (!staffForm.outlet_id && staffForm.role !== 'superadmin' && staffForm.role !== 'operations_head') {
-      showToast('Please select an outlet for store staff', 'error');
-      return;
-    }
-
     try {
-      setSavingStaff(true);
+      setSavingRole(true);
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const body = {
-        outlet_id: staffForm.outlet_id || null,
-        name: staffForm.name,
-        email: staffForm.email || null,
-        phone: staffForm.phone || null,
-        role: staffForm.role,
-        pin: staffForm.pin || null,
-        password: staffForm.password || undefined,
-        monthly_salary: staffForm.monthly_salary ? parseFloat(staffForm.monthly_salary) : null,
-        commission_on_profit: !!staffForm.commission_on_profit,
-        aadhaar_number: staffForm.aadhaar_number || null,
-        pan_number: staffForm.pan_number || null,
-        notes: staffForm.notes || null,
-      };
-
-      let res;
-      if (editStaffMember) {
-        body.id = editStaffMember.id;
-        if (!staffForm.pin) delete body.pin;
-        res = await fetch('/api/admin/staff', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify(body),
-        });
-      } else {
-        res = await fetch('/api/admin/staff', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify(body),
-        });
+      if (!session) {
+        showToast('Session expired, please login', 'error');
+        return;
       }
 
+      const res = await fetch('/api/admin/users/role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(roleForm),
+      });
+
       if (res.ok) {
-        showToast(editStaffMember ? 'Staff updated successfully' : 'Staff member added');
-        setShowStaffModal(false);
+        showToast(`User role updated to ${roleForm.role.toUpperCase()} successfully!`);
+        setShowRoleModal(false);
         fetchAllData();
       } else {
         const json = await res.json();
-        showToast(json.error || 'Failed to save staff member', 'error');
+        showToast(json.error || 'Failed to update user role', 'error');
       }
     } catch (err) {
-      showToast('Error saving staff', 'error');
+      showToast('Error saving user role', 'error');
     } finally {
-      setSavingStaff(false);
+      setSavingRole(false);
     }
   };
 
+  // Staff Actions
   const handleToggleStaffActive = async (member) => {
     try {
       const {
@@ -561,6 +470,7 @@ function UsersDashboardContent() {
       if (res.ok) {
         showToast('Staff member removed');
         setStaff((prev) => prev.filter((s) => s.id !== member.id));
+        fetchAllData();
       } else {
         showToast('Failed to delete staff member', 'error');
       }
@@ -568,6 +478,96 @@ function UsersDashboardContent() {
       showToast('Error deleting staff', 'error');
     }
   };
+
+  // Revoke Admin Profile
+  const handleDeleteAdminProfile = async (admin) => {
+    if (!confirm(`Revoke admin access for ${admin.name || admin.email}?`)) return;
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const res = await fetch(`/api/admin/profiles?id=${admin.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (res.ok) {
+        showToast('Admin access revoked');
+        setAdminProfiles((prev) => prev.filter((a) => a.id !== admin.id));
+        fetchAllData();
+      } else {
+        showToast('Failed to revoke access', 'error');
+      }
+    } catch (err) {
+      showToast('Error revoking admin access', 'error');
+    }
+  };
+
+  // CSV Export for Customers
+  const exportCustomersCSV = () => {
+    const headers = ['ID', 'Name', 'Email', 'Phone', 'Orders Count', 'Total Spent (INR)', 'Role', 'Created At'];
+    const rows = customers.map((c) => {
+      const stats = orderStats[c.id] || { count: 0, total: 0 };
+      return [
+        c.id,
+        `"${c.name || 'Anonymous'}"`,
+        c.email || '',
+        c.phone || '',
+        stats.count,
+        stats.total,
+        c.computedRole || 'customer',
+        c.created_at,
+      ];
+    });
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `janubhai_customers_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Filtered & Sorted Customers
+  const filteredCustomers = useMemo(() => {
+    return customers
+      .filter((c) => {
+        const matchesSearch =
+          !customerSearch ||
+          (c.name || '').toLowerCase().includes(customerSearch.toLowerCase()) ||
+          (c.email || '').toLowerCase().includes(customerSearch.toLowerCase()) ||
+          (c.phone || '').includes(customerSearch) ||
+          (c.current_location || '').toLowerCase().includes(customerSearch.toLowerCase()) ||
+          (c.tags || []).some((t) => t.toLowerCase().includes(customerSearch.toLowerCase()));
+
+        const stats = orderStats[c.id] || { count: 0, total: 0 };
+
+        if (customerFilterType === 'spenders') return matchesSearch && stats.total >= 1000;
+        if (customerFilterType === 'repeat') return matchesSearch && stats.count >= 2;
+        if (customerFilterType === 'social') return matchesSearch && Boolean(c.auth_provider);
+        if (customerFilterType === 'new') {
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          return matchesSearch && new Date(c.created_at) >= thirtyDaysAgo;
+        }
+
+        return matchesSearch;
+      })
+      .sort((a, b) => {
+        const statsA = orderStats[a.id] || { count: 0, total: 0 };
+        const statsB = orderStats[b.id] || { count: 0, total: 0 };
+
+        if (customerSortBy === 'spent_desc') return statsB.total - statsA.total;
+        if (customerSortBy === 'orders_desc') return statsB.count - statsA.count;
+        if (customerSortBy === 'name_asc') return (a.name || '').localeCompare(b.name || '');
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+  }, [customers, customerSearch, customerFilterType, customerSortBy, orderStats]);
 
   // Filtered Staff
   const filteredStaff = useMemo(() => {
@@ -589,84 +589,9 @@ function UsersDashboardContent() {
     });
   }, [staff, staffSearch, staffOutletFilter, staffRoleFilter, staffStatusFilter]);
 
-  // Admin Profiles Actions
-  const handleSaveAdminProfile = async (e) => {
-    e.preventDefault();
-    if (!adminForm.name.trim()) {
-      showToast('Name is required', 'error');
-      return;
-    }
-    if (!adminForm.email && !adminForm.phone) {
-      showToast('Either email or phone is required for admin authorization', 'error');
-      return;
-    }
-
-    try {
-      setSavingAdmin(true);
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const res = await fetch('/api/admin/profiles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify(adminForm),
-      });
-
-      if (res.ok) {
-        showToast('Admin privilege granted');
-        setShowAdminModal(false);
-        setAdminForm({ name: '', email: '', phone: '', role: 'superadmin' });
-        fetchAllData();
-      } else {
-        const json = await res.json();
-        showToast(json.error || 'Failed to grant admin access', 'error');
-      }
-    } catch (err) {
-      showToast('Error granting admin access', 'error');
-    } finally {
-      setSavingAdmin(false);
-    }
-  };
-
-  const handleDeleteAdminProfile = async (admin) => {
-    if (!confirm(`Revoke admin access for ${admin.name || admin.email}?`)) return;
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const res = await fetch(`/api/admin/profiles?id=${admin.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (res.ok) {
-        showToast('Admin access revoked');
-        setAdminProfiles((prev) => prev.filter((a) => a.id !== admin.id));
-      } else {
-        showToast('Failed to revoke access', 'error');
-      }
-    } catch (err) {
-      showToast('Error revoking admin access', 'error');
-    }
-  };
-
   // Filtered Audit Logs
   const filteredAuditLogs = useMemo(() => {
     return auditLogs.filter((log) => {
-      const isUserRelated =
-        ['customer', 'staff', 'admin_profiles', 'profile', 'user'].includes(
-          (log.entity_type || log.entity || '').toLowerCase()
-        ) ||
-        ['create', 'update', 'delete'].includes(log.action);
-
       const matchesSearch =
         !auditSearch ||
         (log.admin_email || '').toLowerCase().includes(auditSearch.toLowerCase()) ||
@@ -676,13 +601,13 @@ function UsersDashboardContent() {
 
       const matchesAction = auditActionFilter === 'all' || log.action === auditActionFilter;
 
-      return isUserRelated && matchesSearch && matchesAction;
+      return matchesSearch && matchesAction;
     });
   }, [auditLogs, auditSearch, auditActionFilter]);
 
   const getOutletName = (id) => {
     const outlet = outlets.find((o) => o.id === id);
-    return outlet ? outlet.name : 'All Outlets (HQ)';
+    return outlet ? outlet.name : 'All Outlets (HQ Global)';
   };
 
   if (loading) {
@@ -737,16 +662,20 @@ function UsersDashboardContent() {
               <Download size={14} /> Export CSV
             </button>
           )}
-          {activeTab === 'staff' && (
-            <button className="admin-btn admin-btn-sm" onClick={openAddStaffModal}>
-              <Plus size={15} /> Add Staff Member
-            </button>
-          )}
-          {activeTab === 'admins' && (
-            <button className="admin-btn admin-btn-sm" onClick={() => setShowAdminModal(true)}>
-              <Plus size={15} /> Grant Admin Access
-            </button>
-          )}
+          <button
+            className="admin-btn admin-btn-sm"
+            onClick={() =>
+              openRoleEditor({
+                id: '',
+                name: '',
+                email: '',
+                phone: '',
+                role: activeTab === 'admins' ? 'superadmin' : activeTab === 'staff' ? 'manager' : 'customer',
+              })
+            }
+          >
+            <Plus size={15} /> Assign Role / Add User
+          </button>
         </div>
       </div>
 
@@ -1008,7 +937,7 @@ function UsersDashboardContent() {
                     <th style={{ width: 44 }}></th>
                     <th>Customer</th>
                     <th>Contact Info</th>
-                    <th>Location</th>
+                    <th>Current System Role</th>
                     <th>Orders</th>
                     <th>Total Spent</th>
                     <th>Tags</th>
@@ -1019,8 +948,9 @@ function UsersDashboardContent() {
                 <tbody>
                   {filteredCustomers.map((customer) => {
                     const stats = orderStats[customer.id] || { count: 0, total: 0 };
+                    const roleBadge = roleBadgeColors[customer.computedRole] || roleBadgeColors.customer;
                     return (
-                      <tr key={customer.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedCustomerId(customer.id)}>
+                      <tr key={customer.id}>
                         <td>
                           {customer.profile_picture_url ? (
                             <img
@@ -1082,8 +1012,22 @@ function UsersDashboardContent() {
                           <div style={{ fontSize: '0.85rem' }}>{customer.email || '-'}</div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{customer.phone || ''}</div>
                         </td>
-                        <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                          {customer.current_location || customer.hometown || '-'}
+                        <td>
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              background: roleBadge.bg,
+                              color: roleBadge.color,
+                              border: `1px solid ${roleBadge.border}`,
+                            }}
+                          >
+                            {roleBadge.label}
+                          </span>
                         </td>
                         <td>
                           <span style={{ fontWeight: 700, color: stats.count > 0 ? 'var(--accent-gold)' : 'var(--text-secondary)' }}>
@@ -1110,11 +1054,6 @@ function UsersDashboardContent() {
                                   {t}
                                 </span>
                               ))}
-                              {customer.tags.length > 2 && (
-                                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-                                  +{customer.tags.length - 2}
-                                </span>
-                              )}
                             </div>
                           ) : (
                             <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>-</span>
@@ -1124,15 +1063,29 @@ function UsersDashboardContent() {
                           {new Date(customer.created_at).toLocaleDateString('en-IN')}
                         </td>
                         <td style={{ textAlign: 'right' }}>
-                          <button
-                            className="admin-btn-outline admin-btn-sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedCustomerId(customer.id);
-                            }}
-                          >
-                            <Eye size={13} /> View
-                          </button>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.35rem' }}>
+                            <button
+                              className="admin-btn-outline admin-btn-sm"
+                              onClick={() => setSelectedCustomerId(customer.id)}
+                              title="View Customer Orders & CRM"
+                            >
+                              <Eye size={13} /> View
+                            </button>
+
+                            {/* Superadmin Direct Edit Role Button */}
+                            <button
+                              className="admin-btn admin-btn-sm"
+                              onClick={() => openRoleEditor(customer)}
+                              title="Edit Role & Permissions (Make Ops Head, Growth, Manager, etc.)"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(216, 154, 30, 0.2) 0%, rgba(216, 154, 30, 0.4) 100%)',
+                                borderColor: 'var(--accent-gold)',
+                                color: 'var(--accent-gold)',
+                              }}
+                            >
+                              <ShieldCheck size={13} /> Edit Role
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1199,7 +1152,7 @@ function UsersDashboardContent() {
                 <option value="all">All Roles</option>
                 <option value="superadmin">Super Admin</option>
                 <option value="operations_head">Operations Head</option>
-                <option value="growth">Growth Lead</option>
+                <option value="growth">Growth & Strategy</option>
                 <option value="manager">Store Manager</option>
                 <option value="cashier">Cashier</option>
                 <option value="barista">Barista</option>
@@ -1232,8 +1185,8 @@ function UsersDashboardContent() {
             {filteredStaff.length === 0 ? (
               <div className="empty-state">
                 <Store size={44} />
-                <h3>No staff members found</h3>
-                <p>Click "Add Staff Member" above to onboard your cafe crew and managers.</p>
+                <h3>No staff members found in Supabase</h3>
+                <p>Click "Assign Role / Add User" above to onboard cafe staff and managers.</p>
               </div>
             ) : (
               <table className="admin-table">
@@ -1242,9 +1195,8 @@ function UsersDashboardContent() {
                     <th>Staff Name & Role</th>
                     <th>Outlet Assignment</th>
                     <th>Contact Info</th>
-                    <th>PIN & Access</th>
+                    <th>PIN & POS Access</th>
                     <th>Compensation</th>
-                    <th>Identity Verif.</th>
                     <th>Status</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
@@ -1300,10 +1252,10 @@ function UsersDashboardContent() {
                                 fontSize: '0.8rem',
                               }}
                             >
-                              <Key size={11} color="var(--accent-gold)" /> PIN Set
+                              <Key size={11} color="var(--accent-gold)" /> PIN: {member.pin_code || member.pin}
                             </span>
                           ) : (
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>No PIN</span>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>No PIN Set</span>
                           )}
                         </td>
                         <td>
@@ -1325,32 +1277,6 @@ function UsersDashboardContent() {
                               Profit Share
                             </span>
                           )}
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '4px' }}>
-                            <span
-                              style={{
-                                fontSize: '0.72rem',
-                                padding: '2px 5px',
-                                borderRadius: '3px',
-                                background: member.aadhaar_number ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                                color: member.aadhaar_number ? '#81c784' : '#888',
-                              }}
-                            >
-                              Aadhaar: {member.aadhaar_number ? '✓' : '✗'}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: '0.72rem',
-                                padding: '2px 5px',
-                                borderRadius: '3px',
-                                background: member.pan_number ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                                color: member.pan_number ? '#81c784' : '#888',
-                              }}
-                            >
-                              PAN: {member.pan_number ? '✓' : '✗'}
-                            </span>
-                          </div>
                         </td>
                         <td>
                           <button
@@ -1382,10 +1308,10 @@ function UsersDashboardContent() {
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.35rem' }}>
                             <button
                               className="admin-btn-outline admin-btn-sm"
-                              onClick={() => openEditStaffModal(member)}
-                              title="Edit Staff Member"
+                              onClick={() => openRoleEditor(member)}
+                              title="Edit Role, Permissions & Outlet"
                             >
-                              <Edit2 size={13} />
+                              <Edit2 size={13} /> Edit Role
                             </button>
                             <button
                               className="admin-btn-outline admin-btn-sm text-danger"
@@ -1411,25 +1337,34 @@ function UsersDashboardContent() {
           ========================================================================= */}
       {activeTab === 'admins' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          {/* Admin Profiles Card */}
           <div className="admin-card">
             <div className="admin-card-header">
               <div>
-                <h3 style={{ margin: 0 }}>Authorized Administrative Users</h3>
+                <h3 style={{ margin: 0 }}>Authorized Administrative Leadership</h3>
                 <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Users granted backend administrative access to Janu Bhai Coffee command suites.
+                  Users granted backend administrative and operational access to Janu Bhai Coffee.
                 </p>
               </div>
-              <button className="admin-btn admin-btn-sm" onClick={() => setShowAdminModal(true)}>
-                <Plus size={14} /> Add Admin User
+              <button
+                className="admin-btn admin-btn-sm"
+                onClick={() =>
+                  openRoleEditor({
+                    name: '',
+                    email: '',
+                    phone: '',
+                    role: 'superadmin',
+                  })
+                }
+              >
+                <Plus size={14} /> Add / Promote Admin
               </button>
             </div>
 
             {adminProfiles.length === 0 ? (
               <div className="empty-state">
                 <Shield size={44} />
-                <h3>No custom admin profiles configured</h3>
-                <p>System access is currently governed by primary Super Admin credentials.</p>
+                <h3>No custom admin profiles found</h3>
+                <p>System access is governed by primary Super Admin credentials.</p>
               </div>
             ) : (
               <table className="admin-table">
@@ -1438,7 +1373,7 @@ function UsersDashboardContent() {
                     <th>Admin Name</th>
                     <th>Email Address</th>
                     <th>Phone / Verification</th>
-                    <th>Role & Scope</th>
+                    <th>Administrative Role</th>
                     <th>Added On</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
@@ -1475,13 +1410,22 @@ function UsersDashboardContent() {
                         {admin.created_at ? new Date(admin.created_at).toLocaleDateString('en-IN') : '-'}
                       </td>
                       <td style={{ textAlign: 'right' }}>
-                        <button
-                          className="admin-btn-outline admin-btn-sm text-danger"
-                          onClick={() => handleDeleteAdminProfile(admin)}
-                          title="Revoke Admin Access"
-                        >
-                          <Trash2 size={13} /> Revoke
-                        </button>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.35rem' }}>
+                          <button
+                            className="admin-btn-outline admin-btn-sm"
+                            onClick={() => openRoleEditor(admin)}
+                            title="Edit Role & Permissions"
+                          >
+                            <Edit2 size={13} /> Edit Role
+                          </button>
+                          <button
+                            className="admin-btn-outline admin-btn-sm text-danger"
+                            onClick={() => handleDeleteAdminProfile(admin)}
+                            title="Revoke Admin Access"
+                          >
+                            <Trash2 size={13} /> Revoke
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -1623,7 +1567,7 @@ function UsersDashboardContent() {
                   >
                     LEVEL 3
                   </span>
-                  <h4 style={{ margin: 0, color: '#60a5fa' }}>Store Manager & Baristas</h4>
+                  <h4 style={{ margin: 0, color: '#60a5fa' }}>Store Manager & Crew</h4>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem' }}>
                   Single-cafe frontline operations, shift check-ins, cash drawers, and store inventory counts.
@@ -1649,7 +1593,8 @@ function UsersDashboardContent() {
             <div className="admin-search" style={{ flex: 1, minWidth: 240 }}>
               <Search size={16} color="var(--text-secondary)" />
               <input
-                placeholder="Search audit trail by admin, action, or user ID..."
+                type="text"
+                placeholder="Search audit trail by admin email, action, entity..."
                 value={auditSearch}
                 onChange={(e) => setAuditSearch(e.target.value)}
               />
@@ -1663,77 +1608,61 @@ function UsersDashboardContent() {
                 borderRadius: '8px',
                 border: '1px solid var(--border-color)',
                 background: 'var(--bg-chocolate, #1a0f0c)',
-                color: 'var(--text-warm-white, #f5f0ea)',
+                color: '#f5f0ea',
                 fontSize: '0.85rem',
               }}
             >
               <option value="all">All Actions</option>
-              <option value="create">Created</option>
-              <option value="update">Updated</option>
-              <option value="delete">Deleted / Revoked</option>
+              <option value="update_user_role">Role Changes</option>
+              <option value="create">Creations</option>
+              <option value="update">Updates</option>
+              <option value="delete">Deletions</option>
             </select>
           </div>
 
           <div className="admin-card">
-            <div className="admin-card-header">
-              <h3 style={{ margin: 0 }}>User & Personnel Audit Log Entries</h3>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                {filteredAuditLogs.length} events recorded
-              </span>
-            </div>
-
             {filteredAuditLogs.length === 0 ? (
               <div className="empty-state">
                 <Clock size={44} />
-                <h3>No recent user audit logs</h3>
-                <p>System modifications to customers, staff, or roles will be logged here automatically.</p>
+                <h3>No audit logs found</h3>
+                <p>System activities and user role changes will appear here.</p>
               </div>
             ) : (
               <table className="admin-table">
                 <thead>
                   <tr>
                     <th>Timestamp</th>
-                    <th>Admin User</th>
+                    <th>Admin / Operator</th>
                     <th>Action</th>
                     <th>Entity Type</th>
-                    <th>Entity Reference</th>
                     <th>Details</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAuditLogs.slice(0, 50).map((log, idx) => (
+                  {filteredAuditLogs.map((log, idx) => (
                     <tr key={log.id || idx}>
-                      <td style={{ fontSize: '0.8rem', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
-                        {new Date(log.created_at).toLocaleString('en-IN')}
+                      <td style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                        {new Date(log.created_at || Date.now()).toLocaleString('en-IN')}
                       </td>
-                      <td style={{ fontSize: '0.85rem', fontWeight: 600 }}>{log.admin_email || 'System'}</td>
+                      <td style={{ fontWeight: 600, color: 'var(--accent-gold)' }}>
+                        {log.admin_email || 'System'}
+                      </td>
                       <td>
                         <span
-                          className="status-badge"
                           style={{
-                            background:
-                              log.action === 'create'
-                                ? 'rgba(76, 175, 80, 0.2)'
-                                : log.action === 'delete'
-                                ? 'rgba(239, 68, 68, 0.2)'
-                                : 'rgba(59, 130, 246, 0.2)',
-                            color:
-                              log.action === 'create'
-                                ? '#81c784'
-                                : log.action === 'delete'
-                                ? '#f87171'
-                                : '#60a5fa',
-                            textTransform: 'capitalize',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            background: 'rgba(216, 154, 30, 0.15)',
+                            color: 'var(--accent-gold)',
                           }}
                         >
                           {log.action}
                         </span>
                       </td>
-                      <td style={{ fontSize: '0.85rem', textTransform: 'capitalize' }}>
-                        {log.entity_type || log.entity || '-'}
-                      </td>
-                      <td style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}>{log.entity_id || '-'}</td>
-                      <td style={{ fontSize: '0.82rem', maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={{ fontSize: '0.85rem' }}>{log.entity_type || '-'}</td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {typeof log.details === 'object' ? JSON.stringify(log.details) : log.details || '-'}
                       </td>
                     </tr>
@@ -1746,315 +1675,32 @@ function UsersDashboardContent() {
       )}
 
       {/* =========================================================================
-          MODAL: CUSTOMER PROFILE & ORDER HISTORY DRAWER
+          MODAL: UNIFIED USER ROLE & PERMISSIONS EDITOR (SUPERADMIN)
           ========================================================================= */}
-      {selectedCustomerId && (
+      {showRoleModal && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            zIndex: 1000,
-          }}
-          onClick={() => setSelectedCustomerId(null)}
-        >
-          <div
-            style={{
-              width: '100%',
-              maxWidth: '620px',
-              height: '100%',
-              background: 'linear-gradient(180deg, #241410 0%, #1a0f0c 100%)',
-              borderLeft: '1px solid rgba(216, 154, 30, 0.3)',
-              boxShadow: '-10px 0 40px rgba(0, 0, 0, 0.6)',
-              overflowY: 'auto',
-              padding: '2rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1.5rem',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Drawer Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <Users size={22} color="var(--accent-gold)" />
-                <h2 style={{ margin: 0, fontSize: '1.3rem' }}>Customer Profile</h2>
-              </div>
-              <button
-                onClick={() => setSelectedCustomerId(null)}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: 'none',
-                  color: '#fff',
-                  borderRadius: '50%',
-                  width: 32,
-                  height: 32,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {customerDetailLoading ? (
-              <div className="admin-loading" style={{ margin: 'auto' }}>
-                <div className="admin-spinner" /> Loading customer history...
-              </div>
-            ) : selectedCustomerData ? (
-              <>
-                {/* Identity Card */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1.25rem',
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    padding: '1.25rem',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(216, 154, 30, 0.2)',
-                  }}
-                >
-                  {selectedCustomerData.profile_picture_url ? (
-                    <img
-                      src={selectedCustomerData.profile_picture_url}
-                      alt=""
-                      style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-gold)' }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #d89a1e, #8c5d13)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.6rem',
-                        fontWeight: 800,
-                        color: '#1a0f0c',
-                      }}
-                    >
-                      {(selectedCustomerData.name || '?')[0].toUpperCase()}
-                    </div>
-                  )}
-
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#f5f0ea' }}>
-                        {selectedCustomerData.name || 'Anonymous User'}
-                      </h3>
-                      {selectedCustomerData.auth_provider && (
-                        <span
-                          style={{
-                            padding: '0.15rem 0.45rem',
-                            borderRadius: 4,
-                            fontSize: '0.65rem',
-                            fontWeight: 700,
-                            background:
-                              selectedCustomerData.auth_provider === 'facebook'
-                                ? '#1877F2'
-                                : selectedCustomerData.auth_provider === 'google'
-                                ? '#DB4437'
-                                : '#555',
-                            color: '#fff',
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          {selectedCustomerData.auth_provider}
-                        </span>
-                      )}
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                      {selectedCustomerData.email && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <Mail size={12} color="var(--accent-gold)" /> {selectedCustomerData.email}
-                        </div>
-                      )}
-                      {selectedCustomerData.phone && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <Phone size={12} color="var(--accent-gold)" /> {selectedCustomerData.phone}
-                        </div>
-                      )}
-                      {(selectedCustomerData.current_location || selectedCustomerData.hometown) && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <MapPin size={12} color="var(--accent-gold)" /> {selectedCustomerData.current_location || selectedCustomerData.hometown}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Lifetime Spending & Orders Summary */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div style={{ background: 'rgba(216, 154, 30, 0.08)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(216, 154, 30, 0.25)' }}>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Total Orders Placed</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-gold)', marginTop: '0.2rem' }}>
-                      {selectedCustomerData.orders?.length || 0}
-                    </div>
-                  </div>
-                  <div style={{ background: 'rgba(105, 240, 174, 0.08)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(105, 240, 174, 0.25)' }}>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Total Lifetime Spend</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#69f0ae', marginTop: '0.2rem' }}>
-                      ₹{((selectedCustomerData.orders || []).reduce((sum, o) => sum + (o.total_amount || 0), 0)).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tags & Internal Staff Notes */}
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(245, 240, 234, 0.1)' }}>
-                  <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.92rem', color: 'var(--accent-gold)' }}>
-                    Customer Tags & VIP Notes
-                  </h4>
-
-                  <div style={{ marginBottom: '0.75rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                      Tags (Comma separated, e.g. VIP, Whole Bean, Light Roast)
-                    </label>
-                    <input
-                      type="text"
-                      value={customerTagsInput}
-                      onChange={(e) => setCustomerTagsInput(e.target.value)}
-                      placeholder="e.g. VIP, Roastery Regular, Chemex Fan"
-                      style={{
-                        width: '100%',
-                        padding: '0.55rem 0.75rem',
-                        borderRadius: '6px',
-                        border: '1px solid var(--border-color)',
-                        background: 'var(--bg-chocolate, #1a0f0c)',
-                        color: 'var(--text-warm-white, #f5f0ea)',
-                        fontSize: '0.88rem',
-                      }}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '0.75rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                      Private Admin / Staff Notes
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={customerNotes}
-                      onChange={(e) => setCustomerNotes(e.target.value)}
-                      placeholder="Notes about customer preferences, coffee taste, allergies, or special instructions..."
-                      style={{
-                        width: '100%',
-                        padding: '0.55rem 0.75rem',
-                        borderRadius: '6px',
-                        border: '1px solid var(--border-color)',
-                        background: 'var(--bg-chocolate, #1a0f0c)',
-                        color: 'var(--text-warm-white, #f5f0ea)',
-                        fontSize: '0.88rem',
-                        fontFamily: 'inherit',
-                      }}
-                    />
-                  </div>
-
-                  <button
-                    className="admin-btn admin-btn-sm"
-                    disabled={savingCustomer}
-                    onClick={handleSaveCustomerNotes}
-                    style={{ width: '100%' }}
-                  >
-                    {savingCustomer ? 'Saving Changes...' : 'Save Profile Notes & Tags'}
-                  </button>
-                </div>
-
-                {/* Recent Orders List */}
-                <div>
-                  <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.95rem', color: '#f5f0ea' }}>
-                    Order History ({selectedCustomerData.orders?.length || 0})
-                  </h4>
-
-                  {(!selectedCustomerData.orders || selectedCustomerData.orders.length === 0) ? (
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>No orders placed yet.</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                      {selectedCustomerData.orders.map((order) => (
-                        <div
-                          key={order.id}
-                          style={{
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            border: '1px solid rgba(245, 240, 234, 0.08)',
-                            borderRadius: '8px',
-                            padding: '0.85rem 1rem',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <div>
-                            <div style={{ fontWeight: 700, fontFamily: 'monospace', color: 'var(--accent-gold)', fontSize: '0.85rem' }}>
-                              #{order.id?.toString().slice(-6).toUpperCase()}
-                            </div>
-                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                              {new Date(order.created_at).toLocaleDateString('en-IN')} &bull; {order.order_items?.length || 0} item(s)
-                            </div>
-                          </div>
-
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontWeight: 700, color: '#f5f0ea', fontSize: '0.92rem' }}>
-                              ₹{Number(order.total_amount || 0).toLocaleString()}
-                            </div>
-                            <span
-                              style={{
-                                fontSize: '0.68rem',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                padding: '1px 6px',
-                                borderRadius: '4px',
-                                background: order.status === 'delivered' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                                color: order.status === 'delivered' ? '#81c784' : '#fbbf24',
-                              }}
-                            >
-                              {order.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : null}
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-          MODAL: ADD / EDIT STAFF MEMBER
-          ========================================================================= */}
-      {showStaffModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
+            background: 'rgba(0, 0, 0, 0.78)',
             backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1000,
+            zIndex: 1500,
             padding: '1rem',
           }}
-          onClick={() => setShowStaffModal(false)}
+          onClick={() => setShowRoleModal(false)}
         >
           <div
             style={{
               width: '100%',
               maxWidth: '560px',
               background: 'linear-gradient(180deg, #2a1a17 0%, #1a0f0c 100%)',
-              border: '1px solid rgba(216, 154, 30, 0.35)',
+              border: '1.5px solid rgba(216, 154, 30, 0.45)',
               borderRadius: '16px',
               padding: '1.75rem',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)',
               maxHeight: '90vh',
               overflowY: 'auto',
             }}
@@ -2062,124 +1708,39 @@ function UsersDashboardContent() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Store size={20} color="var(--accent-gold)" />
-                <h2 style={{ margin: 0, fontSize: '1.2rem' }}>
-                  {editStaffMember ? 'Edit Staff Member' : 'Onboard New Staff Member'}
+                <ShieldCheck size={22} color="var(--accent-gold)" />
+                <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--accent-gold)' }}>
+                  User Role & Access Permissions
                 </h2>
               </div>
               <button
-                onClick={() => setShowStaffModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-secondary)',
-                  cursor: 'pointer',
-                }}
+                onClick={() => setShowRoleModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveStaff} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {/* Outlet Selection */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                  Assigned Cafe / Outlet *
-                </label>
-                <select
-                  value={staffForm.outlet_id}
-                  onChange={(e) => setStaffForm({ ...staffForm, outlet_id: e.target.value })}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.65rem 0.85rem',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-chocolate, #1a0f0c)',
-                    color: 'var(--text-warm-white, #f5f0ea)',
-                    fontSize: '0.9rem',
-                  }}
-                >
-                  <option value="">Select an outlet...</option>
-                  {outlets.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.name} ({o.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Full Name & Role */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <form onSubmit={handleSaveRole} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* User Identity Info */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '0.75rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                    Full Name *
+                    User Display Name *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Rahul Sharma"
-                    value={staffForm.name}
-                    onChange={(e) => setStaffForm({ ...staffForm, name: e.target.value })}
+                    placeholder="Full Name"
+                    value={roleForm.name}
+                    onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })}
                     style={{
                       width: '100%',
                       padding: '0.65rem 0.85rem',
                       borderRadius: '8px',
                       border: '1px solid var(--border-color)',
                       background: 'var(--bg-chocolate, #1a0f0c)',
-                      color: 'var(--text-warm-white, #f5f0ea)',
-                      fontSize: '0.9rem',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                    Role & Position *
-                  </label>
-                  <select
-                    value={staffForm.role}
-                    onChange={(e) => setStaffForm({ ...staffForm, role: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.65rem 0.85rem',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg-chocolate, #1a0f0c)',
-                      color: 'var(--text-warm-white, #f5f0ea)',
-                      fontSize: '0.9rem',
-                    }}
-                  >
-                    <option value="superadmin">Super Admin</option>
-                    <option value="operations_head">Operations Head</option>
-                    <option value="growth">Growth Lead</option>
-                    <option value="manager">Store Manager</option>
-                    <option value="cashier">Cashier</option>
-                    <option value="barista">Barista</option>
-                    <option value="kitchen">Kitchen Crew</option>
-                    <option value="staff">General Staff</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Email & Phone */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="rahul@janubhaicoffee.com"
-                    value={staffForm.email}
-                    onChange={(e) => setStaffForm({ ...staffForm, email: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.65rem 0.85rem',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg-chocolate, #1a0f0c)',
-                      color: 'var(--text-warm-white, #f5f0ea)',
+                      color: '#f5f0ea',
                       fontSize: '0.9rem',
                     }}
                   />
@@ -2191,140 +1752,190 @@ function UsersDashboardContent() {
                   </label>
                   <input
                     type="text"
-                    placeholder="+91 9876543210"
-                    value={staffForm.phone}
-                    onChange={(e) => setStaffForm({ ...staffForm, phone: e.target.value })}
+                    placeholder="+91..."
+                    value={roleForm.phone}
+                    onChange={(e) => setRoleForm({ ...roleForm, phone: e.target.value })}
                     style={{
                       width: '100%',
                       padding: '0.65rem 0.85rem',
                       borderRadius: '8px',
                       border: '1px solid var(--border-color)',
                       background: 'var(--bg-chocolate, #1a0f0c)',
-                      color: 'var(--text-warm-white, #f5f0ea)',
+                      color: '#f5f0ea',
                       fontSize: '0.9rem',
                     }}
                   />
                 </div>
               </div>
 
-              {/* PIN Code & Monthly Salary */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                    POS Terminal 4-Digit PIN
-                  </label>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    placeholder="e.g. 1234"
-                    value={staffForm.pin}
-                    onChange={(e) => setStaffForm({ ...staffForm, pin: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.65rem 0.85rem',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg-chocolate, #1a0f0c)',
-                      color: 'var(--text-warm-white, #f5f0ea)',
-                      fontSize: '0.9rem',
-                      fontFamily: 'monospace',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                    Monthly Salary (₹ INR)
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 25000"
-                    value={staffForm.monthly_salary}
-                    onChange={(e) => setStaffForm({ ...staffForm, monthly_salary: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.65rem 0.85rem',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg-chocolate, #1a0f0c)',
-                      color: 'var(--text-warm-white, #f5f0ea)',
-                      fontSize: '0.9rem',
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Commission on Profit Toggle */}
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.88rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+                  Email Address
+                </label>
                 <input
-                  type="checkbox"
-                  checked={staffForm.commission_on_profit}
-                  onChange={(e) => setStaffForm({ ...staffForm, commission_on_profit: e.target.checked })}
-                  style={{ accentColor: 'var(--accent-gold)' }}
+                  type="email"
+                  placeholder="user@janubhaicoffee.com"
+                  value={roleForm.email}
+                  onChange={(e) => setRoleForm({ ...roleForm, email: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-chocolate, #1a0f0c)',
+                    color: '#f5f0ea',
+                    fontSize: '0.9rem',
+                  }}
                 />
-                <span>Eligible for Store Profit Sharing / Commission</span>
-              </label>
-
-              {/* Aadhaar & PAN */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                    Aadhaar Number
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="XXXX XXXX XXXX"
-                    value={staffForm.aadhaar_number}
-                    onChange={(e) => setStaffForm({ ...staffForm, aadhaar_number: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.65rem 0.85rem',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg-chocolate, #1a0f0c)',
-                      color: 'var(--text-warm-white, #f5f0ea)',
-                      fontSize: '0.9rem',
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                    PAN Number
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="ABCDE1234F"
-                    value={staffForm.pan_number}
-                    onChange={(e) => setStaffForm({ ...staffForm, pan_number: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.65rem 0.85rem',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg-chocolate, #1a0f0c)',
-                      color: 'var(--text-warm-white, #f5f0ea)',
-                      fontSize: '0.9rem',
-                    }}
-                  />
-                </div>
               </div>
 
-              {/* Actions */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.75rem' }}>
-                <button
-                  type="button"
-                  className="admin-btn-outline"
-                  onClick={() => setShowStaffModal(false)}
+              {/* Role Selector */}
+              <div
+                style={{
+                  background: 'rgba(0, 0, 0, 0.35)',
+                  padding: '1rem',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(216, 154, 30, 0.3)',
+                }}
+              >
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: 'var(--accent-gold)', marginBottom: '0.45rem' }}>
+                  Select Assigned Role & System Access Level *
+                </label>
+                <select
+                  value={roleForm.role}
+                  onChange={(e) => setRoleForm({ ...roleForm, role: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1.5px solid var(--accent-gold)',
+                    background: 'var(--bg-chocolate, #1a0f0c)',
+                    color: '#f5f0ea',
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                  }}
                 >
+                  <option value="superadmin">👑 Super Admin / Owner (Full Unrestricted HQ Access)</option>
+                  <option value="operations_head">📋 Operations Head (Multi-Store Ops, SOPs, Stock, CCTV)</option>
+                  <option value="growth">🚀 Brand & Growth Lead (Marketing, CRM, Events, Activations)</option>
+                  <option value="manager">🏪 Store Manager (Single Cafe Ops, Register, Local Stock)</option>
+                  <option value="barista">☕ Barista & Coffee Crew (Bar counter, POS shifts)</option>
+                  <option value="cashier">💳 Cashier & Order Desk</option>
+                  <option value="kitchen">🍳 Kitchen Crew</option>
+                  <option value="staff">👔 General Staff</option>
+                  <option value="customer">👤 Regular Customer (No Administrative Access)</option>
+                </select>
+
+                <p style={{ margin: '0.5rem 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  Changing the role instantly provisions or revokes backend dashboard tabs and workspace switchers.
+                </p>
+              </div>
+
+              {/* Outlet Assignment (for Staff / Managers) */}
+              {roleForm.role !== 'customer' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+                      Primary Outlet Branch
+                    </label>
+                    <select
+                      value={roleForm.outlet_id}
+                      onChange={(e) => setRoleForm({ ...roleForm, outlet_id: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border-color)',
+                        background: 'var(--bg-chocolate, #1a0f0c)',
+                        color: '#f5f0ea',
+                        fontSize: '0.9rem',
+                      }}
+                    >
+                      <option value="">All Outlets (HQ Global)</option>
+                      {outlets.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.name} ({o.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+                      4-Digit POS PIN
+                    </label>
+                    <input
+                      type="password"
+                      maxLength={6}
+                      placeholder="1234"
+                      value={roleForm.pin}
+                      onChange={(e) => setRoleForm({ ...roleForm, pin: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border-color)',
+                        background: 'var(--bg-chocolate, #1a0f0c)',
+                        color: '#f5f0ea',
+                        fontSize: '0.9rem',
+                        fontFamily: 'monospace',
+                        letterSpacing: '2px',
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Monthly Salary & Profit Share (Optional for Staff/Managers) */}
+              {['manager', 'barista', 'cashier', 'kitchen', 'staff', 'operations_head'].includes(roleForm.role) && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', alignItems: 'center' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+                      Monthly Salary (₹)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="25000"
+                      value={roleForm.monthly_salary}
+                      onChange={(e) => setRoleForm({ ...roleForm, monthly_salary: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border-color)',
+                        background: 'var(--bg-chocolate, #1a0f0c)',
+                        color: '#f5f0ea',
+                        fontSize: '0.9rem',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.2rem' }}>
+                    <input
+                      type="checkbox"
+                      id="profit_share_chk"
+                      checked={roleForm.commission_on_profit}
+                      onChange={(e) => setRoleForm({ ...roleForm, commission_on_profit: e.target.checked })}
+                      style={{ width: 18, height: 18, accentColor: 'var(--accent-gold)' }}
+                    />
+                    <label htmlFor="profit_share_chk" style={{ fontSize: '0.82rem', color: '#f5f0ea', cursor: 'pointer' }}>
+                      Enable Profit Share Bonus
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.75rem' }}>
+                <button type="button" className="admin-btn-outline" onClick={() => setShowRoleModal(false)}>
                   Cancel
                 </button>
                 <button
                   type="submit"
                   className="admin-btn"
-                  disabled={savingStaff}
+                  disabled={savingRole}
+                  style={{ background: 'linear-gradient(135deg, #d89a1e 0%, #b87333 100%)', color: '#1a0f0c', fontWeight: 800 }}
                 >
-                  {savingStaff ? 'Saving...' : editStaffMember ? 'Update Staff Member' : 'Add Staff Member'}
+                  {savingRole ? 'Saving Role & Permissions...' : 'Save Role & Access Permissions'}
                 </button>
               </div>
             </form>
@@ -2333,159 +1944,200 @@ function UsersDashboardContent() {
       )}
 
       {/* =========================================================================
-          MODAL: GRANT ADMIN PRIVILEGE
+          DRAWER: CUSTOMER DETAIL & CRM PROFILE
           ========================================================================= */}
-      {showAdminModal && (
+      {selectedCustomerId && selectedCustomerData && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
+            background: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(6px)',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '1rem',
+            justifyContent: 'flex-end',
+            zIndex: 1200,
           }}
-          onClick={() => setShowAdminModal(false)}
+          onClick={() => setSelectedCustomerId(null)}
         >
           <div
             style={{
               width: '100%',
-              maxWidth: '480px',
-              background: 'linear-gradient(180deg, #2a1a17 0%, #1a0f0c 100%)',
-              border: '1px solid rgba(216, 154, 30, 0.35)',
-              borderRadius: '16px',
+              maxWidth: '540px',
+              height: '100%',
+              background: 'linear-gradient(180deg, #241410 0%, #150c0a 100%)',
+              borderLeft: '1px solid rgba(216, 154, 30, 0.3)',
               padding: '1.75rem',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
+              overflowY: 'auto',
+              boxShadow: '-10px 0 40px rgba(0,0,0,0.8)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Shield size={20} color="var(--accent-gold)" />
-                <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Grant Administrative Access</h2>
-              </div>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#f5f0ea' }}>Customer Intelligence</h2>
               <button
-                onClick={() => setShowAdminModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-secondary)',
-                  cursor: 'pointer',
-                }}
+                onClick={() => setSelectedCustomerId(null)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
               >
-                <X size={20} />
+                <X size={22} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveAdminProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                  Admin Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Arsalan / Bilal"
-                  value={adminForm.name}
-                  onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.65rem 0.85rem',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-chocolate, #1a0f0c)',
-                    color: 'var(--text-warm-white, #f5f0ea)',
-                    fontSize: '0.9rem',
-                  }}
-                />
+            {/* Profile Header */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                padding: '1rem',
+                background: 'rgba(0,0,0,0.3)',
+                borderRadius: '12px',
+                border: '1px solid rgba(245, 240, 234, 0.08)',
+                marginBottom: '1.25rem',
+              }}
+            >
+              <div
+                style={{
+                  width: 54,
+                  height: 54,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #d89a1e, #8c5d13)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.3rem',
+                  fontWeight: 900,
+                  color: '#1a0f0c',
+                }}
+              >
+                {(selectedCustomerData.name || '?')[0].toUpperCase()}
               </div>
 
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: '0 0 2px', fontSize: '1.1rem', color: '#f5f0ea' }}>
+                  {selectedCustomerData.name || 'Anonymous User'}
+                </h3>
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                  {selectedCustomerData.email || 'No email registered'} &bull; {selectedCustomerData.phone || 'No phone'}
+                </div>
+              </div>
+            </div>
+
+            {/* Role & System Access Card */}
+            <div
+              style={{
+                background: 'rgba(216, 154, 30, 0.08)',
+                border: '1.5px solid rgba(216, 154, 30, 0.35)',
+                borderRadius: '12px',
+                padding: '1rem',
+                marginBottom: '1.25rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
               <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                  Admin Email
-                </label>
-                <input
-                  type="email"
-                  placeholder="admin@janubhaicoffee.com"
-                  value={adminForm.email}
-                  onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.65rem 0.85rem',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-chocolate, #1a0f0c)',
-                    color: 'var(--text-warm-white, #f5f0ea)',
-                    fontSize: '0.9rem',
-                  }}
-                />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 700 }}>
+                  System Role & Access Level
+                </span>
+                <div style={{ marginTop: '3px' }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      padding: '3px 10px',
+                      borderRadius: '4px',
+                      fontSize: '0.82rem',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      background: (roleBadgeColors[selectedCustomerData.computedRole] || roleBadgeColors.customer).bg,
+                      color: (roleBadgeColors[selectedCustomerData.computedRole] || roleBadgeColors.customer).color,
+                    }}
+                  >
+                    {(roleBadgeColors[selectedCustomerData.computedRole] || roleBadgeColors.customer).label}
+                  </span>
+                </div>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                  Admin Phone Number (for OTP Login)
-                </label>
-                <input
-                  type="text"
-                  placeholder="+91 9876543210"
-                  value={adminForm.phone}
-                  onChange={(e) => setAdminForm({ ...adminForm, phone: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.65rem 0.85rem',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-chocolate, #1a0f0c)',
-                    color: 'var(--text-warm-white, #f5f0ea)',
-                    fontSize: '0.9rem',
-                  }}
-                />
+              <button
+                className="admin-btn admin-btn-sm"
+                onClick={() => {
+                  setSelectedCustomerId(null);
+                  openRoleEditor(selectedCustomerData);
+                }}
+                style={{ background: 'linear-gradient(135deg, #d89a1e 0%, #b87333 100%)', color: '#1a0f0c', fontWeight: 800 }}
+              >
+                <ShieldCheck size={14} /> Change Role / Permissions
+              </button>
+            </div>
+
+            {/* Order Metrics */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.85rem', borderRadius: '8px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Total Orders</span>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-gold)' }}>
+                  {(selectedCustomerData.orders || []).length}
+                </div>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                  Assigned Administrative Role
-                </label>
-                <select
-                  value={adminForm.role}
-                  onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.65rem 0.85rem',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-chocolate, #1a0f0c)',
-                    color: 'var(--text-warm-white, #f5f0ea)',
-                    fontSize: '0.9rem',
-                  }}
-                >
-                  <option value="superadmin">Super Admin / Owner (Full Access)</option>
-                  <option value="operations_head">Operations Head (Ops Book, Checklists, Streams)</option>
-                  <option value="growth">Growth & Brand Lead (BD Hub, RSVPs, Audience)</option>
-                  <option value="manager">Store Manager (Outlet Frontline & Inventory)</option>
-                </select>
+              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.85rem', borderRadius: '8px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Total Spend (INR)</span>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#69f0ae' }}>
+                  ₹{(selectedCustomerData.orders || []).reduce((sum, o) => sum + Number(o.total_amount || 0), 0).toLocaleString()}
+                </div>
               </div>
+            </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.75rem' }}>
-                <button
-                  type="button"
-                  className="admin-btn-outline"
-                  onClick={() => setShowAdminModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="admin-btn"
-                  disabled={savingAdmin}
-                >
-                  {savingAdmin ? 'Granting...' : 'Grant Admin Privileges'}
-                </button>
-              </div>
-            </form>
+            {/* CRM Notes & Tags */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                Tags (Comma separated)
+              </label>
+              <input
+                type="text"
+                value={customerTagsInput}
+                onChange={(e) => setCustomerTagsInput(e.target.value)}
+                placeholder="VIP, Espresso Lover, Gafoor Regular..."
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-chocolate, #1a0f0c)',
+                  color: '#f5f0ea',
+                  fontSize: '0.85rem',
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                Customer Service & CRM Notes
+              </label>
+              <textarea
+                rows={3}
+                value={customerNotes}
+                onChange={(e) => setCustomerNotes(e.target.value)}
+                placeholder="Prefers oat milk flat white, visits on Saturday afternoons..."
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-chocolate, #1a0f0c)',
+                  color: '#f5f0ea',
+                  fontSize: '0.85rem',
+                  fontFamily: 'inherit',
+                }}
+              />
+            </div>
+
+            <button
+              className="admin-btn"
+              onClick={handleSaveCustomerNotes}
+              disabled={savingCustomer}
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              {savingCustomer ? 'Saving...' : 'Save CRM Notes & Tags'}
+            </button>
           </div>
         </div>
       )}
@@ -2493,7 +2145,7 @@ function UsersDashboardContent() {
   );
 }
 
-export default function AdminUsersMasterPage() {
+export default function AdminUsersPage() {
   return (
     <Suspense
       fallback={
