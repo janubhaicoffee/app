@@ -129,23 +129,32 @@ export default function SidebarNav() {
         </span>
       </div>
 
-      {/* 1. MAIN / DASHBOARD (Super Admin) */}
-      {isSuperAdmin && (
+      {/* 1. MAIN COMMAND */}
+      {(isSuperAdmin || isOperations || isGrowth || isManager) && (
         <div className="admin-nav-group">
-          <span className="admin-nav-group-title">MAIN</span>
+          <span className="admin-nav-group-title">COMMAND</span>
           <Link href="/admin" className={`admin-nav-link ${pathname === '/admin' ? 'active' : ''}`}>
-            <LayoutDashboard size={20} /> Dashboard
+            <LayoutDashboard size={20} />
+            <span>
+              {isSuperAdmin
+                ? 'Dashboard (God Mode)'
+                : isOperations
+                ? 'Operations Command'
+                : isGrowth
+                ? 'Growth Command'
+                : 'Cafe Manager Desk'}
+            </span>
           </Link>
         </div>
       )}
 
-      {/* 2. OPERATIONS COMMAND (Consolidated Outlets & Operations Hub) */}
-      {(isOperations || isManager) && (
+      {/* 2. JANU BHAI CAFE OPERATIONS & OUTLETS (Operations Head & Superadmin) */}
+      {(isSuperAdmin || (isOperations && !isManager)) && (
         <div className="admin-nav-group">
-          <span className="admin-nav-group-title">OPERATIONS & OUTLETS</span>
+          <span className="admin-nav-group-title">CAFE OPERATIONS</span>
           <Link
             href="/admin/outlets"
-            className={`admin-nav-link ${isActive('/admin/outlets') || isActive('/admin/cafe-settings') ? 'active' : ''}`}
+            className={`admin-nav-link ${isActive('/admin/outlets') && !isActive('/admin/outlets/checklists') && !isActive('/admin/outlets/transfers') ? 'active' : ''}`}
           >
             <Store size={20} /> Outlets & Cafes
           </Link>
@@ -161,14 +170,82 @@ export default function SidebarNav() {
           >
             <Store size={20} /> Manager Observation Feed
           </Link>
+          <Link
+            href="/admin/outlets/checklists"
+            className={`admin-nav-link ${isActive('/admin/outlets/checklists') ? 'active' : ''}`}
+          >
+            <ClipboardCheck size={20} /> SOP Audits & Checklists
+          </Link>
+          <Link
+            href="/admin/outlets/transfers"
+            className={`admin-nav-link ${isActive('/admin/outlets/transfers') ? 'active' : ''}`}
+          >
+            <ArrowLeftRight size={20} /> Stock Transfers & POs
+          </Link>
+          <Link
+            href="/admin/staff"
+            className={`admin-nav-link ${isActive('/admin/staff') ? 'active' : ''}`}
+          >
+            <UserCheck size={20} /> Cafe Staff & Rosters
+          </Link>
         </div>
       )}
 
-      {/* 4. BRAND, GROWTH & EVENTS */}
-      {(isGrowth || isOperations) && (
+      {/* 3. STORE MANAGER OPERATIONS (Store Manager Only) */}
+      {isManager && !isSuperAdmin && !isOperations && (
+        <div className="admin-nav-group">
+          <span className="admin-nav-group-title">STORE DESK</span>
+          <Link
+            href="/admin/manager"
+            className={`admin-nav-link ${isActive('/admin/manager') ? 'active' : ''}`}
+          >
+            <Store size={20} /> Manager Shift Feed
+          </Link>
+          <Link
+            href="/admin/outlets/checklists"
+            className={`admin-nav-link ${isActive('/admin/outlets/checklists') ? 'active' : ''}`}
+          >
+            <ClipboardCheck size={20} /> Daily SOP Checklists
+          </Link>
+          <Link
+            href="/admin/outlets/transfers"
+            className={`admin-nav-link ${isActive('/admin/outlets/transfers') ? 'active' : ''}`}
+          >
+            <ArrowLeftRight size={20} /> Stock Transfers & Reorders
+          </Link>
+          <Link
+            href="/admin/staff"
+            className={`admin-nav-link ${isActive('/admin/staff') ? 'active' : ''}`}
+          >
+            <UserCheck size={20} /> Store Staff on Shift
+          </Link>
+          <Link
+            href="/admin/events"
+            className={`admin-nav-link ${isActive('/admin/events') ? 'active' : ''}`}
+          >
+            <Calendar size={20} /> Cafe Events in Store
+          </Link>
+          <Link
+            href="/pos"
+            className="admin-nav-link"
+            style={{ color: '#69f0ae' }}
+          >
+            <ShoppingCart size={20} /> Launch POS Register
+          </Link>
+        </div>
+      )}
+
+      {/* 4. JANU BHAI CAFE GROWTH & ACTIVATIONS (Growth, Operations Head, Superadmin) */}
+      {(isGrowth || isOperations || isSuperAdmin) && !isManager && (
         <div className="admin-nav-group">
           <span className="admin-nav-group-title">GROWTH & ACTIVATIONS</span>
-          {isGrowth && (
+          <Link
+            href="/admin/events"
+            className={`admin-nav-link ${isActive('/admin/events') ? 'active' : ''}`}
+          >
+            <Calendar size={20} /> Events & RSVP Engine
+          </Link>
+          {(isGrowth || isSuperAdmin) && (
             <Link
               href="/admin/growth"
               className={`admin-nav-link ${isActive('/admin/growth') ? 'active' : ''}`}
@@ -177,120 +254,87 @@ export default function SidebarNav() {
             </Link>
           )}
           <Link
-            href="/admin/events"
-            className={`admin-nav-link ${isActive('/admin/events') ? 'active' : ''}`}
+            href="/admin/reviews"
+            className={`admin-nav-link ${isActive('/admin/reviews') ? 'active' : ''}`}
           >
-            <Calendar size={20} /> Events & RSVP Engine
+            <Star size={20} /> Guest Experience Reviews
+          </Link>
+          {(isGrowth || isSuperAdmin) && (
+            <Link
+              href="/admin/articles"
+              className={`admin-nav-link ${isActive('/admin/articles') ? 'active' : ''}`}
+            >
+              <FileText size={20} /> Articles & AI Lore
+            </Link>
+          )}
+          <Link
+            href="/admin/media"
+            className={`admin-nav-link ${isActive('/admin/media') ? 'active' : ''}`}
+          >
+            <ImageIcon size={20} /> Media Asset Vault
           </Link>
         </div>
       )}
 
-      {/* 5. CATALOG & INVENTORY (Super Admin / Operations) */}
+      {/* 5. JANU BHAI COFFEE E-COMMERCE & D2C (STRICTLY SUPERADMIN ONLY) */}
       {isSuperAdmin && (
         <div className="admin-nav-group">
-          <span className="admin-nav-group-title">CATALOG</span>
+          <span className="admin-nav-group-title">ECOMMERCE & D2C</span>
           <Link href="/admin/products" className={`admin-nav-link ${isActive('/admin/products') ? 'active' : ''}`}>
-            <Package size={20} /> Products
+            <Package size={20} /> D2C Products
           </Link>
           <Link href="/admin/inventory" className={`admin-nav-link ${isActive('/admin/inventory') ? 'active' : ''}`}>
-            <Package size={20} /> Inventory
+            <Package size={20} /> Roastery Inventory
           </Link>
-        </div>
-      )}
-
-      {/* 6. SALES & ORDERS (Super Admin) */}
-      {isSuperAdmin && (
-        <div className="admin-nav-group">
-          <span className="admin-nav-group-title">SALES</span>
           <Link
             href="/admin/orders"
             className={`admin-nav-link ${isActive('/admin/orders') ? 'active' : ''}`}
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <ShoppingCart size={20} /> Orders
+              <ShoppingCart size={20} /> Online Orders
             </div>
             {pendingOrders > 0 && <span className="admin-badge">{pendingOrders}</span>}
           </Link>
           <Link href="/admin/coupons" className={`admin-nav-link ${isActive('/admin/coupons') ? 'active' : ''}`}>
-            <Tag size={20} /> Coupons
+            <Tag size={20} /> Discount Coupons
+          </Link>
+          <Link href="/admin/abandoned-carts" className={`admin-nav-link ${isActive('/admin/abandoned-carts') ? 'active' : ''}`}>
+            <ShoppingBag size={20} /> Abandoned Carts
+          </Link>
+          <Link href="/admin/customers" className={`admin-nav-link ${isActive('/admin/customers') ? 'active' : ''}`}>
+            <Users size={20} /> Online Customers
           </Link>
         </div>
       )}
 
-      {/* 7. USERS & ACCESS (Single Master Hub for Customers, Staff, and Admins) */}
-      {(isSuperAdmin || isOperations || isGrowth || isManager) && (
-        <div className="admin-nav-group">
-          <span className="admin-nav-group-title">USER MANAGEMENT</span>
-          <Link
-            href="/admin/users"
-            className={`admin-nav-link ${isActive('/admin/users') || isActive('/admin/customers') || isActive('/admin/staff') ? 'active' : ''}`}
-          >
-            <Users size={20} /> Users & Customers
-          </Link>
-        </div>
-      )}
-
-      {/* 8. CONTENT & REVIEWS (Super Admin & Growth) */}
-      {(isSuperAdmin || isGrowth) && (
-        <div className="admin-nav-group">
-          <span className="admin-nav-group-title">CONTENT & REVIEWS</span>
-          <Link href="/admin/reviews" className={`admin-nav-link ${isActive('/admin/reviews') ? 'active' : ''}`}>
-            <Star size={20} /> Customer Reviews
-          </Link>
-          <Link href="/admin/articles" className={`admin-nav-link ${isActive('/admin/articles') ? 'active' : ''}`}>
-            <FileText size={20} /> Articles (AI)
-          </Link>
-          <Link href="/admin/media" className={`admin-nav-link ${isActive('/admin/media') ? 'active' : ''}`}>
-            <ImageIcon size={20} /> Media Library
-          </Link>
-        </div>
-      )}
-
-      {/* 9. ANALYTICS & REPORTS (Super Admin & Operations) */}
-      {(isSuperAdmin || isOperations) && (
-        <div className="admin-nav-group">
-          <span className="admin-nav-group-title">ANALYTICS</span>
-          <Link
-            href="/admin/analytics"
-            className={`admin-nav-link ${isActive('/admin/analytics') && !isActive('/admin/analytics/consolidated') && !isActive('/admin/analytics/comparison') ? 'active' : ''}`}
-          >
-            <BarChart3 size={20} /> Reports
-          </Link>
-          {isSuperAdmin && (
-            <>
-              <Link
-                href="/admin/analytics/consolidated"
-                className={`admin-nav-link ${isActive('/admin/analytics/consolidated') ? 'active' : ''}`}
-              >
-                <BarChart3 size={20} /> Consolidated
-              </Link>
-              <Link
-                href="/admin/analytics/comparison"
-                className={`admin-nav-link ${isActive('/admin/analytics/comparison') ? 'active' : ''}`}
-              >
-                <BarChart3 size={20} /> Outlet Comparison
-              </Link>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* 10. SYSTEM CONFIGURATION (Super Admin only) */}
+      {/* 6. SYSTEM, GOVERNANCE & GLOBAL CONFIG (STRICTLY SUPERADMIN ONLY) */}
       {isSuperAdmin && (
         <div className="admin-nav-group">
-          <span className="admin-nav-group-title">SYSTEM</span>
+          <span className="admin-nav-group-title">SYSTEM & GOVERNANCE</span>
+          <Link
+            href="/admin/users"
+            className={`admin-nav-link ${isActive('/admin/users') ? 'active' : ''}`}
+          >
+            <Shield size={20} /> Master Access Control
+          </Link>
+          <Link
+            href="/admin/analytics/consolidated"
+            className={`admin-nav-link ${isActive('/admin/analytics/consolidated') ? 'active' : ''}`}
+          >
+            <BarChart3 size={20} /> Consolidated P&L
+          </Link>
           <Link
             href="/admin/system/audit-logs"
             className={`admin-nav-link ${isActive('/admin/system/audit-logs') ? 'active' : ''}`}
           >
-            <ClipboardList size={20} /> Audit Logs
+            <ClipboardList size={20} /> Security Audit Logs
           </Link>
           <Link href="/admin/settings" className={`admin-nav-link ${isActive('/admin/settings') ? 'active' : ''}`}>
             <Settings size={20} /> Store Settings
           </Link>
           <Link href="/admin/shipping" className={`admin-nav-link ${isActive('/admin/shipping') ? 'active' : ''}`}>
-            <Truck size={20} /> Shipping Zones
+            <Truck size={20} /> Courier & Shipping
           </Link>
         </div>
       )}

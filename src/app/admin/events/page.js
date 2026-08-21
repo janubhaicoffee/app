@@ -20,7 +20,6 @@ import {
   X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import StaffGuard from '@/components/StaffGuard';
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState([]);
@@ -161,11 +160,7 @@ export default function AdminEventsPage() {
   );
 
   return (
-    <StaffGuard
-      allowedRoles={['superadmin', 'owner', 'operations_head', 'operations', 'operation_manager', 'growth', 'brand_leader', 'manager', 'store_manager']}
-      title="Brand Events & RSVP Engine"
-    >
-      <div style={{ padding: '16px 20px 60px', color: '#f5f0eb' }}>
+    <div style={{ padding: '16px 20px 60px', color: '#f5f0eb' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
           <div>
@@ -680,6 +675,5 @@ export default function AdminEventsPage() {
           </div>
         )}
       </div>
-    </StaffGuard>
   );
 }

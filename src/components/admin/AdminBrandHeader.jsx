@@ -181,7 +181,7 @@ export default function AdminBrandHeader() {
               textOverflow: 'ellipsis',
             }}
           >
-            JANU BHAI
+            {isSuperAdmin ? 'JANU BHAI' : 'JANU BHAI CAFE'}
           </h2>
           <p
             style={{
@@ -194,7 +194,13 @@ export default function AdminBrandHeader() {
               lineHeight: 1,
             }}
           >
-            Roastery Command
+            {isSuperAdmin
+              ? 'Command HQ (God Mode)'
+              : ['operations_head', 'operations', 'operations_manager', 'operation_manager', 'area_manager'].includes(userRole)
+              ? 'Operations Command'
+              : ['growth', 'brand_leader'].includes(userRole)
+              ? 'Brand & Growth Hub'
+              : 'Store Manager Desk'}
           </p>
         </div>
       </div>

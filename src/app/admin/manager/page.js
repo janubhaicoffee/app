@@ -28,7 +28,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import StaffGuard from '@/components/StaffGuard';
 import './manager.css';
 
 const DEFAULT_CHECKPOINTS = [
@@ -513,11 +512,7 @@ export default function ManagerDashboard() {
   };
 
   return (
-    <StaffGuard
-      allowedRoles={['manager', 'store_manager', 'operations_head', 'operations', 'superadmin', 'owner']}
-      title="Manager Store Control"
-    >
-      <div className="manager-dashboard-container">
+    <div className="manager-dashboard-container">
       {/* Hidden file inputs */}
       <input
         type="file"
@@ -1556,7 +1551,6 @@ export default function ManagerDashboard() {
           )}
         </div>
       )}
-      </div>
-    </StaffGuard>
+    </div>
   );
 }

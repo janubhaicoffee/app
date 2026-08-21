@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import StaffGuard from '@/components/StaffGuard';
 import './growth.css';
 
 export default function GrowthDashboard() {
@@ -263,11 +262,7 @@ export default function GrowthDashboard() {
   };
 
   return (
-    <StaffGuard
-      allowedRoles={['growth', 'brand_leader', 'operations_head', 'operations', 'superadmin', 'owner']}
-      title="Brand & Growth Leader Hub"
-    >
-      <div className="growth-dashboard-container">
+    <div className="growth-dashboard-container">
       {/* 1. Header Card */}
       <motion.div
         className="growth-header-card"
@@ -1040,7 +1035,6 @@ export default function GrowthDashboard() {
           </div>
         </div>
       )}
-      </div>
-    </StaffGuard>
+    </div>
   );
 }

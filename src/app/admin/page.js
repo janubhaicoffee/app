@@ -82,6 +82,8 @@ const statusColors = {
 };
 
 export default function AdminDashboard() {
+  const [userRole, setUserRole] = useState('superadmin');
+  const [staffName, setStaffName] = useState('');
   const [data, setData] = useState({
     products: 0,
     customers: 0,
@@ -89,6 +91,11 @@ export default function AdminDashboard() {
     articles: 0,
     revenue: 0,
     pendingReviews: 0,
+    outlets: 0,
+    events: 0,
+    rsvps: 0,
+    outletsList: [],
+    upcomingEvents: [],
     chartData: [],
     recentOrders: [],
     lowStockAlerts: [],
@@ -106,6 +113,19 @@ export default function AdminDashboard() {
       } = await supabase.auth.getSession();
       if (!session) return;
 
+      // 1. Fetch Role context
+      const checkRes = await fetch('/api/admin/data?type=check', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (checkData.role) {
+          setUserRole(checkData.role);
+          setStaffName(checkData.staff?.display_name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0]);
+        }
+      }
+
+      // 2. Fetch Dashboard stats
       const res = await fetch('/api/admin/data?type=dashboard', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
@@ -120,6 +140,11 @@ export default function AdminDashboard() {
             articles: json.data.articles || 0,
             revenue: json.data.revenue || 0,
             pendingReviews: json.data.pendingReviews || 0,
+            outlets: json.data.outlets || 0,
+            events: json.data.events || 0,
+            rsvps: json.data.rsvps || 0,
+            outletsList: json.data.outletsList || [],
+            upcomingEvents: json.data.upcomingEvents || [],
             chartData: json.data.chartData || [],
             recentOrders: json.data.recentOrders || [],
             lowStockAlerts: json.data.lowStockAlerts || [],
@@ -151,14 +176,78 @@ export default function AdminDashboard() {
     );
   }
 
+  const isSuperAdmin = userRole === 'superadmin' || userRole === 'owner';
+  const isOperations = userRole === 'operations_head' || userRole === 'operations' || userRole === 'operation_manager' || userRole === 'operations_manager' || userRole === 'area_manager';
+  const isGrowth = userRole === 'growth' || userRole === 'brand_leader';
+  const isManager = userRole === 'manager' || userRole === 'store_manager';
+
   return (
     <div>
-      {/* Header */}
+      {/* Header with Dynamic Role Indicator */}
       <div className="admin-header">
         <div>
-          <h1>Dashboard Overview</h1>
-          <p style={{ margin: '0.3rem 0 0', color: 'var(--text-secondary, #cbb9a8)', fontSize: '0.9rem' }}>
-            Welcome back, Janu Bhai Roastery Command
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <h1 style={{ margin: 0 }}>
+              {isSuperAdmin
+                ? 'Roastery Command'
+                : isOperations
+                ? 'Operations Command Center'
+                : isGrowth
+                ? 'Growth & Activations Command'
+                : isManager
+                ? 'Cafe Manager Dashboard'
+                : 'Command Dashboard'}
+            </h1>
+            <span
+              style={{
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+                padding: '4px 10px',
+                borderRadius: '100px',
+                background: isSuperAdmin
+                  ? 'rgba(216, 154, 30, 0.2)'
+                  : isOperations
+                  ? 'rgba(251, 191, 36, 0.2)'
+                  : isGrowth
+                  ? 'rgba(236, 72, 153, 0.2)'
+                  : 'rgba(59, 130, 246, 0.2)',
+                color: isSuperAdmin
+                  ? '#d89a1e'
+                  : isOperations
+                  ? '#fbbf24'
+                  : isGrowth
+                  ? '#f472b6'
+                  : '#60a5fa',
+                border: `1px solid ${
+                  isSuperAdmin
+                    ? 'rgba(216, 154, 30, 0.4)'
+                    : isOperations
+                    ? 'rgba(251, 191, 36, 0.4)'
+                    : isGrowth
+                    ? 'rgba(236, 72, 153, 0.4)'
+                    : 'rgba(59, 130, 246, 0.4)'
+                }`,
+              }}
+            >
+              {isSuperAdmin
+                ? '⚡ GOD MODE (FULL ACCESS)'
+                : isOperations
+                ? '🛡️ OPERATIONS HEAD'
+                : isGrowth
+                ? '✨ BRAND & GROWTH'
+                : '🏪 STORE MANAGER'}
+            </span>
+          </div>
+          <p style={{ margin: '0.4rem 0 0', color: 'var(--text-secondary, #cbb9a8)', fontSize: '0.88rem' }}>
+            {isSuperAdmin
+              ? 'Complete multi-outlet financial switchboard, system configuration, and god-mode access.'
+              : isOperations
+              ? `Welcome back, ${staffName || 'Operations Head'}! Multi-outlet logistics, stock alarms, live events, and SOP compliance.`
+              : isGrowth
+              ? `Welcome back, ${staffName || 'Growth Leader'}! Events & RSVPs, customer reviews, AI content, and brand activations.`
+              : `Welcome back, ${staffName || 'Store Manager'}! Daily cafe sales, shifts, checklists, and inventory observation.`}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
@@ -196,102 +285,342 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* 5 KPI Cards */}
+      {/* 5 SMART ROLE-CUSTOMIZED KPI CARDS */}
       <div className="stats-grid">
-        <div className="stat-card green">
-          <h3>
-            <DollarSign size={14} style={{ display: 'inline', marginRight: 4 }} /> Total Revenue
-          </h3>
-          <p className="stat-value">
-            <AnimatedNumber value={data.revenue} isCurrency={true} />
-          </p>
-          <p className="stat-sub">Lifetime orders</p>
-        </div>
-        <Link href="/admin/orders" style={{ textDecoration: 'none' }}>
-          <div className="stat-card gold" style={{ cursor: 'pointer' }}>
-            <h3>
-              <ShoppingCart size={14} style={{ display: 'inline', marginRight: 4 }} /> Total Orders
-            </h3>
-            <p className="stat-value">
-              <AnimatedNumber value={data.orders} />
-            </p>
-            <p className="stat-sub">Across all channels</p>
-          </div>
-        </Link>
-        <Link href="/admin/users?tab=customers" style={{ textDecoration: 'none' }}>
-          <div className="stat-card blue" style={{ cursor: 'pointer' }}>
-            <h3>
-              <Users size={14} style={{ display: 'inline', marginRight: 4 }} /> Customers
-            </h3>
-            <p className="stat-value">
-              <AnimatedNumber value={data.customers} />
-            </p>
-            <p className="stat-sub">Registered accounts</p>
-          </div>
-        </Link>
-        <Link href="/admin/products" style={{ textDecoration: 'none' }}>
-          <div className="stat-card" style={{ cursor: 'pointer' }}>
-            <h3>
-              <Package size={14} style={{ display: 'inline', marginRight: 4 }} /> Products
-            </h3>
-            <p className="stat-value">
-              <AnimatedNumber value={data.products} />
-            </p>
-            <p className="stat-sub">In live catalog</p>
-          </div>
-        </Link>
-        <Link href="/admin/reviews" style={{ textDecoration: 'none' }}>
-          <div className="stat-card red" style={{ cursor: 'pointer' }}>
-            <h3>
-              <Star size={14} style={{ display: 'inline', marginRight: 4 }} /> Pending Reviews
-            </h3>
-            <p className="stat-value">
-              <AnimatedNumber value={data.pendingReviews} />
-            </p>
-            <p className="stat-sub">Awaiting moderation</p>
-          </div>
-        </Link>
+        {isSuperAdmin && (
+          <>
+            <div className="stat-card green">
+              <h3>
+                <DollarSign size={14} style={{ display: 'inline', marginRight: 4 }} /> Total Revenue
+              </h3>
+              <p className="stat-value">
+                <AnimatedNumber value={data.revenue} isCurrency={true} />
+              </p>
+              <p className="stat-sub">Lifetime orders (God Mode)</p>
+            </div>
+            <Link href="/admin/orders" style={{ textDecoration: 'none' }}>
+              <div className="stat-card gold" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <ShoppingCart size={14} style={{ display: 'inline', marginRight: 4 }} /> Total Orders
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.orders} />
+                </p>
+                <p className="stat-sub">Storefront & POS</p>
+              </div>
+            </Link>
+            <Link href="/admin/users?tab=customers" style={{ textDecoration: 'none' }}>
+              <div className="stat-card blue" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Users size={14} style={{ display: 'inline', marginRight: 4 }} /> Customers
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.customers} />
+                </p>
+                <p className="stat-sub">Registered accounts</p>
+              </div>
+            </Link>
+            <Link href="/admin/products" style={{ textDecoration: 'none' }}>
+              <div className="stat-card" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Package size={14} style={{ display: 'inline', marginRight: 4 }} /> Products
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.products} />
+                </p>
+                <p className="stat-sub">In live catalog</p>
+              </div>
+            </Link>
+            <Link href="/admin/reviews" style={{ textDecoration: 'none' }}>
+              <div className="stat-card red" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Star size={14} style={{ display: 'inline', marginRight: 4 }} /> Pending Reviews
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.pendingReviews} />
+                </p>
+                <p className="stat-sub">Awaiting moderation</p>
+              </div>
+            </Link>
+          </>
+        )}
+
+        {isOperations && !isSuperAdmin && (
+          <>
+            <Link href="/admin/outlets" style={{ textDecoration: 'none' }}>
+              <div className="stat-card gold" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Store size={14} style={{ display: 'inline', marginRight: 4 }} /> Active Outlets
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.outlets || 1} />
+                </p>
+                <p className="stat-sub">Cafes & Roasteries</p>
+              </div>
+            </Link>
+            <Link href="/admin/events" style={{ textDecoration: 'none' }}>
+              <div className="stat-card blue" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Calendar size={14} style={{ display: 'inline', marginRight: 4 }} /> Brand Events
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.events || 0} />
+                </p>
+                <p className="stat-sub">Masterclasses & Pop-ups</p>
+              </div>
+            </Link>
+            <Link href="/admin/events" style={{ textDecoration: 'none' }}>
+              <div className="stat-card green" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Users size={14} style={{ display: 'inline', marginRight: 4 }} /> Confirmed RSVPs
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.rsvps || 0} />
+                </p>
+                <p className="stat-sub">Live Guest Registrations</p>
+              </div>
+            </Link>
+            <Link href="/admin/inventory" style={{ textDecoration: 'none' }}>
+              <div className="stat-card red" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <AlertTriangle size={14} style={{ display: 'inline', marginRight: 4 }} /> Stock Alarms
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.lowStockAlerts?.length || 0} />
+                </p>
+                <p className="stat-sub">Low stock reorder items</p>
+              </div>
+            </Link>
+            <Link href="/admin/operations" style={{ textDecoration: 'none' }}>
+              <div className="stat-card" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Shield size={14} style={{ display: 'inline', marginRight: 4 }} /> Operations Control
+                </h3>
+                <p className="stat-value" style={{ fontSize: '1.4rem' }}>
+                  ACTIVE
+                </p>
+                <p className="stat-sub">Checklists & Transfers</p>
+              </div>
+            </Link>
+          </>
+        )}
+
+        {isGrowth && !isSuperAdmin && (
+          <>
+            <Link href="/admin/events" style={{ textDecoration: 'none' }}>
+              <div className="stat-card gold" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Calendar size={14} style={{ display: 'inline', marginRight: 4 }} /> Published Events
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.events || 0} />
+                </p>
+                <p className="stat-sub">Workshops & Tastings</p>
+              </div>
+            </Link>
+            <Link href="/admin/events" style={{ textDecoration: 'none' }}>
+              <div className="stat-card green" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Users size={14} style={{ display: 'inline', marginRight: 4 }} /> Event RSVPs
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.rsvps || 0} />
+                </p>
+                <p className="stat-sub">Confirmed Attendees</p>
+              </div>
+            </Link>
+            <Link href="/admin/reviews" style={{ textDecoration: 'none' }}>
+              <div className="stat-card red" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Star size={14} style={{ display: 'inline', marginRight: 4 }} /> Reviews Queue
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.pendingReviews || 0} />
+                </p>
+                <p className="stat-sub">Awaiting moderation</p>
+              </div>
+            </Link>
+            <Link href="/admin/articles" style={{ textDecoration: 'none' }}>
+              <div className="stat-card blue" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Sparkles size={14} style={{ display: 'inline', marginRight: 4 }} /> AI Articles
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.articles || 0} />
+                </p>
+                <p className="stat-sub">SEO & Coffee Lore</p>
+              </div>
+            </Link>
+            <Link href="/admin/growth" style={{ textDecoration: 'none' }}>
+              <div className="stat-card" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Activity size={14} style={{ display: 'inline', marginRight: 4 }} /> Growth Pipeline
+                </h3>
+                <p className="stat-value" style={{ fontSize: '1.4rem' }}>
+                  ACTIVE
+                </p>
+                <p className="stat-sub">B2B & Audience Hub</p>
+              </div>
+            </Link>
+          </>
+        )}
+
+        {isManager && !isSuperAdmin && !isOperations && (
+          <>
+            <Link href="/admin/manager" style={{ textDecoration: 'none' }}>
+              <div className="stat-card gold" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Store size={14} style={{ display: 'inline', marginRight: 4 }} /> Store Shift Feed
+                </h3>
+                <p className="stat-value" style={{ fontSize: '1.4rem' }}>
+                  OPEN
+                </p>
+                <p className="stat-sub">Daily store observations</p>
+              </div>
+            </Link>
+            <Link href="/admin/events" style={{ textDecoration: 'none' }}>
+              <div className="stat-card blue" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <Calendar size={14} style={{ display: 'inline', marginRight: 4 }} /> Cafe Events
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.events || 0} />
+                </p>
+                <p className="stat-sub">Active Registrations</p>
+              </div>
+            </Link>
+            <Link href="/admin/inventory" style={{ textDecoration: 'none' }}>
+              <div className="stat-card red" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <AlertTriangle size={14} style={{ display: 'inline', marginRight: 4 }} /> Low Stock
+                </h3>
+                <p className="stat-value">
+                  <AnimatedNumber value={data.lowStockAlerts?.length || 0} />
+                </p>
+                <p className="stat-sub">Cafe inventory alerts</p>
+              </div>
+            </Link>
+            <Link href="/admin/outlets/checklists" style={{ textDecoration: 'none' }}>
+              <div className="stat-card green" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <ClipboardCheck size={14} style={{ display: 'inline', marginRight: 4 }} /> SOP Checklists
+                </h3>
+                <p className="stat-value" style={{ fontSize: '1.4rem' }}>
+                  COMPLIANT
+                </p>
+                <p className="stat-sub">Store standards</p>
+              </div>
+            </Link>
+            <Link href="/pos" style={{ textDecoration: 'none' }}>
+              <div className="stat-card" style={{ cursor: 'pointer' }}>
+                <h3>
+                  <ShoppingCart size={14} style={{ display: 'inline', marginRight: 4 }} /> POS Register
+                </h3>
+                <p className="stat-value" style={{ fontSize: '1.4rem' }}>
+                  READY
+                </p>
+                <p className="stat-sub">Launch POS Terminal</p>
+              </div>
+            </Link>
+          </>
+        )}
       </div>
 
-      {/* Operations Quick Launch Bar */}
+      {/* Role-Specific Quick Launch & Live Matrix Bar */}
       <div
         className="admin-card"
         style={{
           padding: '1.2rem 1.5rem',
           marginBottom: '1.8rem',
-          background: 'linear-gradient(135deg, rgba(58, 36, 31, 0.85) 0%, rgba(216, 154, 30, 0.15) 100%)',
-          border: '1px solid rgba(216, 154, 30, 0.3)',
+          background: isSuperAdmin
+            ? 'linear-gradient(135deg, rgba(58, 36, 31, 0.85) 0%, rgba(216, 154, 30, 0.15) 100%)'
+            : isOperations
+            ? 'linear-gradient(135deg, rgba(40, 28, 20, 0.9) 0%, rgba(245, 158, 11, 0.15) 100%)'
+            : isGrowth
+            ? 'linear-gradient(135deg, rgba(38, 22, 34, 0.9) 0%, rgba(236, 72, 153, 0.15) 100%)'
+            : 'linear-gradient(135deg, rgba(20, 30, 48, 0.9) 0%, rgba(59, 130, 246, 0.15) 100%)',
+          border: `1px solid ${
+            isSuperAdmin
+              ? 'rgba(216, 154, 30, 0.3)'
+              : isOperations
+              ? 'rgba(245, 158, 11, 0.3)'
+              : isGrowth
+              ? 'rgba(236, 72, 153, 0.3)'
+              : 'rgba(59, 130, 246, 0.3)'
+          }`,
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-gold, #d89a1e)', fontFamily: 'var(--font-playfair)' }}>
-              <Store size={20} />
-              Operations Command Suite
+            <div style={{ fontWeight: 800, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: isSuperAdmin ? 'var(--accent-gold, #d89a1e)' : isOperations ? '#fbbf24' : isGrowth ? '#f472b6' : '#60a5fa', fontFamily: 'var(--font-playfair)' }}>
+              {isSuperAdmin ? <Shield size={20} /> : isOperations ? <Store size={20} /> : isGrowth ? <Activity size={20} /> : <Store size={20} />}
+              {isSuperAdmin
+                ? 'Roastery God Mode Command Suite'
+                : isOperations
+                ? 'Operations Logistics & Events Hub'
+                : isGrowth
+                ? 'Growth, Events & Audience Studio'
+                : 'Store Manager Operations Desk'}
             </div>
             <p style={{ margin: '0.3rem 0 0', fontSize: '0.85rem', color: 'var(--text-secondary, #cbb9a8)' }}>
-              Manage multi-outlet live switchboards, inter-cafe stock transfers, purchase orders, SOP audits, and CCTV streams.
+              {isSuperAdmin
+                ? 'Manage multi-outlet live switchboards, raw audit logs, store settings, and financial consolidation.'
+                : isOperations
+                ? 'Direct access to multi-outlet switchboards, stock transfers, purchase orders, SOP audits, and event rosters.'
+                : isGrowth
+                ? 'Create upcoming coffee events, manage attendee registrations, moderate customer reviews, and publish AI articles.'
+                : 'Monitor daily store checklists, shift logs, cafe register balances, and local customer orders.'}
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-            <Link href="/admin/operations" className="admin-btn admin-btn-sm">
-              <Shield size={14} /> Operations Book
-            </Link>
-            <Link href="/admin/manager" className="admin-btn-outline admin-btn-sm">
-              <Store size={14} /> Manager Feed
-            </Link>
-            <Link href="/admin/growth" className="admin-btn-outline admin-btn-sm">
-              <Activity size={14} /> Growth & BD
-            </Link>
-            <Link href="/admin/events" className="admin-btn-outline admin-btn-sm">
-              <Calendar size={14} /> Events & RSVPs
-            </Link>
-            <Link href="/admin/outlets/operations" className="admin-btn-outline admin-btn-sm">
-              <Store size={14} /> Outlets Hub
-            </Link>
-            <Link href="/admin/outlets/checklists" className="admin-btn-outline admin-btn-sm">
-              <ClipboardCheck size={14} /> SOP Audits
-            </Link>
+            {(isSuperAdmin || isOperations) && (
+              <>
+                <Link href="/admin/operations" className="admin-btn admin-btn-sm">
+                  <Shield size={14} /> Operations Book
+                </Link>
+                <Link href="/admin/events" className="admin-btn-outline admin-btn-sm">
+                  <Calendar size={14} /> Events & RSVPs
+                </Link>
+                <Link href="/admin/outlets" className="admin-btn-outline admin-btn-sm">
+                  <Store size={14} /> Outlets & Cafes
+                </Link>
+                <Link href="/admin/manager" className="admin-btn-outline admin-btn-sm">
+                  <Store size={14} /> Manager Feed
+                </Link>
+                <Link href="/admin/outlets/checklists" className="admin-btn-outline admin-btn-sm">
+                  <ClipboardCheck size={14} /> SOP Audits
+                </Link>
+              </>
+            )}
+            {isGrowth && !isSuperAdmin && !isOperations && (
+              <>
+                <Link href="/admin/events" className="admin-btn admin-btn-sm">
+                  <Calendar size={14} /> Events & RSVP Engine
+                </Link>
+                <Link href="/admin/growth" className="admin-btn-outline admin-btn-sm">
+                  <Activity size={14} /> Growth & BD
+                </Link>
+                <Link href="/admin/reviews" className="admin-btn-outline admin-btn-sm">
+                  <Star size={14} /> Review Moderation
+                </Link>
+                <Link href="/admin/articles" className="admin-btn-outline admin-btn-sm">
+                  <Sparkles size={14} /> AI Content Studio
+                </Link>
+              </>
+            )}
+            {isManager && !isSuperAdmin && !isOperations && (
+              <>
+                <Link href="/admin/manager" className="admin-btn admin-btn-sm">
+                  <Store size={14} /> Manager Shift Feed
+                </Link>
+                <Link href="/admin/outlets/checklists" className="admin-btn-outline admin-btn-sm">
+                  <ClipboardCheck size={14} /> SOP Checklists
+                </Link>
+                <Link href="/pos" className="admin-btn-outline admin-btn-sm">
+                  <ShoppingCart size={14} /> Open POS
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

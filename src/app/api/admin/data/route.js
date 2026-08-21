@@ -104,6 +104,29 @@ export async function GET(request) {
     if (type === 'check') {
       return NextResponse.json({ isAdmin: true, role: auth.role || 'superadmin', staff: auth.staff || null });
     }
+
+    const isSuper = auth.role === 'superadmin' || auth.role === 'owner';
+    const ecommerceRestrictedTypes = [
+      'products',
+      'orders',
+      'order_detail',
+      'customers',
+      'customer_detail',
+      'coupons',
+      'abandoned_carts',
+      'settings',
+      'shipping_zones',
+      'inventory_log',
+      'audit_log',
+      'staff',
+    ];
+
+    if (!isSuper && ecommerceRestrictedTypes.includes(type)) {
+      return NextResponse.json(
+        { error: 'Forbidden: Janu Bhai Coffee eCommerce is restricted to Superadmin' },
+        { status: 403 }
+      );
+    }
     if (type === 'dashboard') {
       const [
         pCount,
@@ -111,10 +134,15 @@ export async function GET(request) {
         oCount,
         aCount,
         rCount,
+        outletsCount,
+        eventsCount,
+        rsvpsCount,
         { data: allOrders },
         { data: recentOrders },
         { data: lowStock },
         { data: topItems },
+        { data: outletsList },
+        { data: upcomingEvents },
       ] = await Promise.all([
         supabase.from('products').select('*', { count: 'exact', head: true }),
         supabase.from('customers').select('*', { count: 'exact', head: true }),
@@ -124,6 +152,9 @@ export async function GET(request) {
           .from('reviews')
           .select('*', { count: 'exact', head: true })
           .eq('is_approved', false),
+        supabase.from('outlets').select('*', { count: 'exact', head: true }),
+        supabase.from('events').select('*', { count: 'exact', head: true }),
+        supabase.from('event_rsvps').select('*', { count: 'exact', head: true }),
         supabase.from('orders').select('total_amount, status, created_at'),
         supabase
           .from('orders')
@@ -140,6 +171,8 @@ export async function GET(request) {
           .from('order_items')
           .select('product_id, product_name, quantity, price, orders!inner(status, created_at)')
           .limit(10),
+        supabase.from('outlets').select('id, name, code, status, address').limit(10),
+        supabase.from('events').select('id, title, event_date, start_time, location_name, capacity, rsvp_count').order('event_date', { ascending: true }).limit(5),
       ]);
       let topProducts = [];
       if (topItems?.length) {
@@ -192,6 +225,11 @@ export async function GET(request) {
           orders: oCount || 0,
           articles: aCount || 0,
           pendingReviews: rCount || 0,
+          outlets: outletsCount || 0,
+          events: eventsCount || 0,
+          rsvps: rsvpsCount || 0,
+          outletsList: outletsList || [],
+          upcomingEvents: upcomingEvents || [],
           revenue,
           chartData: Object.values(chartDataMap),
           recentOrders: recentOrders || [],
@@ -535,6 +573,29 @@ export async function POST(request) {
     const { supabase, adminEmail } = auth;
     const body = await request.json();
     const { action, payload, id } = body;
+
+    const isSuper = auth.role === 'superadmin' || auth.role === 'owner';
+    const ecommerceRestrictedActions = [
+      'create_product',
+      'update_product',
+      'delete_product',
+      'update_order_status',
+      'bulk_update_orders',
+      'delete_order',
+      'save_settings',
+      'create_shipping_zone',
+      'update_shipping_zone',
+      'delete_shipping_zone',
+      'delete_user',
+      'sync_facebook_data',
+    ];
+
+    if (!isSuper && ecommerceRestrictedActions.includes(action)) {
+      return NextResponse.json(
+        { error: 'Forbidden: Janu Bhai Coffee eCommerce operations are restricted to Superadmin' },
+        { status: 403 }
+      );
+    }
     if (action === 'create_product') {
       const insertPayload = {
         ...payload,

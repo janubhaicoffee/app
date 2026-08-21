@@ -27,7 +27,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import StaffGuard from '@/components/StaffGuard';
 import './operations.css';
 
 const DEFAULT_14_AREAS = [
@@ -324,11 +323,7 @@ export default function OperationsHeadDashboard() {
   };
 
   return (
-    <StaffGuard
-      allowedRoles={['operations_head', 'operations', 'operation_manager', 'superadmin', 'owner']}
-      title="Operations Head Control Book"
-    >
-      <div className="operations-dashboard-container">
+    <div className="operations-dashboard-container">
       {/* 1. Header Card */}
       <motion.div
         className="operations-header-card"
@@ -1493,7 +1488,6 @@ export default function OperationsHeadDashboard() {
           </div>
         </div>
       )}
-      </div>
-    </StaffGuard>
+    </div>
   );
 }
