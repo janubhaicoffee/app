@@ -10,8 +10,11 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
     }
 
-    // Check if the user is a superadmin
+    // Check if user is superadmin via env email or admin_profiles
     let isSuperAdmin = false;
+    let userRole = 'staff';
+    let hasGlobalOutletAccess = false;
+
     try {
       const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
       if (userData?.user) {
@@ -21,13 +24,49 @@ export async function GET(request) {
           .filter(Boolean);
         if (adminEmails.includes(userData.user.email?.toLowerCase())) {
           isSuperAdmin = true;
+          userRole = 'superadmin';
+          hasGlobalOutletAccess = true;
+        } else {
+          // Check admin_profiles
+          const { data: adminProf } = await supabaseAdmin
+            .from('admin_profiles')
+            .select('*')
+            .or(`phone.eq.${userData.user.phone || ''},email.eq.${userData.user.email || ''}`)
+            .maybeSingle();
+
+          if (adminProf) {
+            userRole = adminProf.role || 'superadmin';
+            if (['superadmin', 'owner', 'operations_head', 'growth', 'brand_leader', 'operations_manager', 'operation_manager', 'area_manager'].includes(userRole)) {
+              hasGlobalOutletAccess = true;
+            }
+          } else {
+            // Check outlet_staff for role
+            const emailFilter = userData.user.email ? `email.eq.${userData.user.email}` : '';
+            const phoneFilter = userData.user.phone ? `phone.eq.${userData.user.phone}` : '';
+            const userIdFilter = `user_id.eq.${userId}`;
+            const orFilter = [userIdFilter, emailFilter, phoneFilter].filter(Boolean).join(',');
+
+            const { data: staffMember } = await supabaseAdmin
+              .from('outlet_staff')
+              .select('*')
+              .or(orFilter)
+              .eq('is_active', true)
+              .maybeSingle();
+
+            if (staffMember) {
+              userRole = staffMember.role || 'staff';
+              if (['superadmin', 'owner', 'operations_head', 'growth', 'brand_leader', 'operations_manager', 'operation_manager', 'area_manager'].includes(userRole)) {
+                hasGlobalOutletAccess = true;
+              }
+            }
+          }
         }
       }
     } catch (err) {
-      console.error('Error checking superadmin status in POS outlets:', err);
+      console.error('Error checking role in POS outlets:', err);
     }
 
-    if (isSuperAdmin) {
+    if (isSuperAdmin || hasGlobalOutletAccess) {
       const { data: outlets, error: outletsError } = await supabaseAdmin
         .from('outlets')
         .select('*')
@@ -35,7 +74,13 @@ export async function GET(request) {
         .order('name', { ascending: true });
 
       if (outletsError) throw outletsError;
-      return NextResponse.json({ success: true, data: outlets || [], isSuperAdmin: true });
+      return NextResponse.json({
+        success: true,
+        data: outlets || [],
+        isSuperAdmin,
+        role: userRole,
+        canSwitchOutlets: true,
+      });
     }
 
     const { data: staffRecords, error: staffError } = await supabaseAdmin
@@ -47,10 +92,10 @@ export async function GET(request) {
     if (staffError) throw staffError;
 
     if (!staffRecords || staffRecords.length === 0) {
-      return NextResponse.json({ success: true, data: [] });
+      return NextResponse.json({ success: true, data: [], role: userRole, canSwitchOutlets: false });
     }
 
-    const outletIds = staffRecords.map((r) => r.outlet_id);
+    const outletIds = staffRecords.map((r) => r.outlet_id).filter(Boolean);
 
     const { data: outlets, error: outletsError } = await supabaseAdmin
       .from('outlets')
@@ -61,7 +106,13 @@ export async function GET(request) {
 
     if (outletsError) throw outletsError;
 
-    return NextResponse.json({ success: true, data: outlets || [], isSuperAdmin: false });
+    return NextResponse.json({
+      success: true,
+      data: outlets || [],
+      isSuperAdmin: false,
+      role: userRole,
+      canSwitchOutlets: outlets && outlets.length > 1,
+    });
   } catch (error) {
     console.error('POS Outlets GET error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

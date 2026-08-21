@@ -266,7 +266,7 @@ export default function OutletDetail() {
       </div>
 
       <div className="admin-tabs">
-        {['overview', 'operations', 'inventory', 'orders', 'staff', 'expenses', 'sources', 'commissions'].map((tab) => (
+        {['overview', 'operations', 'inventory', 'orders', 'staff', 'expenses', 'sources'].map((tab) => (
           <button
             key={tab}
             className={`admin-tab ${activeTab === tab ? 'active' : ''}`}
@@ -543,7 +543,7 @@ export default function OutletDetail() {
               <Users size={40} />
               <h3>No staff assigned</h3>
               <p>Add staff members to this outlet to get started.</p>
-              <Link href="/admin/staff" className="admin-btn-outline">
+              <Link href="/admin/users?tab=staff" className="admin-btn-outline">
                 <UserPlus size={14} /> Manage Staff
               </Link>
             </div>
@@ -614,8 +614,6 @@ export default function OutletDetail() {
       )}
 
       {activeTab === 'sources' && <OutletSourcesTab outletId={params.id} />}
-
-      {activeTab === 'commissions' && <OutletCommissionsTab outletId={params.id} />}
 
       {activeTab === 'expenses' && (
         <>
@@ -831,14 +829,14 @@ function OutletSourcesTab({ outletId }) {
               <th>Product</th>
               <th>Price</th>
               <th>Source</th>
-              <th>Commission/Unit</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {posProducts.length === 0 ? (
               <tr>
-                <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
                   No products in outlet menu
                 </td>
               </tr>
@@ -859,16 +857,11 @@ function OutletSourcesTab({ outletId }) {
                             gap: 4,
                           }}
                         >
-                          <Link2 size={14} /> {pp.source_product_id}
+                          <Link2 size={14} /> Linked ({pp.source_product_id})
                         </span>
                       ) : (
-                        <span style={{ color: '#a0aec0' }}>Local item</span>
+                        <span style={{ color: '#a0aec0' }}>Central Standard</span>
                       )}
-                    </td>
-                    <td>
-                      {isLinked
-                        ? `₹${Number(pp.commission_per_unit).toLocaleString('en-IN')}`
-                        : '-'}
                     </td>
                     <td>
                       {editingProduct === pp.id ? (
@@ -876,7 +869,7 @@ function OutletSourcesTab({ outletId }) {
                           sourceProducts={filteredSP}
                           searchQuery={searchQuery}
                           setSearchQuery={setSearchQuery}
-                          onLink={(spId, commission) => handleLinkProduct(pp.id, spId, commission)}
+                          onLink={(spId) => handleLinkProduct(pp.id, spId)}
                           onCancel={() => {
                             setEditingProduct(null);
                             setSearchQuery('');
@@ -911,12 +904,11 @@ function OutletSourcesTab({ outletId }) {
 
 function SourceLinkForm({ sourceProducts, searchQuery, setSearchQuery, onLink, onCancel, saving }) {
   const [selected, setSelected] = useState('');
-  const [commission, setCommission] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selected) return;
-    onLink(selected, commission);
+    onLink(selected);
   };
 
   return (
@@ -958,19 +950,6 @@ function SourceLinkForm({ sourceProducts, searchQuery, setSearchQuery, onLink, o
             </option>
           ))}
       </select>
-      <input
-        type="number"
-        step="0.01"
-        placeholder="Commission per unit (₹)"
-        value={commission}
-        onChange={(e) => setCommission(e.target.value)}
-        style={{
-          padding: '6px',
-          fontSize: '0.8rem',
-          borderRadius: '4px',
-          border: '1px solid var(--border-color)',
-        }}
-      />
       <div style={{ display: 'flex', gap: '0.25rem' }}>
         <button type="submit" className="admin-btn sm" disabled={!selected || saving}>
           {saving ? 'Saving...' : 'Link'}
@@ -980,216 +959,6 @@ function SourceLinkForm({ sourceProducts, searchQuery, setSearchQuery, onLink, o
         </button>
       </div>
     </form>
-  );
-}
-
-function OutletCommissionsTab({ outletId }) {
-  const [loading, setLoading] = useState(true);
-  const [commissions, setCommissions] = useState([]);
-  const [summary, setSummary] = useState(null);
-  const [filterStatus, setFilterStatus] = useState('');
-
-  const statusColors = {
-    pending: { bg: '#fff3cd', color: '#856404' },
-    approved: { bg: '#cce5ff', color: '#004085' },
-    paid: { bg: '#d4edda', color: '#155724' },
-    cancelled: { bg: '#f8d7da', color: '#721c24' },
-  };
-
-  const fetchData = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) return;
-    const headers = { Authorization: `Bearer ${session.access_token}` };
-    const params = new URLSearchParams({ outlet_id: outletId });
-    if (filterStatus) params.set('status', filterStatus);
-    const res = await fetch(`/api/admin/data?type=commissions&${params}`, { headers });
-    if (res.ok) {
-      const j = await res.json();
-      setCommissions(j.data || []);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    if (outletId) fetchData();
-  }, [outletId, filterStatus]);
-
-  const doAction = async (action, id) => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    await fetch('/api/admin/data', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ action, id }),
-    });
-    fetchData();
-  };
-
-  const totals = commissions.reduce(
-    (acc, c) => {
-      acc[c.status] = (acc[c.status] || 0) + Number(c.total_commission);
-      acc.total += Number(c.total_commission);
-      return acc;
-    },
-    { total: 0 },
-  );
-
-  if (loading) return <div className="admin-loading">Loading commissions...</div>;
-
-  return (
-    <div>
-      <div
-        className="admin-card"
-        style={{ display: 'flex', gap: '1.5rem', padding: '1.25rem', marginBottom: '1rem' }}
-      >
-        <div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Pending</span>
-          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#856404' }}>
-            ₹{(totals.pending || 0).toLocaleString()}
-          </div>
-        </div>
-        <div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Approved</span>
-          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#004085' }}>
-            ₹{(totals.approved || 0).toLocaleString()}
-          </div>
-        </div>
-        <div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Paid</span>
-          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#155724' }}>
-            ₹{(totals.paid || 0).toLocaleString()}
-          </div>
-        </div>
-        <div>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total</span>
-          <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>
-            ₹{totals.total.toLocaleString()}
-          </div>
-        </div>
-      </div>
-
-      <div className="admin-toolbar">
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          style={{
-            padding: '0.5rem',
-            borderRadius: '6px',
-            border: '1px solid var(--border-color)',
-            fontSize: '0.85rem',
-          }}
-        >
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="paid">Paid</option>
-        </select>
-        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-          {commissions.length} transaction(s)
-        </span>
-      </div>
-
-      <div className="admin-card" style={{ padding: 0 }}>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Order</th>
-              <th>Product</th>
-              <th>Qty</th>
-              <th>Rate</th>
-              <th>Total</th>
-              <th>Period</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {commissions.length === 0 ? (
-              <tr>
-                <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-                  No commission transactions
-                </td>
-              </tr>
-            ) : (
-              commissions.map((c) => (
-                <tr key={c.id}>
-                  <td style={{ fontSize: '0.85rem', fontFamily: 'monospace' }}>
-                    {c.pos_orders?.order_number || '-'}
-                  </td>
-                  <td>{c.pos_products?.name || 'Deleted'}</td>
-                  <td>{c.quantity}</td>
-                  <td>₹{Number(c.commission_per_unit).toLocaleString()}</td>
-                  <td style={{ fontWeight: 600 }}>
-                    ₹{Number(c.total_commission).toLocaleString()}
-                  </td>
-                  <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    {
-                      [
-                        'Jan',
-                        'Feb',
-                        'Mar',
-                        'Apr',
-                        'May',
-                        'Jun',
-                        'Jul',
-                        'Aug',
-                        'Sep',
-                        'Oct',
-                        'Nov',
-                        'Dec',
-                      ][c.period_month - 1]
-                    }{' '}
-                    {c.period_year}
-                  </td>
-                  <td>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        padding: '0.15rem 0.5rem',
-                        borderRadius: '4px',
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                        ...(statusColors[c.status] || { bg: '#e2e3e5', color: '#383d41' }),
-                      }}
-                    >
-                      {c.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      {c.status === 'pending' && (
-                        <button
-                          className="admin-btn sm"
-                          onClick={() => doAction('approve_commission', c.id)}
-                          style={{ background: '#004085', color: '#fff', fontSize: '0.75rem' }}
-                        >
-                          <CheckCircle size={12} /> Approve
-                        </button>
-                      )}
-                      {c.status === 'approved' && (
-                        <button
-                          className="admin-btn sm"
-                          onClick={() => doAction('pay_commission', c.id)}
-                          style={{ background: '#155724', color: '#fff', fontSize: '0.75rem' }}
-                        >
-                          <DollarSign size={12} /> Pay
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
   );
 }
 

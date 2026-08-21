@@ -7,13 +7,13 @@ export default function AdminPartnersDeprecated() {
   const router = useRouter();
 
   useEffect(() => {
-    // Partner management has been removed in favor of direct Staff & Operational Command
-    router.replace('/admin/staff');
+    router.replace('/admin/users?tab=staff');
   }, [router]);
 
   return (
-    <div style={{ padding: '40px', color: '#a89f91', textAlign: 'center' }}>
-      Redirecting to Staff Command...
+    <div className="admin-loading">
+      <div className="admin-spinner" />
+      <span>Redirecting to Users & Team Hub...</span>
     </div>
   );
 }

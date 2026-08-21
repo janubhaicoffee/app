@@ -84,26 +84,36 @@ export default function SidebarNav() {
   const isGrowth = isSuperAdmin || ['growth', 'brand_leader'].includes(userRole);
   const isManager = isSuperAdmin || ['manager', 'store_manager'].includes(userRole);
 
-  const getRoleBadgeLabel = () => {
-    if (isSuperAdmin) return 'Super Admin';
-    if (userRole === 'operations_head' || userRole === 'operations') return 'Operations Head';
-    if (userRole === 'growth' || userRole === 'brand_leader') return 'Growth & Strategy';
-    if (userRole === 'manager' || userRole === 'store_manager') return 'Store Manager';
-    return userRole;
+  const getRoleBadgeInfo = () => {
+    if (isSuperAdmin) {
+      return { label: 'Super Admin', icon: <Shield size={12} />, color: 'var(--accent-gold, #d89a1e)', bg: 'rgba(216, 154, 30, 0.15)', border: 'rgba(216, 154, 30, 0.3)' };
+    }
+    if (['operations_head', 'operations', 'operation_manager', 'operations_manager', 'area_manager'].includes(userRole)) {
+      return { label: 'Operations Head', icon: <Shield size={12} />, color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.3)' };
+    }
+    if (userRole === 'growth' || userRole === 'brand_leader') {
+      return { label: 'Growth & Strategy', icon: <Sparkles size={12} />, color: '#f472b6', bg: 'rgba(236, 72, 153, 0.15)', border: 'rgba(236, 72, 153, 0.3)' };
+    }
+    if (userRole === 'manager' || userRole === 'store_manager') {
+      return { label: 'Store Manager', icon: <Store size={12} />, color: '#60a5fa', bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.3)' };
+    }
+    return { label: userRole.replace('_', ' '), icon: <UserCheck size={12} />, color: 'var(--accent-gold, #d89a1e)', bg: 'rgba(216, 154, 30, 0.15)', border: 'rgba(216, 154, 30, 0.3)' };
   };
+
+  const badgeInfo = getRoleBadgeInfo();
 
   return (
     <nav className="admin-nav">
       {/* Role Badge Indicator */}
-      <div style={{ padding: '0 1.25rem 0.8rem', borderBottom: '1px solid rgba(245, 240, 234, 0.08)', marginBottom: '0.8rem' }}>
+      <div style={{ padding: '0.4rem 0.5rem 0.75rem', borderBottom: '1px solid rgba(245, 240, 234, 0.08)', marginBottom: '0.6rem' }}>
         <span
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            background: 'rgba(216, 154, 30, 0.15)',
-            color: 'var(--accent-gold, #d89a1e)',
-            border: '1px solid rgba(216, 154, 30, 0.3)',
+            background: badgeInfo.bg,
+            color: badgeInfo.color,
+            border: `1px solid ${badgeInfo.border}`,
             padding: '3px 10px',
             borderRadius: '100px',
             fontSize: '0.72rem',
@@ -112,7 +122,7 @@ export default function SidebarNav() {
             letterSpacing: '0.5px',
           }}
         >
-          <UserCheck size={12} /> {getRoleBadgeLabel()}
+          {badgeInfo.icon} {badgeInfo.label}
         </span>
       </div>
 
@@ -126,10 +136,16 @@ export default function SidebarNav() {
         </div>
       )}
 
-      {/* 2. OPERATIONS & QUALITY CONTROL */}
-      {isOperations && (
+      {/* 2. OPERATIONS COMMAND (Consolidated Outlets & Operations Hub) */}
+      {(isOperations || isManager) && (
         <div className="admin-nav-group">
-          <span className="admin-nav-group-title">OPERATIONS COMMAND</span>
+          <span className="admin-nav-group-title">OPERATIONS & OUTLETS</span>
+          <Link
+            href="/admin/outlets"
+            className={`admin-nav-link ${isActive('/admin/outlets') || isActive('/admin/cafe-settings') ? 'active' : ''}`}
+          >
+            <Store size={20} /> Outlets & Cafes
+          </Link>
           <Link
             href="/admin/operations"
             className={`admin-nav-link ${isActive('/admin/operations') ? 'active' : ''}`}
@@ -141,63 +157,6 @@ export default function SidebarNav() {
             className={`admin-nav-link ${isActive('/admin/manager') ? 'active' : ''}`}
           >
             <Store size={20} /> Manager Observation Feed
-          </Link>
-          <Link
-            href="/admin/outlets"
-            className={`admin-nav-link ${pathname === '/admin/outlets' ? 'active' : ''}`}
-          >
-            <Store size={20} /> All Outlets
-          </Link>
-          <Link
-            href="/admin/outlets/checklists"
-            className={`admin-nav-link ${isActive('/admin/outlets/checklists') ? 'active' : ''}`}
-          >
-            <ClipboardCheck size={20} /> Checklists & Audits
-          </Link>
-          <Link
-            href="/admin/outlets/surveillance"
-            className={`admin-nav-link ${isActive('/admin/outlets/surveillance') ? 'active' : ''}`}
-          >
-            <Camera size={20} /> Live Surveillance
-          </Link>
-          <Link
-            href="/admin/outlets/transfers"
-            className={`admin-nav-link ${isActive('/admin/outlets/transfers') ? 'active' : ''}`}
-          >
-            <ArrowLeftRight size={20} /> Stock Transfers
-          </Link>
-          <Link
-            href="/admin/outlets/purchase-orders"
-            className={`admin-nav-link ${isActive('/admin/outlets/purchase-orders') ? 'active' : ''}`}
-          >
-            <ShoppingBag size={20} /> Purchase Orders
-          </Link>
-          {isSuperAdmin && (
-            <Link
-              href="/admin/outlets/commissions"
-              className={`admin-nav-link ${isActive('/admin/outlets/commissions') ? 'active' : ''}`}
-            >
-              <DollarSign size={20} /> Commissions
-            </Link>
-          )}
-        </div>
-      )}
-
-      {/* 3. STORE MANAGER DESK (If exclusively Manager) */}
-      {!isOperations && isManager && (
-        <div className="admin-nav-group">
-          <span className="admin-nav-group-title">STORE MANAGER DESK</span>
-          <Link
-            href="/admin/manager"
-            className={`admin-nav-link ${isActive('/admin/manager') ? 'active' : ''}`}
-          >
-            <Store size={20} /> Store Control Hub
-          </Link>
-          <Link
-            href="/admin/inventory"
-            className={`admin-nav-link ${isActive('/admin/inventory') ? 'active' : ''}`}
-          >
-            <Package size={20} /> Store Inventory
           </Link>
         </div>
       )}
@@ -256,23 +215,26 @@ export default function SidebarNav() {
         </div>
       )}
 
-      {/* 7. CUSTOMERS & AUDIENCE (Super Admin & Growth) */}
-      {(isSuperAdmin || isGrowth) && (
+      {/* 7. USERS & ACCESS (Single Master Hub for Customers, Staff, and Admins) */}
+      {(isSuperAdmin || isOperations || isGrowth || isManager) && (
         <div className="admin-nav-group">
-          <span className="admin-nav-group-title">CUSTOMERS & REVIEWS</span>
-          <Link href="/admin/customers" className={`admin-nav-link ${isActive('/admin/customers') ? 'active' : ''}`}>
-            <Users size={20} /> Customers
-          </Link>
-          <Link href="/admin/reviews" className={`admin-nav-link ${isActive('/admin/reviews') ? 'active' : ''}`}>
-            <Star size={20} /> Reviews
+          <span className="admin-nav-group-title">USER MANAGEMENT</span>
+          <Link
+            href="/admin/users"
+            className={`admin-nav-link ${isActive('/admin/users') || isActive('/admin/customers') || isActive('/admin/staff') ? 'active' : ''}`}
+          >
+            <Users size={20} /> Users & Customers
           </Link>
         </div>
       )}
 
-      {/* 8. CONTENT & MEDIA (Super Admin & Growth) */}
+      {/* 8. CONTENT & REVIEWS (Super Admin & Growth) */}
       {(isSuperAdmin || isGrowth) && (
         <div className="admin-nav-group">
-          <span className="admin-nav-group-title">CONTENT</span>
+          <span className="admin-nav-group-title">CONTENT & REVIEWS</span>
+          <Link href="/admin/reviews" className={`admin-nav-link ${isActive('/admin/reviews') ? 'active' : ''}`}>
+            <Star size={20} /> Customer Reviews
+          </Link>
           <Link href="/admin/articles" className={`admin-nav-link ${isActive('/admin/articles') ? 'active' : ''}`}>
             <FileText size={20} /> Articles (AI)
           </Link>
@@ -311,16 +273,10 @@ export default function SidebarNav() {
         </div>
       )}
 
-      {/* 10. SYSTEM & STAFF SETTINGS (Super Admin only) */}
+      {/* 10. SYSTEM CONFIGURATION (Super Admin only) */}
       {isSuperAdmin && (
         <div className="admin-nav-group">
           <span className="admin-nav-group-title">SYSTEM</span>
-          <Link
-            href="/admin/staff"
-            className={`admin-nav-link ${isActive('/admin/staff') ? 'active' : ''}`}
-          >
-            <Shield size={20} /> Staff Management
-          </Link>
           <Link
             href="/admin/system/audit-logs"
             className={`admin-nav-link ${isActive('/admin/system/audit-logs') ? 'active' : ''}`}
@@ -329,9 +285,6 @@ export default function SidebarNav() {
           </Link>
           <Link href="/admin/settings" className={`admin-nav-link ${isActive('/admin/settings') ? 'active' : ''}`}>
             <Settings size={20} /> Store Settings
-          </Link>
-          <Link href="/admin/cafe-settings" className={`admin-nav-link ${isActive('/admin/cafe-settings') ? 'active' : ''}`}>
-            <Building2 size={20} /> Cafe Settings
           </Link>
           <Link href="/admin/shipping" className={`admin-nav-link ${isActive('/admin/shipping') ? 'active' : ''}`}>
             <Truck size={20} /> Shipping Zones

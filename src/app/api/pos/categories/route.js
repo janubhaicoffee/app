@@ -57,3 +57,54 @@ export async function POST(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function PATCH(request) {
+  try {
+    const body = await request.json();
+    const { id, name, description, color, icon, sort_order } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Missing category id' }, { status: 400 });
+    }
+
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (color !== undefined) updates.color = color;
+    if (icon !== undefined) updates.icon = icon;
+    if (sort_order !== undefined) updates.sort_order = parseInt(sort_order);
+
+    const { data, error } = await supabaseAdmin
+      .from('pos_categories')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    console.error('POS Categories PATCH error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Missing category id' }, { status: 400 });
+    }
+
+    const { error } = await supabaseAdmin.from('pos_categories').delete().eq('id', id);
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('POS Categories DELETE error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+

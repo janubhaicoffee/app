@@ -207,42 +207,50 @@ export default function AdminDashboard() {
           </p>
           <p className="stat-sub">Lifetime orders</p>
         </div>
-        <div className="stat-card gold">
-          <h3>
-            <ShoppingCart size={14} style={{ display: 'inline', marginRight: 4 }} /> Total Orders
-          </h3>
-          <p className="stat-value">
-            <AnimatedNumber value={data.orders} />
-          </p>
-          <p className="stat-sub">Across all channels</p>
-        </div>
-        <div className="stat-card blue">
-          <h3>
-            <Users size={14} style={{ display: 'inline', marginRight: 4 }} /> Customers
-          </h3>
-          <p className="stat-value">
-            <AnimatedNumber value={data.customers} />
-          </p>
-          <p className="stat-sub">Registered accounts</p>
-        </div>
-        <div className="stat-card">
-          <h3>
-            <Package size={14} style={{ display: 'inline', marginRight: 4 }} /> Products
-          </h3>
-          <p className="stat-value">
-            <AnimatedNumber value={data.products} />
-          </p>
-          <p className="stat-sub">In live catalog</p>
-        </div>
-        <div className="stat-card red">
-          <h3>
-            <Star size={14} style={{ display: 'inline', marginRight: 4 }} /> Pending Reviews
-          </h3>
-          <p className="stat-value">
-            <AnimatedNumber value={data.pendingReviews} />
-          </p>
-          <p className="stat-sub">Awaiting moderation</p>
-        </div>
+        <Link href="/admin/orders" style={{ textDecoration: 'none' }}>
+          <div className="stat-card gold" style={{ cursor: 'pointer' }}>
+            <h3>
+              <ShoppingCart size={14} style={{ display: 'inline', marginRight: 4 }} /> Total Orders
+            </h3>
+            <p className="stat-value">
+              <AnimatedNumber value={data.orders} />
+            </p>
+            <p className="stat-sub">Across all channels</p>
+          </div>
+        </Link>
+        <Link href="/admin/users?tab=customers" style={{ textDecoration: 'none' }}>
+          <div className="stat-card blue" style={{ cursor: 'pointer' }}>
+            <h3>
+              <Users size={14} style={{ display: 'inline', marginRight: 4 }} /> Customers
+            </h3>
+            <p className="stat-value">
+              <AnimatedNumber value={data.customers} />
+            </p>
+            <p className="stat-sub">Registered accounts</p>
+          </div>
+        </Link>
+        <Link href="/admin/products" style={{ textDecoration: 'none' }}>
+          <div className="stat-card" style={{ cursor: 'pointer' }}>
+            <h3>
+              <Package size={14} style={{ display: 'inline', marginRight: 4 }} /> Products
+            </h3>
+            <p className="stat-value">
+              <AnimatedNumber value={data.products} />
+            </p>
+            <p className="stat-sub">In live catalog</p>
+          </div>
+        </Link>
+        <Link href="/admin/reviews" style={{ textDecoration: 'none' }}>
+          <div className="stat-card red" style={{ cursor: 'pointer' }}>
+            <h3>
+              <Star size={14} style={{ display: 'inline', marginRight: 4 }} /> Pending Reviews
+            </h3>
+            <p className="stat-value">
+              <AnimatedNumber value={data.pendingReviews} />
+            </p>
+            <p className="stat-sub">Awaiting moderation</p>
+          </div>
+        </Link>
       </div>
 
       {/* Operations Quick Launch Bar */}

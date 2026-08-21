@@ -255,9 +255,14 @@ export default function CustomerDetailPage() {
             </div>
           </div>
         </div>
-        <button className="admin-btn" onClick={handleSave} disabled={saving}>
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button className="admin-btn-outline" onClick={() => router.push('/admin/users?tab=customers')}>
+            ← Back to Users
+          </button>
+          <button className="admin-btn" onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
       </div>
 
       {saveMsg && (

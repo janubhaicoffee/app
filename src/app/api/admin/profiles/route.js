@@ -59,19 +59,22 @@ export async function POST(request) {
     if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
     const body = await request.json();
-    const { email, phone, name } = body;
+    const { email, phone, name, role } = body;
 
     if (!name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
+    const upsertData = {
+      email: email || null,
+      phone: phone || null,
+      name,
+    };
+    if (role) upsertData.role = role;
+
     const { data, error } = await auth.supabase
       .from('admin_profiles')
-      .upsert({
-        email: email || null,
-        phone: phone || null,
-        name,
-      })
+      .upsert(upsertData)
       .select()
       .single();
 
