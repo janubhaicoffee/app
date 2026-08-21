@@ -96,7 +96,7 @@ export async function POST(request) {
           display_name: name,
           email: email || null,
           phone: phone || null,
-          role: role || 'staff',
+          role: role ? (['operations_head', 'growth', 'manager', 'employee', 'superadmin'].includes(role) ? role : 'employee') : 'employee',
           pin_code: pin || null,
           is_active: true,
           joined_at: new Date().toISOString(),
@@ -143,7 +143,9 @@ export async function PATCH(request) {
     if (name !== undefined) updates.display_name = name;
     if (email !== undefined) updates.email = email;
     if (phone !== undefined) updates.phone = phone;
-    if (role !== undefined) updates.role = role;
+    if (role !== undefined) {
+      updates.role = ['operations_head', 'growth', 'manager', 'employee', 'superadmin'].includes(role) ? role : 'employee';
+    }
     if (pin !== undefined) updates.pin_code = pin;
     if (is_active !== undefined) updates.is_active = is_active;
     if (monthly_salary !== undefined) updates.monthly_salary = monthly_salary;

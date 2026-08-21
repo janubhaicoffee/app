@@ -61,16 +61,18 @@ export default function StaffAuthPage() {
       return;
     }
 
-    if (role === 'operations_head' || role === 'operations' || role === 'operation_manager') {
-      router.push('/admin/operations');
-    } else if (role === 'growth' || role === 'brand_leader') {
-      router.push('/admin/growth');
-    } else if (role === 'manager' || role === 'store_manager') {
-      router.push('/admin/manager');
-    } else if (role === 'superadmin' || role === 'owner') {
+    if (role === 'superadmin') {
       router.push('/admin');
-    } else {
+    } else if (role === 'operations_head') {
       router.push('/admin/operations');
+    } else if (role === 'growth') {
+      router.push('/admin/growth');
+    } else if (role === 'manager') {
+      router.push('/admin/manager');
+    } else if (role === 'employee') {
+      router.push('/pos');
+    } else {
+      router.push('/account');
     }
   };
 

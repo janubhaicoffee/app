@@ -36,7 +36,7 @@ export async function GET(request) {
 
           if (adminProf) {
             userRole = adminProf.role || 'superadmin';
-            if (['superadmin', 'owner', 'operations_head', 'growth', 'brand_leader', 'operations_manager', 'operation_manager', 'area_manager'].includes(userRole)) {
+            if (['superadmin', 'operations_head', 'growth'].includes(userRole)) {
               hasGlobalOutletAccess = true;
             }
           } else {
@@ -54,8 +54,8 @@ export async function GET(request) {
               .maybeSingle();
 
             if (staffMember) {
-              userRole = staffMember.role || 'staff';
-              if (['superadmin', 'owner', 'operations_head', 'growth', 'brand_leader', 'operations_manager', 'operation_manager', 'area_manager'].includes(userRole)) {
+              userRole = staffMember.role || 'employee';
+              if (['superadmin', 'operations_head', 'growth'].includes(userRole)) {
                 hasGlobalOutletAccess = true;
               }
             }

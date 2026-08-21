@@ -44,21 +44,25 @@ import {
   Sliders,
 } from 'lucide-react';
 
-const roleBadgeColors = {
-  superadmin: { bg: 'rgba(216, 154, 30, 0.2)', color: '#d89a1e', border: 'rgba(216, 154, 30, 0.4)', label: 'Super Admin' },
-  owner: { bg: 'rgba(216, 154, 30, 0.2)', color: '#d89a1e', border: 'rgba(216, 154, 30, 0.4)', label: 'Super Admin' },
+// Strict 6 Roles for the Entire Application
+export const roleBadgeColors = {
+  superadmin: { bg: 'rgba(216, 154, 30, 0.2)', color: '#d89a1e', border: 'rgba(216, 154, 30, 0.4)', label: 'Superadmin' },
   operations_head: { bg: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.4)', label: 'Operations Head' },
-  operations: { bg: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.4)', label: 'Operations Head' },
-  operation_manager: { bg: 'rgba(245, 158, 11, 0.2)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.4)', label: 'Operations Head' },
-  growth: { bg: 'rgba(236, 72, 153, 0.2)', color: '#f472b6', border: 'rgba(236, 72, 153, 0.4)', label: 'Growth & Strategy' },
-  brand_leader: { bg: 'rgba(236, 72, 153, 0.2)', color: '#f472b6', border: 'rgba(236, 72, 153, 0.4)', label: 'Growth & Strategy' },
-  manager: { bg: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: 'rgba(59, 130, 246, 0.4)', label: 'Store Manager' },
-  store_manager: { bg: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: 'rgba(59, 130, 246, 0.4)', label: 'Store Manager' },
-  cashier: { bg: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', border: 'rgba(34, 197, 94, 0.4)', label: 'Cashier' },
-  barista: { bg: 'rgba(249, 115, 22, 0.2)', color: '#fb923c', border: 'rgba(249, 115, 22, 0.4)', label: 'Barista' },
-  kitchen: { bg: 'rgba(234, 179, 8, 0.2)', color: '#facc15', border: 'rgba(234, 179, 8, 0.4)', label: 'Kitchen Crew' },
-  staff: { bg: 'rgba(156, 163, 175, 0.2)', color: '#d1d5db', border: 'rgba(156, 163, 175, 0.4)', label: 'General Staff' },
+  growth: { bg: 'rgba(236, 72, 153, 0.2)', color: '#f472b6', border: 'rgba(236, 72, 153, 0.4)', label: 'Growth' },
+  manager: { bg: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', border: 'rgba(59, 130, 246, 0.4)', label: 'Manager' },
+  employee: { bg: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', border: 'rgba(34, 197, 94, 0.4)', label: 'Employee' },
   customer: { bg: 'rgba(255, 255, 255, 0.08)', color: '#cbb9a8', border: 'rgba(245, 240, 234, 0.12)', label: 'Customer' },
+};
+
+export const normalizeRole = (rawRole) => {
+  if (!rawRole) return 'customer';
+  const r = String(rawRole).toLowerCase().trim();
+  if (r === 'superadmin' || r === 'owner') return 'superadmin';
+  if (['operations_head', 'operations', 'operation_manager', 'operations_manager', 'area_manager'].includes(r)) return 'operations_head';
+  if (['growth', 'brand_leader'].includes(r)) return 'growth';
+  if (['manager', 'store_manager'].includes(r)) return 'manager';
+  if (['employee', 'staff', 'cashier', 'barista', 'kitchen'].includes(r)) return 'employee';
+  return 'customer';
 };
 
 function UsersDashboardContent() {
@@ -162,12 +166,18 @@ function UsersDashboardContent() {
 
       if (staffRes.ok) {
         const json = await staffRes.json();
-        staffList = json.data || [];
+        staffList = (json.data || []).map((s) => ({
+          ...s,
+          role: normalizeRole(s.role),
+        }));
         setStaff(staffList);
       }
       if (profilesRes.ok) {
         const json = await profilesRes.json();
-        adminList = json.data || [];
+        adminList = (json.data || []).map((a) => ({
+          ...a,
+          role: normalizeRole(a.role),
+        }));
         setAdminProfiles(adminList);
       }
       if (outletsRes.ok) {
@@ -187,7 +197,7 @@ function UsersDashboardContent() {
         const json = await custRes.json();
         const rawCustomers = json.data || [];
 
-        // Enrich customers with their live role from staff/admin tables
+        // Enrich customers with their normalized live role from staff/admin tables
         const enriched = rawCustomers.map((c) => {
           const emailLower = (c.email || '').toLowerCase();
           const phoneTrimmed = c.phone || '';
@@ -197,7 +207,7 @@ function UsersDashboardContent() {
             (a) => (a.email && a.email.toLowerCase() === emailLower) || (a.phone && a.phone === phoneTrimmed)
           );
           if (matchedAdmin) {
-            return { ...c, computedRole: matchedAdmin.role || 'superadmin' };
+            return { ...c, computedRole: 'superadmin' };
           }
 
           // Check staff profiles
@@ -210,7 +220,7 @@ function UsersDashboardContent() {
           if (matchedStaff) {
             return {
               ...c,
-              computedRole: matchedStaff.role || 'staff',
+              computedRole: normalizeRole(matchedStaff.role),
               outlet_id: matchedStaff.outlet_id,
               staffRecordId: matchedStaff.id,
             };
@@ -370,7 +380,9 @@ function UsersDashboardContent() {
         (a.phone && a.phone === user.phone)
     );
 
-    const currentRole = user.role || user.computedRole || (matchedAdmin ? 'superadmin' : matchedStaff ? matchedStaff.role : 'customer');
+    const currentRole = normalizeRole(
+      user.role || user.computedRole || (matchedAdmin ? 'superadmin' : matchedStaff ? matchedStaff.role : 'customer')
+    );
 
     setRoleForm({
       user_id: user.id || matchedStaff?.user_id || '',
@@ -410,7 +422,8 @@ function UsersDashboardContent() {
       });
 
       if (res.ok) {
-        showToast(`User role updated to ${roleForm.role.toUpperCase()} successfully!`);
+        const json = await res.json();
+        showToast(`Role updated to ${roleForm.role.toUpperCase()} successfully!`);
         setShowRoleModal(false);
         fetchAllData();
       } else {
@@ -579,7 +592,8 @@ function UsersDashboardContent() {
         (m.phone || '').includes(staffSearch);
 
       const matchesOutlet = staffOutletFilter === 'all' || m.outlet_id === staffOutletFilter;
-      const matchesRole = staffRoleFilter === 'all' || m.role === staffRoleFilter;
+      const normalizedRole = normalizeRole(m.role);
+      const matchesRole = staffRoleFilter === 'all' || normalizedRole === staffRoleFilter;
       const matchesStatus =
         staffStatusFilter === 'all' ||
         (staffStatusFilter === 'active' && m.is_active) ||
@@ -1076,7 +1090,7 @@ function UsersDashboardContent() {
                             <button
                               className="admin-btn admin-btn-sm"
                               onClick={() => openRoleEditor(customer)}
-                              title="Edit Role & Permissions (Make Ops Head, Growth, Manager, etc.)"
+                              title="Edit Role & Permissions (Assign Operations Head, Growth, Manager, Employee, etc.)"
                               style={{
                                 background: 'linear-gradient(135deg, rgba(216, 154, 30, 0.2) 0%, rgba(216, 154, 30, 0.4) 100%)',
                                 borderColor: 'var(--accent-gold)',
@@ -1136,7 +1150,7 @@ function UsersDashboardContent() {
                 ))}
               </select>
 
-              {/* Role Filter */}
+              {/* Role Filter (Strict 6 Roles) */}
               <select
                 value={staffRoleFilter}
                 onChange={(e) => setStaffRoleFilter(e.target.value)}
@@ -1149,15 +1163,12 @@ function UsersDashboardContent() {
                   fontSize: '0.85rem',
                 }}
               >
-                <option value="all">All Roles</option>
-                <option value="superadmin">Super Admin</option>
+                <option value="all">All Official Roles</option>
+                <option value="superadmin">Superadmin</option>
                 <option value="operations_head">Operations Head</option>
-                <option value="growth">Growth & Strategy</option>
-                <option value="manager">Store Manager</option>
-                <option value="cashier">Cashier</option>
-                <option value="barista">Barista</option>
-                <option value="kitchen">Kitchen Crew</option>
-                <option value="staff">General Staff</option>
+                <option value="growth">Growth</option>
+                <option value="manager">Manager</option>
+                <option value="employee">Employee</option>
               </select>
 
               {/* Status Filter */}
@@ -1203,7 +1214,8 @@ function UsersDashboardContent() {
                 </thead>
                 <tbody>
                   {filteredStaff.map((member) => {
-                    const badgeInfo = roleBadgeColors[member.role] || roleBadgeColors.staff;
+                    const normalized = normalizeRole(member.role);
+                    const badgeInfo = roleBadgeColors[normalized] || roleBadgeColors.employee;
                     return (
                       <tr key={member.id}>
                         <td>
@@ -1403,7 +1415,7 @@ function UsersDashboardContent() {
                             border: '1px solid rgba(216, 154, 30, 0.4)',
                           }}
                         >
-                          {admin.role || 'Super Admin'}
+                          {roleBadgeColors[admin.role]?.label || 'Superadmin'}
                         </span>
                       </td>
                       <td style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
@@ -1434,13 +1446,13 @@ function UsersDashboardContent() {
             )}
           </div>
 
-          {/* Role Privileges & Capabilities Guide */}
+          {/* Strict 6 Roles & Permissions Matrix Guide */}
           <div className="admin-card">
             <h3 style={{ marginTop: 0, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Layers size={18} color="var(--accent-gold)" /> Role Permissions & Access Control Matrix
+              <Layers size={18} color="var(--accent-gold)" /> System Roles & Access Control Matrix (6 Official Roles)
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-              {/* Super Admin */}
+              {/* 1. Superadmin */}
               <div
                 style={{
                   background: 'rgba(216, 154, 30, 0.06)',
@@ -1462,20 +1474,20 @@ function UsersDashboardContent() {
                   >
                     LEVEL 1
                   </span>
-                  <h4 style={{ margin: 0, color: 'var(--accent-gold)' }}>Super Admin / Owner</h4>
+                  <h4 style={{ margin: 0, color: 'var(--accent-gold)' }}>Superadmin</h4>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem' }}>
-                  Full unrestricted governance over all stores, financial revenue, catalogs, user access, and system configurations.
+                  Full unrestricted governance across all stores, financial PnL, master catalog, user roles & system settings.
                 </p>
                 <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: '#f5f0ea', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <li>Global Dashboard & Financial Analytics</li>
-                  <li>Product Catalog, Inventory & Pricing</li>
-                  <li>Customer CRM, Staff Onboarding & Admin Whitelisting</li>
+                  <li>User Role Editing & Staff Permissions</li>
+                  <li>Master Outlets & Central Recipe Specs</li>
                   <li>Store & Cafe Global Configurations</li>
                 </ul>
               </div>
 
-              {/* Operations Head */}
+              {/* 2. Operations Head */}
               <div
                 style={{
                   background: 'rgba(245, 158, 11, 0.06)',
@@ -1500,17 +1512,17 @@ function UsersDashboardContent() {
                   <h4 style={{ margin: 0, color: '#fbbf24' }}>Operations Head</h4>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem' }}>
-                  Multi-outlet quality control, SOP enforcement, surveillance, stock movements, and store crew management.
+                  Multi-outlet quality control, recipe specs, ingredients & cutlery stock monitoring, photo shortage alerts.
                 </p>
                 <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: '#f5f0ea', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <li>14-Area Operations Control Book</li>
-                  <li>Daily SOP Checklists & Audits</li>
-                  <li>Inter-Store Stock Transfers & POs</li>
+                  <li>Daily SOP Audits & Checklists</li>
+                  <li>Inter-Store Transfers & Purchase Orders</li>
                   <li>Live CCTV Surveillance Streams</li>
                 </ul>
               </div>
 
-              {/* Brand & Growth */}
+              {/* 3. Growth */}
               <div
                 style={{
                   background: 'rgba(236, 72, 153, 0.06)',
@@ -1532,20 +1544,20 @@ function UsersDashboardContent() {
                   >
                     LEVEL 2
                   </span>
-                  <h4 style={{ margin: 0, color: '#f472b6' }}>Brand & Growth Lead</h4>
+                  <h4 style={{ margin: 0, color: '#f472b6' }}>Growth</h4>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem' }}>
-                  Marketing activations, workshop/event RSVPs, brand partnership pipelines, and customer growth intelligence.
+                  Marketing campaigns, workshop/event RSVPs, brand partnership pipelines, and customer growth intelligence.
                 </p>
                 <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: '#f5f0ea', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <li>Growth Strategic Priorities & Opportunities</li>
                   <li>Events & Workshop RSVP Engine</li>
-                  <li>Customer Directory & Audience Segmentation</li>
+                  <li>Customer Directory & Segmentation</li>
                   <li>AI Articles & Media Management</li>
                 </ul>
               </div>
 
-              {/* Store Manager */}
+              {/* 4. Manager */}
               <div
                 style={{
                   background: 'rgba(59, 130, 246, 0.06)',
@@ -1567,16 +1579,86 @@ function UsersDashboardContent() {
                   >
                     LEVEL 3
                   </span>
-                  <h4 style={{ margin: 0, color: '#60a5fa' }}>Store Manager & Crew</h4>
+                  <h4 style={{ margin: 0, color: '#60a5fa' }}>Manager</h4>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem' }}>
                   Single-cafe frontline operations, shift check-ins, cash drawers, and store inventory counts.
                 </p>
                 <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: '#f5f0ea', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   <li>Manager Observation Feed & Daily Logs</li>
-                  <li>Store Live Raw Material Inventory</li>
+                  <li>Store Live Raw Material Stock</li>
                   <li>Cash Withdrawal & Consumption Registers</li>
                   <li>Store POS & Shift Attendance</li>
+                </ul>
+              </div>
+
+              {/* 5. Employee */}
+              <div
+                style={{
+                  background: 'rgba(34, 197, 94, 0.06)',
+                  border: '1px solid rgba(34, 197, 94, 0.3)',
+                  borderRadius: '10px',
+                  padding: '1.2rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.6rem' }}>
+                  <span
+                    style={{
+                      background: '#4ade80',
+                      color: '#1a0f0c',
+                      fontWeight: 800,
+                      fontSize: '0.72rem',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    LEVEL 4
+                  </span>
+                  <h4 style={{ margin: 0, color: '#4ade80' }}>Employee</h4>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem' }}>
+                  Cafe counter, POS register terminal, drink prep, table billing, and kitchen fulfillment.
+                </p>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: '#f5f0ea', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <li>POS Order Processing & Table Bills</li>
+                  <li>Kitchen Display Screen (KDS)</li>
+                  <li>Shift Clock-in via 4-Digit PIN</li>
+                  <li>Store Drink & Pastry Fulfillment</li>
+                </ul>
+              </div>
+
+              {/* 6. Customer */}
+              <div
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '10px',
+                  padding: '1.2rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.6rem' }}>
+                  <span
+                    style={{
+                      background: '#cbb9a8',
+                      color: '#1a0f0c',
+                      fontWeight: 800,
+                      fontSize: '0.72rem',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    LEVEL 5
+                  </span>
+                  <h4 style={{ margin: 0, color: '#cbb9a8' }}>Customer</h4>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.75rem' }}>
+                  Public ecommerce storefront, online orders, cafe QR ordering, event registrations, and reviews.
+                </p>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.82rem', color: '#f5f0ea', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <li>Coffee Beans & Drink Storefront</li>
+                  <li>Cart, Checkout & Razorpay Payments</li>
+                  <li>Order Tracking & Invoice History</li>
+                  <li>Tasting Event & Workshop RSVPs</li>
                 </ul>
               </div>
             </div>
@@ -1789,7 +1871,7 @@ function UsersDashboardContent() {
                 />
               </div>
 
-              {/* Role Selector */}
+              {/* Strict 6 Role Selector */}
               <div
                 style={{
                   background: 'rgba(0, 0, 0, 0.35)',
@@ -1815,23 +1897,20 @@ function UsersDashboardContent() {
                     fontWeight: 700,
                   }}
                 >
-                  <option value="superadmin">👑 Super Admin / Owner (Full Unrestricted HQ Access)</option>
-                  <option value="operations_head">📋 Operations Head (Multi-Store Ops, SOPs, Stock, CCTV)</option>
-                  <option value="growth">🚀 Brand & Growth Lead (Marketing, CRM, Events, Activations)</option>
-                  <option value="manager">🏪 Store Manager (Single Cafe Ops, Register, Local Stock)</option>
-                  <option value="barista">☕ Barista & Coffee Crew (Bar counter, POS shifts)</option>
-                  <option value="cashier">💳 Cashier & Order Desk</option>
-                  <option value="kitchen">🍳 Kitchen Crew</option>
-                  <option value="staff">👔 General Staff</option>
-                  <option value="customer">👤 Regular Customer (No Administrative Access)</option>
+                  <option value="superadmin">👑 Superadmin (Full Unrestricted HQ Governance)</option>
+                  <option value="operations_head">📋 Operations Head (Ops Control Book, Stock, SOPs, Shortage Alerts, CCTV)</option>
+                  <option value="growth">🚀 Growth (Marketing, Workshop/Event RSVPs, CRM, Articles & Media)</option>
+                  <option value="manager">🏪 Manager (Assigned Cafe Store Desk, Observations, Local Stock & Shifts)</option>
+                  <option value="employee">☕ Employee (POS Register Counter, Table Billing, Kitchen Queue, Clock-in)</option>
+                  <option value="customer">👤 Customer (Standard Web Storefront & Cafe Account - No Admin Privileges)</option>
                 </select>
 
                 <p style={{ margin: '0.5rem 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                  Changing the role instantly provisions or revokes backend dashboard tabs and workspace switchers.
+                  Assigned role takes effect immediately across web, admin, outlet desk, and POS register.
                 </p>
               </div>
 
-              {/* Outlet Assignment (for Staff / Managers) */}
+              {/* Outlet Assignment (for Staff / Managers / Employees) */}
               {roleForm.role !== 'customer' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '0.75rem' }}>
                   <div>
@@ -1886,8 +1965,8 @@ function UsersDashboardContent() {
                 </div>
               )}
 
-              {/* Monthly Salary & Profit Share (Optional for Staff/Managers) */}
-              {['manager', 'barista', 'cashier', 'kitchen', 'staff', 'operations_head'].includes(roleForm.role) && (
+              {/* Monthly Salary & Profit Share (for Manager, Employee, Operations Head) */}
+              {['manager', 'employee', 'operations_head'].includes(roleForm.role) && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', alignItems: 'center' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
@@ -2048,11 +2127,11 @@ function UsersDashboardContent() {
                       fontSize: '0.82rem',
                       fontWeight: 800,
                       textTransform: 'uppercase',
-                      background: (roleBadgeColors[selectedCustomerData.computedRole] || roleBadgeColors.customer).bg,
-                      color: (roleBadgeColors[selectedCustomerData.computedRole] || roleBadgeColors.customer).color,
+                      background: (roleBadgeColors[normalizeRole(selectedCustomerData.computedRole)] || roleBadgeColors.customer).bg,
+                      color: (roleBadgeColors[normalizeRole(selectedCustomerData.computedRole)] || roleBadgeColors.customer).color,
                     }}
                   >
-                    {(roleBadgeColors[selectedCustomerData.computedRole] || roleBadgeColors.customer).label}
+                    {(roleBadgeColors[normalizeRole(selectedCustomerData.computedRole)] || roleBadgeColors.customer).label}
                   </span>
                 </div>
               </div>

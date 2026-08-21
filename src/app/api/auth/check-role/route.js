@@ -8,7 +8,7 @@ export async function GET(request) {
       return NextResponse.json({ role: 'guest' });
     }
     const token = authHeader.split(' ')[1];
-    
+
     const {
       data: { user },
       error: authError,
@@ -18,7 +18,7 @@ export async function GET(request) {
       return NextResponse.json({ role: 'guest' });
     }
 
-    // 1. Check if superadmin
+    // 1. Check if Superadmin (ENV whitelist or admin_profiles table)
     const adminEmails = (process.env.SUPERADMIN_EMAILS || '')
       .split(',')
       .map((e) => e.trim().toLowerCase())
@@ -26,20 +26,30 @@ export async function GET(request) {
     const isEmailAdmin = adminEmails.includes(user.email?.toLowerCase());
 
     if (isEmailAdmin) {
-      return NextResponse.json({ role: 'superadmin' });
+      return NextResponse.json({
+        role: 'superadmin',
+        roleName: 'Super Admin',
+        userId: user.id,
+        email: user.email,
+      });
     }
 
     const { data: adminProfile } = await supabaseAdmin
       .from('admin_profiles')
       .select('*')
-      .eq('phone', user.phone || '')
+      .or(`email.eq.${user.email || ''},phone.eq.${user.phone || ''}`)
       .maybeSingle();
 
-    if (adminProfile) {
-      return NextResponse.json({ role: 'superadmin' });
+    if (adminProfile && (adminProfile.role === 'superadmin' || !adminProfile.role)) {
+      return NextResponse.json({
+        role: 'superadmin',
+        roleName: 'Super Admin',
+        userId: user.id,
+        email: user.email,
+      });
     }
 
-    // 2. Check if Janu Bhai staff / worker
+    // 2. Check if Staff / Leadership in outlet_staff
     const emailFilter = user.email ? `email.eq.${user.email}` : '';
     const phoneFilter = user.phone ? `phone.eq.${user.phone}` : '';
     const userIdFilter = `user_id.eq.${user.id}`;
@@ -61,20 +71,29 @@ export async function GET(request) {
           .eq('id', staff.id);
       }
 
-      if (['operations_head', 'operations', 'operation_manager', 'area_manager'].includes(staff.role)) {
+      // Map strictly to the 6 official roles: superadmin, operations_head, growth, manager, employee, customer
+      if (staff.role === 'superadmin' || staff.role === 'owner') {
         return NextResponse.json({
-          role: 'operations_head',
-          staffRole: staff.role,
+          role: 'superadmin',
+          roleName: 'Super Admin',
           staffName: staff.display_name,
           outletId: staff.outlet_id,
-          isOperationManager: true,
+        });
+      }
+
+      if (['operations_head', 'operations', 'operation_manager', 'operations_manager', 'area_manager'].includes(staff.role)) {
+        return NextResponse.json({
+          role: 'operations_head',
+          roleName: 'Operations Head',
+          staffName: staff.display_name,
+          outletId: staff.outlet_id,
         });
       }
 
       if (['growth', 'brand_leader'].includes(staff.role)) {
         return NextResponse.json({
           role: 'growth',
-          staffRole: staff.role,
+          roleName: 'Growth',
           staffName: staff.display_name,
           outletId: staff.outlet_id,
         });
@@ -83,21 +102,28 @@ export async function GET(request) {
       if (['manager', 'store_manager'].includes(staff.role)) {
         return NextResponse.json({
           role: 'manager',
-          staffRole: staff.role,
+          roleName: 'Manager',
           staffName: staff.display_name,
           outletId: staff.outlet_id,
         });
       }
 
+      // Any other staff role (barista, cashier, kitchen, staff) is unified to employee
       return NextResponse.json({
-        role: 'staff',
-        staffRole: staff.role,
+        role: 'employee',
+        roleName: 'Employee',
         staffName: staff.display_name,
         outletId: staff.outlet_id,
       });
     }
 
-    return NextResponse.json({ role: 'customer' });
+    // Default to Customer
+    return NextResponse.json({
+      role: 'customer',
+      roleName: 'Customer',
+      userId: user.id,
+      email: user.email,
+    });
   } catch (error) {
     console.error('Check role API error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

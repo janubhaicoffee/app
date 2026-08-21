@@ -42,11 +42,21 @@ async function verifyAdmin(request) {
         .eq('is_active', true)
         .maybeSingle();
 
-      const allowedRoles = ['operations_head', 'operation_manager', 'operations_manager', 'area_manager', 'operations', 'growth', 'brand_leader', 'manager', 'store_manager', 'owner', 'superadmin'];
-      if (!staff || !allowedRoles.includes(staff.role)) {
+      const allowedRoles = ['superadmin', 'operations_head', 'growth', 'manager', 'employee'];
+      const normalizedStaffRole = ['operations_head', 'operations', 'operation_manager', 'operations_manager', 'area_manager'].includes(staff.role)
+        ? 'operations_head'
+        : ['growth', 'brand_leader'].includes(staff.role)
+        ? 'growth'
+        : ['manager', 'store_manager'].includes(staff.role)
+        ? 'manager'
+        : staff.role === 'superadmin' || staff.role === 'owner'
+        ? 'superadmin'
+        : 'employee';
+
+      if (!staff || !allowedRoles.includes(normalizedStaffRole)) {
         return { error: 'Forbidden', status: 403 };
       }
-      return { supabase: supabaseAdmin, user, adminEmail: user.email, role: staff.role, staff };
+      return { supabase: supabaseAdmin, user, adminEmail: user.email, role: normalizedStaffRole, staff };
     }
     return { supabase: supabaseAdmin, user, adminEmail: user.email, role: profile.role || 'superadmin' };
   }

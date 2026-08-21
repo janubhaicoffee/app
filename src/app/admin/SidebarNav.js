@@ -79,25 +79,28 @@ export default function SidebarNav() {
 
   const isActive = (path) => pathname === path || (path !== '/admin' && pathname?.startsWith(path));
 
-  const isSuperAdmin = ['superadmin', 'owner'].includes(userRole);
+  const isSuperAdmin = userRole === 'superadmin' || userRole === 'owner';
   const isOperations = isSuperAdmin || ['operations_head', 'operations', 'operation_manager', 'operations_manager', 'area_manager'].includes(userRole);
   const isGrowth = isSuperAdmin || ['growth', 'brand_leader'].includes(userRole);
   const isManager = isSuperAdmin || ['manager', 'store_manager'].includes(userRole);
 
   const getRoleBadgeInfo = () => {
     if (isSuperAdmin) {
-      return { label: 'Super Admin', icon: <Shield size={12} />, color: 'var(--accent-gold, #d89a1e)', bg: 'rgba(216, 154, 30, 0.15)', border: 'rgba(216, 154, 30, 0.3)' };
+      return { label: 'Superadmin', icon: <Shield size={12} />, color: 'var(--accent-gold, #d89a1e)', bg: 'rgba(216, 154, 30, 0.15)', border: 'rgba(216, 154, 30, 0.3)' };
     }
     if (['operations_head', 'operations', 'operation_manager', 'operations_manager', 'area_manager'].includes(userRole)) {
       return { label: 'Operations Head', icon: <Shield size={12} />, color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.3)' };
     }
     if (userRole === 'growth' || userRole === 'brand_leader') {
-      return { label: 'Growth & Strategy', icon: <Sparkles size={12} />, color: '#f472b6', bg: 'rgba(236, 72, 153, 0.15)', border: 'rgba(236, 72, 153, 0.3)' };
+      return { label: 'Growth', icon: <Sparkles size={12} />, color: '#f472b6', bg: 'rgba(236, 72, 153, 0.15)', border: 'rgba(236, 72, 153, 0.3)' };
     }
     if (userRole === 'manager' || userRole === 'store_manager') {
-      return { label: 'Store Manager', icon: <Store size={12} />, color: '#60a5fa', bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.3)' };
+      return { label: 'Manager', icon: <Store size={12} />, color: '#60a5fa', bg: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.3)' };
     }
-    return { label: userRole.replace('_', ' '), icon: <UserCheck size={12} />, color: 'var(--accent-gold, #d89a1e)', bg: 'rgba(216, 154, 30, 0.15)', border: 'rgba(216, 154, 30, 0.3)' };
+    if (userRole === 'employee' || userRole === 'staff') {
+      return { label: 'Employee', icon: <UserCheck size={12} />, color: '#4ade80', bg: 'rgba(34, 197, 94, 0.15)', border: 'rgba(34, 197, 94, 0.3)' };
+    }
+    return { label: 'Customer', icon: <UserCheck size={12} />, color: '#cbb9a8', bg: 'rgba(255, 255, 255, 0.08)', border: 'rgba(245, 240, 234, 0.12)' };
   };
 
   const badgeInfo = getRoleBadgeInfo();

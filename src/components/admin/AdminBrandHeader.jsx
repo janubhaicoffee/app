@@ -99,19 +99,22 @@ export default function AdminBrandHeader() {
   };
 
   const getRoleBadge = () => {
-    if (['superadmin', 'owner'].includes(userRole)) {
+    if (userRole === 'superadmin' || userRole === 'owner') {
       return { label: 'Super Admin', icon: <Shield size={12} color="#d89a1e" />, color: '#d89a1e' };
     }
     if (['operations_head', 'operations', 'operations_manager', 'operation_manager', 'area_manager'].includes(userRole)) {
       return { label: 'Operations Head', icon: <Shield size={12} color="#fbbf24" />, color: '#fbbf24' };
     }
     if (['growth', 'brand_leader'].includes(userRole)) {
-      return { label: 'Growth & Strategy', icon: <Sparkles size={12} color="#f472b6" />, color: '#f472b6' };
+      return { label: 'Growth', icon: <Sparkles size={12} color="#f472b6" />, color: '#f472b6' };
     }
     if (['manager', 'store_manager'].includes(userRole)) {
-      return { label: 'Store Manager', icon: <Store size={12} color="#60a5fa" />, color: '#60a5fa' };
+      return { label: 'Manager', icon: <Store size={12} color="#60a5fa" />, color: '#60a5fa' };
     }
-    return { label: userRole.replace('_', ' '), icon: <UserCheck size={12} color="#d89a1e" />, color: '#d89a1e' };
+    if (['employee', 'staff', 'barista', 'cashier', 'kitchen'].includes(userRole)) {
+      return { label: 'Employee', icon: <UserCheck size={12} color="#4ade80" />, color: '#4ade80' };
+    }
+    return { label: 'Customer', icon: <UserCheck size={12} color="#cbb9a8" />, color: '#cbb9a8' };
   };
 
   const roleBadge = getRoleBadge();

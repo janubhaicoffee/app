@@ -1,6 +1,16 @@
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { NextResponse } from 'next/server';
 
+// Strict whitelist of the 6 official roles in the entire app
+export const ALLOWED_ROLES = [
+  'superadmin',
+  'operations_head',
+  'growth',
+  'manager',
+  'employee',
+  'customer',
+];
+
 async function verifySuperAdmin(request) {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -25,7 +35,7 @@ async function verifySuperAdmin(request) {
     const { data: profile } = await supabaseAdmin
       .from('admin_profiles')
       .select('*')
-      .eq('phone', user.phone || '')
+      .or(`email.eq.${user.email || ''},phone.eq.${user.phone || ''}`)
       .maybeSingle();
 
     if (!profile || profile.role !== 'superadmin') {
@@ -66,6 +76,17 @@ export async function POST(request) {
       notes,
     } = body;
 
+    // Validate that role is one of the 6 official roles
+    const normalizedRole = role.toLowerCase().trim();
+    if (!ALLOWED_ROLES.includes(normalizedRole)) {
+      return NextResponse.json(
+        {
+          error: `Invalid role "${role}". Allowed roles are: ${ALLOWED_ROLES.join(', ')}`,
+        },
+        { status: 400 }
+      );
+    }
+
     if (!name && !email && !phone && !user_id) {
       return NextResponse.json(
         { error: 'At least one identifier (user_id, email, phone, or name) is required' },
@@ -91,7 +112,7 @@ export async function POST(request) {
     }
 
     // 2. Handle Superadmin Assignment
-    if (role === 'superadmin' || role === 'owner') {
+    if (normalizedRole === 'superadmin') {
       await supabaseAdmin.from('admin_profiles').upsert({
         name: cleanName,
         email: cleanEmail,
@@ -99,7 +120,6 @@ export async function POST(request) {
         role: 'superadmin',
       });
 
-      // Update or create outlet_staff record if outlet_id is provided
       if (outlet_id) {
         const filter = cleanEmail ? { email: cleanEmail } : cleanPhone ? { phone: cleanPhone } : null;
         if (filter) {
@@ -118,23 +138,9 @@ export async function POST(request) {
           });
         }
       }
-    } else if (
-      [
-        'operations_head',
-        'operations',
-        'operation_manager',
-        'growth',
-        'brand_leader',
-        'manager',
-        'store_manager',
-        'cashier',
-        'barista',
-        'kitchen',
-        'staff',
-      ].includes(role)
-    ) {
-      // 3. Handle Operations Head / Growth / Store Manager / Staff Roles
-      // Remove from admin_profiles if they were previously there and not superadmin
+    } else if (['operations_head', 'growth', 'manager', 'employee'].includes(normalizedRole)) {
+      // 3. Handle Operations Head, Growth, Manager, Employee
+      // Remove from admin_profiles
       if (cleanEmail || cleanPhone) {
         let adminDel = supabaseAdmin.from('admin_profiles').delete();
         if (cleanEmail) adminDel = adminDel.eq('email', cleanEmail);
@@ -142,7 +148,7 @@ export async function POST(request) {
         await adminDel;
       }
 
-      // Check for existing outlet_staff entry
+      // Check for existing outlet_staff record
       let staffQuery = supabaseAdmin.from('outlet_staff').select('id');
       if (resolvedUserId) staffQuery = staffQuery.eq('user_id', resolvedUserId);
       else if (cleanEmail) staffQuery = staffQuery.eq('email', cleanEmail);
@@ -155,7 +161,7 @@ export async function POST(request) {
         display_name: cleanName,
         email: cleanEmail,
         phone: cleanPhone,
-        role,
+        role: normalizedRole,
         outlet_id: outlet_id || null,
         pin_code: pin || null,
         is_active: true,
@@ -173,7 +179,7 @@ export async function POST(request) {
         await supabaseAdmin.from('outlet_staff').insert([staffPayload]);
       }
     } else {
-      // 4. Demote to Regular Customer (remove administrative & staff privileges)
+      // 4. Role === 'customer' (Regular Customer with no administrative or staff privileges)
       if (cleanEmail) {
         await supabaseAdmin.from('admin_profiles').delete().eq('email', cleanEmail);
         await supabaseAdmin.from('outlet_staff').delete().eq('email', cleanEmail);
@@ -187,12 +193,12 @@ export async function POST(request) {
       }
     }
 
-    // 5. Update Supabase Auth user metadata if user_id exists
+    // 5. Update Auth user metadata
     if (resolvedUserId) {
       try {
         await supabaseAdmin.auth.admin.updateUserById(resolvedUserId, {
           user_metadata: {
-            role,
+            role: normalizedRole,
             display_name: cleanName,
             outlet_id: outlet_id || null,
           },
@@ -202,7 +208,7 @@ export async function POST(request) {
       }
     }
 
-    // 6. Audit Log entry
+    // 6. Record in security audit_log
     try {
       await supabaseAdmin.from('audit_log').insert({
         admin_email: auth.caller?.email || 'superadmin',
@@ -213,7 +219,7 @@ export async function POST(request) {
           name: cleanName,
           email: cleanEmail,
           phone: cleanPhone,
-          new_role: role,
+          new_role: normalizedRole,
           outlet_id,
         },
       });
@@ -223,10 +229,10 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      message: `User role successfully updated to ${role}`,
+      message: `User role successfully set to ${normalizedRole}`,
       data: {
         user_id: resolvedUserId,
-        role,
+        role: normalizedRole,
         outlet_id,
       },
     });

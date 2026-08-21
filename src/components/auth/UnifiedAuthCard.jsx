@@ -97,26 +97,20 @@ export default function UnifiedAuthCard({ defaultTab = 'phone', defaultMode = 'l
           router.push('/admin');
           return;
         }
-        if (data.role === 'operations_head' || data.role === 'operations' || data.role === 'operation_manager') {
+        if (data.role === 'operations_head') {
           router.push('/admin/operations');
           return;
         }
-        if (data.role === 'growth' || data.role === 'brand_leader') {
+        if (data.role === 'growth') {
           router.push('/admin/growth');
           return;
         }
-        if (data.role === 'manager' || data.role === 'store_manager') {
+        if (data.role === 'manager') {
           router.push('/admin/manager');
           return;
         }
-        if (data.role === 'staff') {
-          const isLocal =
-            window.location.hostname.includes('localhost') ||
-            window.location.hostname.includes('127.0.0.1');
-          const targetUrl = isLocal
-            ? `${window.location.protocol}//outlet.localhost:${window.location.port}/dashboard`
-            : `${window.location.protocol}//outlet.janubhai.com/dashboard`;
-          window.location.href = targetUrl;
+        if (data.role === 'employee') {
+          router.push('/pos');
           return;
         }
       }
