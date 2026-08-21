@@ -1178,15 +1178,15 @@ function OutletsMasterDashboardContent() {
       <div className="stats-grid" style={{ marginBottom: '1.75rem' }}>
         <div
           className="stat-card gold"
-          style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
+          style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
           onClick={() => handleTabChange('all')}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <h3 style={{ margin: 0 }}>
               <Store size={14} style={{ display: 'inline', marginRight: 4 }} /> Outlets
             </h3>
-            <span style={{ fontSize: '0.75rem', color: '#69f0ae', fontWeight: 700 }}>
-              {executiveMetrics.openOutlets} Open Live
+            <span style={{ fontSize: '0.74rem', color: '#69f0ae', fontWeight: 800, textTransform: 'uppercase' }}>
+              ● {executiveMetrics.openOutlets} Open Live
             </span>
           </div>
           <p className="stat-value">{executiveMetrics.totalOutlets}</p>
@@ -1195,14 +1195,14 @@ function OutletsMasterDashboardContent() {
 
         <div
           className="stat-card blue"
-          style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
+          style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
           onClick={() => handleTabChange('menu')}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <h3 style={{ margin: 0 }}>
               <Coffee size={14} style={{ display: 'inline', marginRight: 4 }} /> Central Menu
             </h3>
-            <span style={{ fontSize: '0.75rem', color: '#60a5fa' }}>{categories.length} Categories</span>
+            <span style={{ fontSize: '0.74rem', color: '#60a5fa', fontWeight: 700 }}>{categories.length} Categories</span>
           </div>
           <p className="stat-value">{executiveMetrics.menuItemsCount}</p>
           <p className="stat-sub">Live menu products in Supabase</p>
@@ -1210,14 +1210,14 @@ function OutletsMasterDashboardContent() {
 
         <div
           className="stat-card red"
-          style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
+          style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
           onClick={() => handleTabChange('stock')}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <h3 style={{ margin: 0 }}>
               <AlertTriangle size={14} style={{ display: 'inline', marginRight: 4 }} /> Stock Shortages
             </h3>
-            <span style={{ fontSize: '0.75rem', color: '#ff8a80', fontWeight: 700 }}>
+            <span style={{ fontSize: '0.74rem', color: '#ff8a80', fontWeight: 800 }}>
               {executiveMetrics.criticalShortagesCount} Photo Alerts
             </span>
           </div>
@@ -1227,14 +1227,14 @@ function OutletsMasterDashboardContent() {
 
         <div
           className="stat-card green"
-          style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
+          style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
           onClick={() => handleTabChange('checklists')}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <h3 style={{ margin: 0 }}>
               <ClipboardCheck size={14} style={{ display: 'inline', marginRight: 4 }} /> SOP Audits
             </h3>
-            <span style={{ fontSize: '0.75rem', color: '#69f0ae' }}>Shift Logs</span>
+            <span style={{ fontSize: '0.74rem', color: '#69f0ae', fontWeight: 700 }}>Shift Logs</span>
           </div>
           <p className="stat-value">{checklists.length}</p>
           <p className="stat-sub">Opening, midday & closing records</p>
@@ -1242,29 +1242,33 @@ function OutletsMasterDashboardContent() {
 
         <div
           className="stat-card"
-          style={{ cursor: 'pointer', transition: 'transform 0.2s ease' }}
+          style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
           onClick={() => handleTabChange('transfers')}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <h3 style={{ margin: 0 }}>
               <ArrowLeftRight size={14} style={{ display: 'inline', marginRight: 4 }} /> Stock Transfers
             </h3>
-            <span style={{ fontSize: '0.75rem', color: '#60a5fa' }}>Inter-Store</span>
+            <span style={{ fontSize: '0.74rem', color: '#fbbf24', fontWeight: 700 }}>Inter-Store</span>
           </div>
           <p className="stat-value">{executiveMetrics.totalTransfers}</p>
           <p className="stat-sub">Active & in-transit supply dispatches</p>
         </div>
       </div>
 
-      {/* Tabs Navigation */}
+      {/* Tabs Navigation (Sleek Horizontal Scroller with No Native Scrollbars) */}
       <div
+        className="admin-tabs-nav no-scrollbar"
         style={{
           display: 'flex',
-          gap: '0.4rem',
-          borderBottom: '1px solid rgba(245, 240, 234, 0.1)',
-          paddingBottom: '0.25rem',
+          gap: '0.5rem',
+          borderBottom: '1px solid rgba(245, 240, 234, 0.12)',
+          paddingBottom: '0.4rem',
           marginBottom: '1.5rem',
           overflowX: 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
         }}
       >
         {[
@@ -1286,21 +1290,22 @@ function OutletsMasterDashboardContent() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.7rem 1.1rem',
-                background: isActive ? 'rgba(216, 154, 30, 0.15)' : 'transparent',
+                gap: '0.5rem',
+                padding: '0.65rem 1.15rem',
+                background: isActive ? 'rgba(216, 154, 30, 0.18)' : 'rgba(255, 255, 255, 0.03)',
                 color: isActive ? 'var(--accent-gold, #d89a1e)' : 'var(--text-secondary, #cbb9a8)',
-                border: 'none',
-                borderBottom: isActive ? '2px solid var(--accent-gold, #d89a1e)' : '2px solid transparent',
-                fontWeight: isActive ? 700 : 500,
-                fontSize: '0.88rem',
+                border: `1px solid ${isActive ? 'rgba(216, 154, 30, 0.4)' : 'rgba(245, 240, 234, 0.06)'}`,
+                borderBottom: isActive ? '2px solid var(--accent-gold, #d89a1e)' : '1px solid rgba(245, 240, 234, 0.06)',
+                fontWeight: isActive ? 800 : 600,
+                fontSize: '0.85rem',
                 cursor: 'pointer',
-                borderRadius: '8px 8px 0 0',
-                transition: 'all 0.2s ease',
+                borderRadius: '10px 10px 0 0',
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                 whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}
             >
-              <IconComponent size={16} /> {tab.label}
+              <IconComponent size={15} /> {tab.label}
             </button>
           );
         })}
@@ -1336,7 +1341,7 @@ function OutletsMasterDashboardContent() {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1.25rem' }}>
               {filteredOutlets.map((outlet) => {
                 const status = statusBadges[outlet.operational_status] || statusBadges.open;
                 return (

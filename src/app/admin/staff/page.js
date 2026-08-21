@@ -323,7 +323,7 @@ export default function AdminStaffPage() {
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '16px' }}>
           {filteredStaff.map((member) => {
             const badge = ROLE_BADGES[member.role] || ROLE_BADGES.employee;
             const outletName = outlets.find((o) => o.id === member.outlet_id)?.name || 'Gafoor Nagar Flagship';

@@ -766,13 +766,17 @@ function UsersDashboardContent() {
 
       {/* Navigation Tabs Bar */}
       <div
+        className="admin-tabs-nav no-scrollbar"
         style={{
           display: 'flex',
           gap: '0.5rem',
-          borderBottom: '1px solid rgba(245, 240, 234, 0.1)',
-          paddingBottom: '0.25rem',
+          borderBottom: '1px solid rgba(245, 240, 234, 0.12)',
+          paddingBottom: '0.4rem',
           marginBottom: '1.5rem',
           overflowX: 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
         }}
       >
         <button
