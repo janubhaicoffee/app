@@ -70,10 +70,10 @@ const navItems = [
   {
     section: 'Worker & Brand Hubs',
     items: [
-      { href: '/manager', label: 'Manager Control Hub', icon: ClipboardList },
-      { href: '/operations', label: 'Operations Head Hub', icon: FileText },
-      { href: '/growth', label: 'Growth & Strategy', icon: TrendingUp },
-      { href: '/events', label: 'Events & RSVPs', icon: Coffee },
+      { href: '/admin/manager', label: 'Manager Control Hub', icon: ClipboardList },
+      { href: '/admin/operations', label: 'Operations Head Hub', icon: FileText },
+      { href: '/admin/growth', label: 'Growth & Strategy', icon: TrendingUp },
+      { href: '/admin/events', label: 'Events & RSVPs', icon: Coffee },
     ],
   },
   {

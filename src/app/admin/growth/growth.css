@@ -1,0 +1,126 @@
+/* Growth & Brand Strategy Dashboard Styling - Janu Bhai Cafe */
+
+.growth-dashboard-container {
+  min-height: calc(100vh - 40px);
+  background: transparent;
+  color: #f5f0eb;
+  padding: 16px 20px 60px;
+  font-family: inherit;
+}
+
+.growth-header-card {
+  background: linear-gradient(135deg, rgba(50, 32, 22, 0.85) 0%, rgba(20, 14, 10, 0.95) 100%);
+  border: 1px solid rgba(212, 163, 89, 0.35);
+  border-radius: 20px;
+  padding: 28px 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.growth-brand-title {
+  font-size: 1.95rem;
+  font-weight: 800;
+  color: #f7e7ce;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.growth-badge {
+  background: linear-gradient(135deg, rgba(212, 163, 89, 0.3) 0%, rgba(184, 134, 59, 0.2) 100%);
+  color: #f7e7ce;
+  border: 1px solid rgba(212, 163, 89, 0.5);
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* Tabs Bar */
+.growth-tabs-bar {
+  display: flex;
+  gap: 8px;
+  background: rgba(22, 15, 10, 0.8);
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 28px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.growth-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #a89f91;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.growth-tab-btn:hover {
+  color: #f5f0eb;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.growth-tab-btn.active {
+  background: #d4a359;
+  color: #120b06;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(212, 163, 89, 0.35);
+}
+
+/* Panel Layout */
+.growth-panel {
+  background: rgba(26, 18, 13, 0.7);
+  border: 1px solid rgba(212, 163, 89, 0.18);
+  border-radius: 18px;
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(14px);
+}
+
+/* Opportunity Pipeline Card */
+.pipeline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.pipeline-card {
+  background: rgba(36, 24, 16, 0.7);
+  border: 1px solid rgba(212, 163, 89, 0.25);
+  border-radius: 14px;
+  padding: 20px;
+  transition: transform 0.2s;
+}
+
+.pipeline-card:hover {
+  transform: translateY(-2px);
+  border-color: #d4a359;
+}
+
+@media (max-width: 768px) {
+  .growth-dashboard-container {
+    padding: 80px 14px 40px;
+  }
+  .growth-header-card {
+    padding: 20px;
+  }
+}

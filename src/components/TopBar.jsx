@@ -293,23 +293,6 @@ export default function TopBar() {
                   <span>{user ? 'My Account' : 'Sign In / Register'}</span>
                   <ChevronRight size={16} />
                 </Link>
-
-                <div style={{ margin: '14px 0 6px', padding: '10px 14px', background: 'rgba(212,163,89,0.1)', borderRadius: '10px', border: '1px solid rgba(212,163,89,0.2)' }}>
-                  <span style={{ fontSize: '0.72rem', color: '#d4a359', textTransform: 'uppercase', fontWeight: 800, display: 'block', marginBottom: '8px' }}>
-                    Staff & Operations Portals
-                  </span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <Link href="/manager" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#f5f0eb', fontSize: '0.82rem', textDecoration: 'none', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Manager Hub</span> →
-                    </Link>
-                    <Link href="/operations" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#f5f0eb', fontSize: '0.82rem', textDecoration: 'none', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Operations Head</span> →
-                    </Link>
-                    <Link href="/growth" onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#f5f0eb', fontSize: '0.82rem', textDecoration: 'none', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Growth & Strategy</span> →
-                    </Link>
-                  </div>
-                </div>
               </div>
 
               <div className="sidebar-footer-apple">

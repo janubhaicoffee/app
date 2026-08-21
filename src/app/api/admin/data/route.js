@@ -46,10 +46,12 @@ async function verifyAdmin(request) {
       if (!staff || !allowedRoles.includes(staff.role)) {
         return { error: 'Forbidden', status: 403 };
       }
+      return { supabase: supabaseAdmin, user, adminEmail: user.email, role: staff.role, staff };
     }
+    return { supabase: supabaseAdmin, user, adminEmail: user.email, role: profile.role || 'superadmin' };
   }
   const supabase = supabaseAdmin;
-  return { supabase, user, adminEmail: user.email };
+  return { supabase, user, adminEmail: user.email, role: 'superadmin' };
 }
 async function logAudit(supabase, adminEmail, action, entityType, entityId, details = {}) {
   try {
@@ -73,7 +75,7 @@ export async function GET(request) {
     const type = searchParams.get('type');
     const id = searchParams.get('id');
     if (type === 'check') {
-      return NextResponse.json({ isAdmin: true });
+      return NextResponse.json({ isAdmin: true, role: auth.role || 'superadmin', staff: auth.staff || null });
     }
     if (type === 'dashboard') {
       const [

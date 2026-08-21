@@ -97,16 +97,16 @@ export default function UnifiedAuthCard({ defaultTab = 'phone', defaultMode = 'l
           router.push('/admin');
           return;
         }
-        if (data.role === 'operations_head' || data.role === 'operations') {
-          router.push('/operations');
+        if (data.role === 'operations_head' || data.role === 'operations' || data.role === 'operation_manager') {
+          router.push('/admin/operations');
           return;
         }
-        if (data.role === 'growth') {
-          router.push('/growth');
+        if (data.role === 'growth' || data.role === 'brand_leader') {
+          router.push('/admin/growth');
           return;
         }
-        if (data.role === 'manager') {
-          router.push('/manager');
+        if (data.role === 'manager' || data.role === 'store_manager') {
+          router.push('/admin/manager');
           return;
         }
         if (data.role === 'staff') {

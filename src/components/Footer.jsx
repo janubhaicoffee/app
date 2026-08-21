@@ -67,15 +67,6 @@ export default function Footer() {
                 <li>
                   <Link href="/contact">Bulk / B2B Orders</Link>
                 </li>
-                <li>
-                  <Link href="/manager" style={{ opacity: 0.7, fontSize: '0.8rem' }}>Manager Hub</Link>
-                </li>
-                <li>
-                  <Link href="/operations" style={{ opacity: 0.7, fontSize: '0.8rem' }}>Operations Head</Link>
-                </li>
-                <li>
-                  <Link href="/growth" style={{ opacity: 0.7, fontSize: '0.8rem' }}>Growth & BD</Link>
-                </li>
               </ul>
             </div>
 
