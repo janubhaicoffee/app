@@ -218,110 +218,133 @@ export default function AdminBrandHeader() {
             border: '1px solid rgba(245, 240, 234, 0.08)',
           }}
         >
-          {/* Row 1: Workspace / Portal Switcher */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', width: '100%' }}>
-            <div
-              style={{
-                position: 'relative',
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <Globe
+          {/* Row 1: Workspace / Portal Switcher (STRICTLY SUPERADMIN ONLY) */}
+          {isSuperAdmin && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', width: '100%' }}>
+              <div
+                style={{
+                  position: 'relative',
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <Globe
+                  size={13}
+                  color="var(--accent-gold, #d89a1e)"
+                  style={{ position: 'absolute', left: '8px', pointerEvents: 'none', zIndex: 1 }}
+                />
+                <select
+                  value={siteUrls.admin}
+                  onChange={(e) => {
+                    window.location.href = e.target.value;
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '5px 8px 5px 26px',
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.5px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(216, 154, 30, 0.3)',
+                    background: 'rgba(30, 18, 16, 0.9)',
+                    color: 'var(--accent-gold, #d89a1e)',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                  }}
+                >
+                  <option value={siteUrls.admin} style={{ background: '#1e1210', color: '#f5f0ea' }}>
+                    ADMIN HQ (GOD MODE)
+                  </option>
+                  <option value={siteUrls.outlet} style={{ background: '#1e1210', color: '#f5f0ea' }}>
+                    OUTLET DESK
+                  </option>
+                  <option value={siteUrls.pos} style={{ background: '#1e1210', color: '#f5f0ea' }}>
+                    POS REGISTER
+                  </option>
+                </select>
+                <ChevronDown
+                  size={12}
+                  color="var(--accent-gold, #d89a1e)"
+                  style={{ position: 'absolute', right: '8px', pointerEvents: 'none' }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Row 2: Outlet / Branch Control */}
+          {isSuperAdmin || ['operations_head', 'operations', 'operations_manager', 'operation_manager', 'area_manager'].includes(userRole) ? (
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}>
+              <Store
                 size={13}
-                color="var(--accent-gold, #d89a1e)"
+                color="var(--text-secondary, #cbb9a8)"
                 style={{ position: 'absolute', left: '8px', pointerEvents: 'none', zIndex: 1 }}
               />
               <select
-                value={siteUrls.admin}
-                onChange={(e) => {
-                  window.location.href = e.target.value;
-                }}
+                value={selectedOutletId}
+                onChange={handleOutletChange}
                 style={{
                   width: '100%',
-                  padding: '5px 8px 5px 26px',
+                  padding: '5px 22px 5px 26px',
                   fontSize: '0.74rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.5px',
+                  fontWeight: 600,
                   borderRadius: '6px',
-                  border: '1px solid rgba(216, 154, 30, 0.3)',
-                  background: 'rgba(30, 18, 16, 0.9)',
-                  color: 'var(--accent-gold, #d89a1e)',
+                  border: '1px solid rgba(245, 240, 234, 0.15)',
+                  background: 'rgba(20, 12, 10, 0.85)',
+                  color: 'var(--text-primary, #f5f0ea)',
                   outline: 'none',
                   cursor: 'pointer',
                   appearance: 'none',
                   WebkitAppearance: 'none',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
                 }}
               >
-                <option value={siteUrls.admin} style={{ background: '#1e1210', color: '#f5f0ea' }}>
-                  ADMIN HQ
-                </option>
-                <option value={siteUrls.outlet} style={{ background: '#1e1210', color: '#f5f0ea' }}>
-                  OUTLET DESK
-                </option>
-                <option value={siteUrls.pos} style={{ background: '#1e1210', color: '#f5f0ea' }}>
-                  POS REGISTER
-                </option>
+                {outletsList.length > 1 && (
+                  <option value="all-outlets" style={{ background: '#1e1210', color: '#d89a1e', fontWeight: 700 }}>
+                    🏢 ALL OUTLETS (OVERVIEW)
+                  </option>
+                )}
+                {outletsList.map((o) => (
+                  <option key={o.id} value={o.id} style={{ background: '#1e1210', color: '#f5f0ea' }}>
+                    📍 {o.name.toUpperCase()} {o.code ? `(${o.code})` : ''}
+                  </option>
+                ))}
+                {isSuperAdmin && (
+                  <option value="create-new" style={{ background: '#1e1210', color: '#69f0ae', fontWeight: 700 }}>
+                    ➕ MANAGE / ADD OUTLETS
+                  </option>
+                )}
               </select>
               <ChevronDown
                 size={12}
-                color="var(--accent-gold, #d89a1e)"
+                color="var(--text-secondary, #cbb9a8)"
                 style={{ position: 'absolute', right: '8px', pointerEvents: 'none' }}
               />
             </div>
-          </div>
-
-          {/* Row 2: Outlet / Branch Switcher */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}>
-            <Store
-              size={13}
-              color="var(--text-secondary, #cbb9a8)"
-              style={{ position: 'absolute', left: '8px', pointerEvents: 'none', zIndex: 1 }}
-            />
-            <select
-              value={selectedOutletId}
-              onChange={handleOutletChange}
+          ) : (
+            <div
               style={{
-                width: '100%',
-                padding: '5px 22px 5px 26px',
-                fontSize: '0.74rem',
-                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '5px 8px',
                 borderRadius: '6px',
-                border: '1px solid rgba(245, 240, 234, 0.15)',
-                background: 'rgba(20, 12, 10, 0.85)',
-                color: 'var(--text-primary, #f5f0ea)',
-                outline: 'none',
-                cursor: 'pointer',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
+                background: 'rgba(20, 12, 10, 0.6)',
+                border: '1px solid rgba(245, 240, 234, 0.08)',
+                fontSize: '0.74rem',
+                color: '#cbb9a8',
               }}
             >
-              {outletsList.length > 1 && (
-                <option value="all-outlets" style={{ background: '#1e1210', color: '#d89a1e', fontWeight: 700 }}>
-                  🏢 ALL OUTLETS (OVERVIEW)
-                </option>
-              )}
-              {outletsList.map((o) => (
-                <option key={o.id} value={o.id} style={{ background: '#1e1210', color: '#f5f0ea' }}>
-                  📍 {o.name.toUpperCase()} {o.code ? `(${o.code})` : ''}
-                </option>
-              ))}
-              {isSuperAdmin && (
-                <option value="create-new" style={{ background: '#1e1210', color: '#69f0ae', fontWeight: 700 }}>
-                  ➕ MANAGE / ADD OUTLETS
-                </option>
-              )}
-            </select>
-            <ChevronDown
-              size={12}
-              color="var(--text-secondary, #cbb9a8)"
-              style={{ position: 'absolute', right: '8px', pointerEvents: 'none' }}
-            />
-          </div>
+              <Store size={13} color="var(--accent-gold, #d89a1e)" />
+              <span style={{ fontWeight: 600, color: '#f5f0ea', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {outletsList.find((o) => o.id === selectedOutletId)?.name || 'Gafoor Nagar Flagship'}
+              </span>
+            </div>
+          )}
 
           {/* Row 3: Role Status Pill */}
           <div

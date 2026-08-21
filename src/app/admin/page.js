@@ -625,215 +625,424 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* 2 Main Charts */}
-      <div className="charts-grid">
-        {/* Revenue Chart */}
-        <div className="admin-card">
-          <div className="admin-card-header">
-            <h2>
-              Revenue{' '}
-              <span style={{ fontWeight: 400, fontSize: '0.85rem', color: 'var(--text-secondary, #cbb9a8)' }}>
-                (Last 30 Days)
-              </span>
-            </h2>
-            <TrendingUp size={18} color="#69f0ae" />
-          </div>
-          <div style={{ width: '100%', height: 280 }}>
-            <ResponsiveContainer>
-              <AreaChart data={data.chartData}>
-                <defs>
-                  <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#d89a1e" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#d89a1e" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(245, 240, 234, 0.06)" />
-                <XAxis
-                  dataKey="date"
-                  stroke="#cbb9a8"
-                  tick={{ fill: '#cbb9a8', fontSize: 11 }}
-                  tickFormatter={(val) => (val ? val.split('-').slice(1).join('/') : '')}
-                />
-                <YAxis
-                  stroke="#cbb9a8"
-                  tick={{ fill: '#cbb9a8', fontSize: 11 }}
-                  tickFormatter={(val) => `₹${(val / 1000).toFixed(0)}k`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'rgba(30, 18, 16, 0.95)',
-                    border: '1px solid rgba(216, 154, 30, 0.4)',
-                    borderRadius: 12,
-                    color: '#f5f0ea',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                  }}
-                  formatter={(value) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Revenue']}
-                  labelFormatter={(label) => `Date: ${label}`}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#d89a1e"
-                  strokeWidth={2.5}
-                  fill="url(#revenueGrad)"
-                  dot={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Orders Bar Chart */}
-        <div className="admin-card">
-          <div className="admin-card-header">
-            <h2>
-              Orders{' '}
-              <span style={{ fontWeight: 400, fontSize: '0.85rem', color: 'var(--text-secondary, #cbb9a8)' }}>
-                (Last 30 Days)
-              </span>
-            </h2>
-            <ShoppingCart size={18} color="var(--accent-gold, #d89a1e)" />
-          </div>
-          <div style={{ width: '100%', height: 280 }}>
-            <ResponsiveContainer>
-              <BarChart data={data.chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(245, 240, 234, 0.06)" />
-                <XAxis
-                  dataKey="date"
-                  stroke="#cbb9a8"
-                  tick={{ fill: '#cbb9a8', fontSize: 11 }}
-                  tickFormatter={(val) => (val ? val.split('-').slice(1).join('/') : '')}
-                />
-                <YAxis stroke="#cbb9a8" tick={{ fill: '#cbb9a8', fontSize: 11 }} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'rgba(30, 18, 16, 0.95)',
-                    border: '1px solid rgba(216, 154, 30, 0.4)',
-                    borderRadius: 12,
-                    color: '#f5f0ea',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                  }}
-                  formatter={(value) => [value, 'Orders']}
-                  labelFormatter={(label) => `Date: ${label}`}
-                />
-                <Bar dataKey="orders" fill="#d89a1e" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* 2 Bottom Columns: Recent Orders & Low Stock */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: '1.5rem',
-          marginBottom: '1.5rem',
-        }}
-      >
-        {/* Recent Orders */}
-        <div className="admin-card">
-          <div className="admin-card-header">
-            <h2>Recent Orders</h2>
-            <Link href="/admin/orders" className="admin-btn admin-btn-sm">
-              View All Orders
-            </Link>
-          </div>
-          {data.recentOrders.length > 0 ? (
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Order</th>
-                  <th>Customer</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.recentOrders.slice(0, 10).map((order, i) => (
-                  <tr key={order.id || i}>
-                    <td style={{ fontWeight: 700, fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--accent-gold, #d89a1e)' }}>
-                      #{order.order_id || order.id?.toString().slice(-6).toUpperCase() || `ORD-${String(i + 1).padStart(4, '0')}`}
-                    </td>
-                    <td>{order.customer_name || order.customer?.name || order.email || 'Direct Storefront'}</td>
-                    <td style={{ fontWeight: 700, color: 'var(--text-primary, #f5f0ea)' }}>
-                      ₹{Number(order.total || order.amount || 0).toLocaleString('en-IN')}
-                    </td>
-                    <td>
-                      <span
-                        className="status-badge"
-                        style={{
-                          background: `${statusColors[order.status] || '#6b7280'}25`,
-                          color: statusColors[order.status] || '#6b7280',
-                          border: `1px solid ${statusColors[order.status] || '#6b7280'}50`,
-                        }}
-                      >
-                        {order.status || 'confirmed'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="empty-state">
-              <ShoppingCart size={36} />
-              <h3>No recent orders</h3>
-              <p>Live storefront and POS orders will appear here automatically.</p>
+      {/* 2 Main Charts (STRICTLY SUPERADMIN ONLY) */}
+      {isSuperAdmin && (
+        <div className="charts-grid">
+          {/* Revenue Chart */}
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2>
+                Revenue{' '}
+                <span style={{ fontWeight: 400, fontSize: '0.85rem', color: 'var(--text-secondary, #cbb9a8)' }}>
+                  (Last 30 Days)
+                </span>
+              </h2>
+              <TrendingUp size={18} color="#69f0ae" />
             </div>
-          )}
-        </div>
-
-        {/* Low Stock Alerts */}
-        <div className="admin-card">
-          <div className="admin-card-header">
-            <h2>Low Stock Alerts</h2>
-            <Link href="/admin/inventory" className="admin-btn-outline admin-btn-sm">
-              Manage Inventory
-            </Link>
+            <div style={{ width: '100%', height: 280 }}>
+              <ResponsiveContainer>
+                <AreaChart data={data.chartData}>
+                  <defs>
+                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#d89a1e" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#d89a1e" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(245, 240, 234, 0.06)" />
+                  <XAxis
+                    dataKey="date"
+                    stroke="#cbb9a8"
+                    tick={{ fill: '#cbb9a8', fontSize: 11 }}
+                    tickFormatter={(val) => (val ? val.split('-').slice(1).join('/') : '')}
+                  />
+                  <YAxis
+                    stroke="#cbb9a8"
+                    tick={{ fill: '#cbb9a8', fontSize: 11 }}
+                    tickFormatter={(val) => `₹${(val / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'rgba(30, 18, 16, 0.95)',
+                      border: '1px solid rgba(216, 154, 30, 0.4)',
+                      borderRadius: 12,
+                      color: '#f5f0ea',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                    }}
+                    formatter={(value) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Revenue']}
+                    labelFormatter={(label) => `Date: ${label}`}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#d89a1e"
+                    strokeWidth={2.5}
+                    fill="url(#revenueGrad)"
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          {data.lowStockAlerts && data.lowStockAlerts.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-              {data.lowStockAlerts.slice(0, 8).map((item, i) => (
-                <div
-                  key={item.id || i}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.75rem 1rem',
-                    background: 'rgba(216, 154, 30, 0.08)',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(216, 154, 30, 0.25)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <AlertTriangle size={16} color="#f59e0b" style={{ flexShrink: 0 }} />
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary, #f5f0ea)' }}>
-                        {item.name}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #cbb9a8)' }}>
-                        {item.outlet_name ? `Outlet: ${item.outlet_name}` : 'Main Roastery Warehouse'}
+
+          {/* Orders Bar Chart */}
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2>
+                Orders{' '}
+                <span style={{ fontWeight: 400, fontSize: '0.85rem', color: 'var(--text-secondary, #cbb9a8)' }}>
+                  (Last 30 Days)
+                </span>
+              </h2>
+              <ShoppingCart size={18} color="var(--accent-gold, #d89a1e)" />
+            </div>
+            <div style={{ width: '100%', height: 280 }}>
+              <ResponsiveContainer>
+                <BarChart data={data.chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(245, 240, 234, 0.06)" />
+                  <XAxis
+                    dataKey="date"
+                    stroke="#cbb9a8"
+                    tick={{ fill: '#cbb9a8', fontSize: 11 }}
+                    tickFormatter={(val) => (val ? val.split('-').slice(1).join('/') : '')}
+                  />
+                  <YAxis stroke="#cbb9a8" tick={{ fill: '#cbb9a8', fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'rgba(30, 18, 16, 0.95)',
+                      border: '1px solid rgba(216, 154, 30, 0.4)',
+                      borderRadius: 12,
+                      color: '#f5f0ea',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                    }}
+                    formatter={(value) => [value, 'Orders']}
+                    labelFormatter={(label) => `Date: ${label}`}
+                  />
+                  <Bar dataKey="orders" fill="#d89a1e" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUPERADMIN GOD MODE DATA COLUMNS */}
+      {isSuperAdmin && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          {/* Recent Orders */}
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2>Recent Storefront Orders</h2>
+              <Link href="/admin/orders" className="admin-btn admin-btn-sm">
+                View All Orders
+              </Link>
+            </div>
+            {data.recentOrders.length > 0 ? (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Order</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.recentOrders.slice(0, 10).map((order, i) => (
+                    <tr key={order.id || i}>
+                      <td style={{ fontWeight: 700, fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--accent-gold, #d89a1e)' }}>
+                        #{order.order_id || order.id?.toString().slice(-6).toUpperCase() || `ORD-${String(i + 1).padStart(4, '0')}`}
+                      </td>
+                      <td>{order.customer_name || order.customer?.name || order.email || 'Direct Storefront'}</td>
+                      <td style={{ fontWeight: 700, color: 'var(--text-primary, #f5f0ea)' }}>
+                        ₹{Number(order.total || order.amount || 0).toLocaleString('en-IN')}
+                      </td>
+                      <td>
+                        <span
+                          className="status-badge"
+                          style={{
+                            background: `${statusColors[order.status] || '#6b7280'}25`,
+                            color: statusColors[order.status] || '#6b7280',
+                            border: `1px solid ${statusColors[order.status] || '#6b7280'}50`,
+                          }}
+                        >
+                          {order.status || 'confirmed'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="empty-state">
+                <ShoppingCart size={36} />
+                <h3>No recent orders</h3>
+                <p>Live storefront and POS orders will appear here automatically.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Low Stock Alerts */}
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2>Roastery Warehouse Stock</h2>
+              <Link href="/admin/inventory" className="admin-btn-outline admin-btn-sm">
+                Manage Inventory
+              </Link>
+            </div>
+            {data.lowStockAlerts && data.lowStockAlerts.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                {data.lowStockAlerts.slice(0, 8).map((item, i) => (
+                  <div
+                    key={item.id || i}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.75rem 1rem',
+                      background: 'rgba(216, 154, 30, 0.08)',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(216, 154, 30, 0.25)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <AlertTriangle size={16} color="#f59e0b" style={{ flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary, #f5f0ea)' }}>
+                          {item.name}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #cbb9a8)' }}>
+                          {item.outlet_name ? `Outlet: ${item.outlet_name}` : 'Main Roastery Warehouse'}
+                        </div>
                       </div>
                     </div>
+                    <span style={{ fontWeight: 800, color: '#ff8a80', fontSize: '0.85rem' }}>
+                      {item.stock} left
+                    </span>
                   </div>
-                  <span style={{ fontWeight: 800, color: '#ff8a80', fontSize: '0.85rem' }}>
-                    {item.stock} left
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <Package size={36} />
-              <h3>Stock levels optimal</h3>
-              <p>All catalog products and outlet inventories are above minimum thresholds.</p>
-            </div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <Package size={36} />
+                <h3>Stock levels optimal</h3>
+                <p>All catalog products and warehouse inventories are above minimum thresholds.</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* OPERATIONS HEAD CAFE CHAIN OVERVIEW */}
+      {isOperations && !isSuperAdmin && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          {/* Active Cafe Outlets */}
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2>Janu Bhai Cafe Outlets</h2>
+              <Link href="/admin/outlets" className="admin-btn admin-btn-sm">
+                Manage Outlets
+              </Link>
+            </div>
+            {data.outletsList && data.outletsList.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {data.outletsList.map((outlet, i) => (
+                  <div
+                    key={outlet.id || i}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.85rem 1rem',
+                      background: 'rgba(216, 154, 30, 0.08)',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(216, 154, 30, 0.25)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Store size={18} color="#fbbf24" style={{ flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#f5f0ea' }}>
+                          {outlet.name}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#cbb9a8' }}>
+                          {outlet.address || 'South Delhi, New Delhi'}
+                        </div>
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        background: 'rgba(105, 240, 174, 0.15)',
+                        color: '#69f0ae',
+                        border: '1px solid rgba(105, 240, 174, 0.3)',
+                      }}
+                    >
+                      ● {outlet.status || 'Active'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <Store size={36} />
+                <h3>Gafoor Nagar Flagship Active</h3>
+                <p>Multi-outlet logistics, rosters, and shift sync connected.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Upcoming Events & RSVPs */}
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2>Upcoming Cafe Events & Activations</h2>
+              <Link href="/admin/events" className="admin-btn-outline admin-btn-sm">
+                Event Engine
+              </Link>
+            </div>
+            {data.upcomingEvents && data.upcomingEvents.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {data.upcomingEvents.map((ev, i) => (
+                  <div
+                    key={ev.id || i}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.85rem 1rem',
+                      background: 'rgba(59, 130, 246, 0.08)',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(59, 130, 246, 0.25)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Calendar size={18} color="#60a5fa" style={{ flexShrink: 0 }} />
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#f5f0ea' }}>
+                          {ev.title}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#cbb9a8' }}>
+                          {ev.event_date ? new Date(ev.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Upcoming'} • {ev.start_time || '05:00 PM'}
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{ fontWeight: 800, color: '#fbbf24', fontSize: '0.82rem' }}>
+                      {ev.rsvp_count || 0}/{ev.capacity || 30} RSVPs
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <Calendar size={36} />
+                <h3>No events scheduled</h3>
+                <p>Create coffee workshops and tasting pop-ups from the Events Hub.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* GROWTH LEADER OVERVIEW */}
+      {isGrowth && !isSuperAdmin && !isOperations && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          {/* Upcoming Events */}
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2>Events & Activations</h2>
+              <Link href="/admin/events" className="admin-btn admin-btn-sm">
+                Create Event
+              </Link>
+            </div>
+            <div className="empty-state">
+              <Calendar size={36} />
+              <h3>Event Pipeline Active</h3>
+              <p>Monitor registrations, VIP attendee lists, and ticket passes.</p>
+            </div>
+          </div>
+
+          {/* Review Moderation */}
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2>Guest Experience Reviews</h2>
+              <Link href="/admin/reviews" className="admin-btn-outline admin-btn-sm">
+                Review Queue
+              </Link>
+            </div>
+            <div className="empty-state">
+              <Star size={36} />
+              <h3>Reviews Moderation</h3>
+              <p>Moderate real coffee customer reviews and sentiment.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STORE MANAGER OVERVIEW */}
+      {isManager && !isSuperAdmin && !isOperations && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '1.5rem',
+          }}
+        >
+          {/* Store SOP Checklists */}
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2>Store SOP Checklists</h2>
+              <Link href="/admin/outlets/checklists" className="admin-btn admin-btn-sm">
+                Fill Checklists
+              </Link>
+            </div>
+            <div className="empty-state">
+              <ClipboardCheck size={36} />
+              <h3>Shift Checklists Ready</h3>
+              <p>Ensure opening, hygiene, grinder calibration, and closing compliance.</p>
+            </div>
+          </div>
+
+          {/* POS Terminal */}
+          <div className="admin-card">
+            <div className="admin-card-header">
+              <h2>POS Billing Terminal</h2>
+              <Link href="/pos" className="admin-btn admin-btn-sm" style={{ color: '#69f0ae' }}>
+                Launch POS
+              </Link>
+            </div>
+            <div className="empty-state">
+              <ShoppingCart size={36} />
+              <h3>POS Cashier Terminal</h3>
+              <p>Take counter orders, dine-in tickets, and apply cafe discount codes.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

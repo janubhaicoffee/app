@@ -107,28 +107,6 @@ export default function SidebarNav() {
 
   return (
     <nav className="admin-nav">
-      {/* Role Badge Indicator */}
-      <div style={{ padding: '0.4rem 0.5rem 0.75rem', borderBottom: '1px solid rgba(245, 240, 234, 0.08)', marginBottom: '0.6rem' }}>
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: badgeInfo.bg,
-            color: badgeInfo.color,
-            border: `1px solid ${badgeInfo.border}`,
-            padding: '3px 10px',
-            borderRadius: '100px',
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-          }}
-        >
-          {badgeInfo.icon} {badgeInfo.label}
-        </span>
-      </div>
-
       {/* 1. MAIN COMMAND */}
       {(isSuperAdmin || isOperations || isGrowth || isManager) && (
         <div className="admin-nav-group">
