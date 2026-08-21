@@ -348,7 +348,7 @@ export default function EventDetailPage({ params }) {
                   </div>
 
                   <Link
-                    href="/customer"
+                    href="/account"
                     style={{
                       display: 'inline-block',
                       marginTop: '20px',
@@ -361,7 +361,7 @@ export default function EventDetailPage({ params }) {
                       fontSize: '0.86rem',
                     }}
                   >
-                    View in Customer Hub →
+                    View Passes in Account →
                   </Link>
                 </div>
               )}

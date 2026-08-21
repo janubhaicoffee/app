@@ -26,6 +26,9 @@ import {
   X,
   Phone,
   RefreshCw,
+  Ticket,
+  ExternalLink,
+  Shield,
 } from 'lucide-react';
 import { getUserProgression, awardPoints } from '@/actions/progression';
 import { getTierInfo } from '@/lib/progressionUtils';
@@ -41,6 +44,8 @@ export default function AccountPage() {
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [myRsvps, setMyRsvps] = useState([]);
 
   // Progression & Lore State
   const [progressionData, setProgressionData] = useState({
@@ -168,7 +173,7 @@ export default function AccountPage() {
           setOrders(orderData);
         }
 
-        // Check Admin Status
+        // Check Admin / Staff Status & Role
         const adminRes = await fetch('/api/admin/data?type=check', {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
@@ -176,6 +181,22 @@ export default function AccountPage() {
           const adminData = await adminRes.json();
           if (adminData.isAdmin && mounted) {
             setIsAdmin(true);
+            setUserRole(adminData.role || 'superadmin');
+          }
+        }
+
+        // Fetch User's Active Event Passes & RSVPs
+        if (session.user?.email) {
+          try {
+            const rsvpRes = await fetch(`/api/events/rsvp?email=${encodeURIComponent(session.user.email)}`);
+            if (rsvpRes.ok) {
+              const rsvpData = await rsvpRes.json();
+              if (rsvpData.success && mounted) {
+                setMyRsvps(rsvpData.data || []);
+              }
+            }
+          } catch (rsvpErr) {
+            console.error('Failed to fetch event passes:', rsvpErr);
           }
         }
       } catch (error) {
@@ -445,14 +466,13 @@ export default function AccountPage() {
                 <span>Saved Addresses</span>
               </button>
 
-              <Link
-                href="/customer"
-                className="nav-item"
-                style={{ color: '#d4a359' }}
+              <button
+                className={`nav-item ${activeTab === 'passes' ? 'active' : ''}`}
+                onClick={() => setActiveTab('passes')}
               >
                 <Sparkles size={18} />
-                <span>Event Passes & Hub</span>
-              </Link>
+                <span>Event Passes & RSVPs {myRsvps.length > 0 ? `(${myRsvps.length})` : ''}</span>
+              </button>
 
               <button
                 className={`nav-item ${activeTab === 'subscriptions' ? 'active' : ''}`}
@@ -464,12 +484,34 @@ export default function AccountPage() {
 
               {isAdmin && (
                 <Link
-                  href="/admin"
+                  href={
+                    userRole === 'operations_head'
+                      ? '/admin/operations'
+                      : userRole === 'growth'
+                      ? '/admin/growth'
+                      : userRole === 'manager'
+                      ? '/admin/manager'
+                      : '/admin'
+                  }
                   className="nav-item"
-                  style={{ color: 'var(--accent-gold)', border: '1px dashed var(--accent-gold)' }}
+                  style={{
+                    color: '#d4a359',
+                    background: 'rgba(212, 163, 89, 0.12)',
+                    border: '1px solid rgba(212, 163, 89, 0.35)',
+                    fontWeight: 700,
+                    marginTop: '8px',
+                  }}
                 >
-                  <Settings size={18} />
-                  <span>Admin Command</span>
+                  <Shield size={18} />
+                  <span>
+                    {userRole === 'operations_head'
+                      ? 'Operations Command'
+                      : userRole === 'growth'
+                      ? 'Growth Command'
+                      : userRole === 'manager'
+                      ? 'Manager Feed'
+                      : 'Admin Command'}
+                  </span>
                 </Link>
               )}
 
@@ -489,6 +531,68 @@ export default function AccountPage() {
                 <h2 className="tab-header">
                   Welcome back, {user?.user_metadata?.full_name?.split(' ')[0] || 'Coffee Connoisseur'}!
                 </h2>
+
+                {/* Operations / Staff Fast Access Banner */}
+                {isAdmin && (
+                  <div
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(212, 163, 89, 0.18) 0%, rgba(20, 14, 10, 0.95) 100%)',
+                      border: '1px solid rgba(212, 163, 89, 0.4)',
+                      borderRadius: '14px',
+                      padding: '16px 20px',
+                      marginBottom: '20px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: '12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <Shield size={24} color="#d4a359" />
+                      <div>
+                        <div style={{ color: '#f7e7ce', fontWeight: 700, fontSize: '0.95rem' }}>
+                          {userRole === 'operations_head'
+                            ? 'Operations Head Authorization Active'
+                            : userRole === 'manager'
+                            ? 'Store Manager Authorization Active'
+                            : userRole === 'growth'
+                            ? 'Growth & Activations Authorization Active'
+                            : 'Janu Bhai Admin Command Authorization Active'}
+                        </div>
+                        <p style={{ color: '#a89f91', fontSize: '0.82rem', margin: '2px 0 0' }}>
+                          Manage cafe rosters, checklists, live events, and roastery dispatch from your staff terminal.
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href={
+                        userRole === 'operations_head'
+                          ? '/admin/operations'
+                          : userRole === 'growth'
+                          ? '/admin/growth'
+                          : userRole === 'manager'
+                          ? '/admin/manager'
+                          : '/admin'
+                      }
+                      style={{
+                        background: 'linear-gradient(135deg, #d4a359 0%, #b8863b 100%)',
+                        color: '#120b06',
+                        fontWeight: 800,
+                        padding: '9px 18px',
+                        borderRadius: '10px',
+                        textDecoration: 'none',
+                        fontSize: '0.85rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <span>Open {userRole === 'operations_head' ? 'Operations Portal' : 'Admin Portal'}</span>
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                )}
 
                 {/* Banner */}
                 <div className="welcome-banner">
@@ -1113,6 +1217,100 @@ export default function AccountPage() {
                   <Coffee size={18} />
                   <span>Start Coffee Subscription (15% OFF)</span>
                 </Link>
+              </div>
+            )}
+
+            {/* TAB 7: EVENT PASSES & RSVPS */}
+            {activeTab === 'passes' && (
+              <div className="tab-content">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <h2 className="tab-header" style={{ margin: '0 0 6px' }}>Your Digital Event Passes</h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+                      Present your digital VIP ticket pass at the door during cafe event check-in.
+                    </p>
+                  </div>
+                  <Link
+                    href="/events"
+                    className="btn-glass-secondary"
+                    style={{ fontSize: '0.84rem', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Calendar size={15} />
+                    <span>Discover More Events</span>
+                  </Link>
+                </div>
+
+                {myRsvps.length === 0 ? (
+                  <div style={{ padding: '48px 24px', textAlign: 'center', background: 'rgba(0,0,0,0.25)', borderRadius: '18px', border: '1px dashed rgba(212,163,89,0.25)' }}>
+                    <Ticket size={44} color="var(--accent-gold)" style={{ margin: '0 auto 14px' }} />
+                    <h3 style={{ color: 'var(--text-primary)', margin: '0 0 8px', fontSize: '1.2rem' }}>No Event Passes Yet</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', maxWidth: '460px', margin: '0 auto 20px', lineHeight: 1.5 }}>
+                      Join our artisan coffee cupping sessions, latte art masterclasses, and acoustic cafe pop-ups in South Delhi.
+                    </p>
+                    <Link href="/events" className="btn-gold-action" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Calendar size={16} />
+                      <span>Browse Upcoming Events</span>
+                    </Link>
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                    {myRsvps.map((rsvp) => (
+                      <div
+                        key={rsvp.id}
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(38,26,18,0.85) 0%, rgba(20,14,10,0.95) 100%)',
+                          border: '1px solid rgba(212, 163, 89, 0.3)',
+                          borderRadius: '16px',
+                          padding: '20px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <span style={{ fontSize: '0.74rem', color: '#d4a359', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 800 }}>
+                              Official VIP Pass
+                            </span>
+                            <span style={{ background: 'rgba(16,185,129,0.2)', color: '#34d399', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700 }}>
+                              ✓ Confirmed
+                            </span>
+                          </div>
+
+                          <h3 style={{ color: '#f7e7ce', margin: '0 0 6px', fontSize: '1.2rem', fontFamily: 'var(--font-playfair)' }}>
+                            {rsvp.event?.title || 'Coffee Masterclass'}
+                          </h3>
+                          {rsvp.event?.featuring_name && (
+                            <p style={{ color: '#d4a359', fontSize: '0.84rem', margin: '0 0 12px', fontWeight: 600 }}>
+                              Featuring: {rsvp.event.featuring_name}
+                            </p>
+                          )}
+
+                          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '10px', fontSize: '0.84rem', color: '#a89f91', marginBottom: '16px', lineHeight: 1.6 }}>
+                            📅 {rsvp.event?.event_date || 'Upcoming'} · ⏰ {rsvp.event?.start_time || 'Evening'}<br />
+                            📍 {rsvp.event?.location_name || 'Janu Bhai Cafe, Gafoor Nagar, Delhi'}<br />
+                            👤 Guest: <strong style={{ color: '#f5f0eb' }}>{rsvp.customer_name}</strong> ({rsvp.guest_count || 1} Person)
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed rgba(212,163,89,0.25)', paddingTop: '12px' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#a89f91', fontFamily: 'monospace' }}>
+                            Pass #{rsvp.id?.slice(0, 8).toUpperCase()}
+                          </span>
+                          <a
+                            href="https://maps.google.com/?q=Gafoor+Nagar+Okhla+Delhi"
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ color: '#d4a359', fontSize: '0.8rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <span>Directions</span>
+                            <ExternalLink size={13} />
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

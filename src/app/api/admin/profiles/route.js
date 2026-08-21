@@ -24,12 +24,36 @@ async function verifyAdmin(request) {
   const isEmailAdmin = adminEmails.includes(user.email?.toLowerCase());
 
   if (!isEmailAdmin) {
-    const { data: profile } = await supabaseAdmin
-      .from('admin_profiles')
+    const profileOr = [
+      user.email ? `email.eq.${user.email}` : '',
+      user.phone ? `phone.eq.${user.phone}` : '',
+    ].filter(Boolean).join(',');
+
+    if (profileOr) {
+      const { data: profile } = await supabaseAdmin
+        .from('admin_profiles')
+        .select('*')
+        .or(profileOr)
+        .maybeSingle();
+      if (profile) return { supabase: supabaseAdmin, user };
+    }
+
+    // Check outlet_staff
+    const emailFilter = user.email ? `email.eq.${user.email}` : '';
+    const phoneFilter = user.phone ? `phone.eq.${user.phone}` : '';
+    const userIdFilter = `user_id.eq.${user.id}`;
+    const orFilter = [userIdFilter, emailFilter, phoneFilter].filter(Boolean).join(',');
+
+    const { data: staff } = await supabaseAdmin
+      .from('outlet_staff')
       .select('*')
-      .eq('phone', user.phone)
+      .or(orFilter)
+      .eq('is_active', true)
       .maybeSingle();
-    if (!profile) return { error: 'Forbidden', status: 403 };
+
+    if (!staff || !['superadmin', 'owner', 'operations_head', 'operations'].includes(staff.role)) {
+      return { error: 'Forbidden', status: 403 };
+    }
   }
 
   return { supabase: supabaseAdmin, user };

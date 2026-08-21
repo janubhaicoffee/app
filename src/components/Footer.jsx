@@ -56,7 +56,7 @@ export default function Footer() {
                   <Link href="/events">Events & RSVP Activations</Link>
                 </li>
                 <li>
-                  <Link href="/customer">Customer & Audience Hub</Link>
+                  <Link href="/account">VIP Account & Event Passes</Link>
                 </li>
                 <li>
                   <Link href="/process">Our Sourcing & Process</Link>

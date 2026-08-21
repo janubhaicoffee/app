@@ -403,7 +403,7 @@ export default function EventsDirectoryPage() {
 
                 <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
                   <Link
-                    href="/customer"
+                    href="/account"
                     style={{
                       flex: 1,
                       background: '#d4a359',
@@ -415,7 +415,7 @@ export default function EventsDirectoryPage() {
                       fontSize: '0.86rem',
                     }}
                   >
-                    View in Customer Hub →
+                    View Passes in Account →
                   </Link>
                   <button
                     onClick={() => setRsvpModalEvent(null)}

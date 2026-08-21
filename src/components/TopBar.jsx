@@ -254,11 +254,11 @@ export default function TopBar() {
                   <ChevronRight size={16} />
                 </Link>
                 <Link
-                  href="/customer"
+                  href="/account"
                   className="sidebar-link-item-apple"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <span>Customer & Audience Hub</span>
+                  <span>VIP Account & Event Passes</span>
                   <ChevronRight size={16} />
                 </Link>
                 <Link

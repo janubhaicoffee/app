@@ -16,52 +16,69 @@ async function verifyAdmin(request) {
   } = await supabaseAdmin.auth.getUser(token);
   if (authError || !supabaseUser) return { error: 'Invalid token', status: 401 };
   const user = supabaseUser;
+
+  // 1. Superadmin ENV whitelist
   const adminEmails = (process.env.SUPERADMIN_EMAILS || '')
     .split(',')
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
   const isEmailAdmin = adminEmails.includes(user.email?.toLowerCase());
-  if (!isEmailAdmin) {
+  if (isEmailAdmin) {
+    return { supabase: supabaseAdmin, user, adminEmail: user.email, role: 'superadmin' };
+  }
+
+  // 2. admin_profiles table check
+  const profileOr = [
+    user.email ? `email.eq.${user.email}` : '',
+    user.phone ? `phone.eq.${user.phone}` : '',
+  ].filter(Boolean).join(',');
+
+  if (profileOr) {
     const { data: profile } = await supabaseAdmin
       .from('admin_profiles')
       .select('*')
-      .eq('phone', user.phone || '')
+      .or(profileOr)
       .maybeSingle();
 
-    if (!profile) {
-      // Check if user is an Operation Manager, Partner, or Manager in outlet_staff
-      const emailFilter = user.email ? `email.eq.${user.email}` : '';
-      const phoneFilter = user.phone ? `phone.eq.${user.phone}` : '';
-      const userIdFilter = `user_id.eq.${user.id}`;
-      const orFilter = [userIdFilter, emailFilter, phoneFilter].filter(Boolean).join(',');
-
-      const { data: staff } = await supabaseAdmin
-        .from('outlet_staff')
-        .select('*')
-        .or(orFilter)
-        .eq('is_active', true)
-        .maybeSingle();
-
-      const allowedRoles = ['superadmin', 'operations_head', 'growth', 'manager', 'employee'];
-      const normalizedStaffRole = ['operations_head', 'operations', 'operation_manager', 'operations_manager', 'area_manager'].includes(staff.role)
-        ? 'operations_head'
-        : ['growth', 'brand_leader'].includes(staff.role)
-        ? 'growth'
-        : ['manager', 'store_manager'].includes(staff.role)
-        ? 'manager'
-        : staff.role === 'superadmin' || staff.role === 'owner'
-        ? 'superadmin'
-        : 'employee';
-
-      if (!staff || !allowedRoles.includes(normalizedStaffRole)) {
-        return { error: 'Forbidden', status: 403 };
-      }
-      return { supabase: supabaseAdmin, user, adminEmail: user.email, role: normalizedStaffRole, staff };
+    if (profile) {
+      return { supabase: supabaseAdmin, user, adminEmail: user.email, role: profile.role || 'superadmin' };
     }
-    return { supabase: supabaseAdmin, user, adminEmail: user.email, role: profile.role || 'superadmin' };
   }
-  const supabase = supabaseAdmin;
-  return { supabase, user, adminEmail: user.email, role: 'superadmin' };
+
+  // 3. outlet_staff check
+  const emailFilter = user.email ? `email.eq.${user.email}` : '';
+  const phoneFilter = user.phone ? `phone.eq.${user.phone}` : '';
+  const userIdFilter = `user_id.eq.${user.id}`;
+  const orFilter = [userIdFilter, emailFilter, phoneFilter].filter(Boolean).join(',');
+
+  const { data: staff } = await supabaseAdmin
+    .from('outlet_staff')
+    .select('*')
+    .or(orFilter)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (!staff) {
+    return { error: 'Forbidden', status: 403 };
+  }
+
+  const staffRole = staff.role || '';
+  const normalizedStaffRole = ['operations_head', 'operations', 'operation_manager', 'operations_manager', 'area_manager'].includes(staffRole)
+    ? 'operations_head'
+    : ['growth', 'brand_leader'].includes(staffRole)
+    ? 'growth'
+    : ['manager', 'store_manager'].includes(staffRole)
+    ? 'manager'
+    : staffRole === 'superadmin' || staffRole === 'owner'
+    ? 'superadmin'
+    : 'employee';
+
+  const allowedRoles = ['superadmin', 'operations_head', 'growth', 'manager', 'employee'];
+  if (!allowedRoles.includes(normalizedStaffRole)) {
+    return { error: 'Forbidden', status: 403 };
+  }
+
+  return { supabase: supabaseAdmin, user, adminEmail: user.email, role: normalizedStaffRole, staff };
 }
 async function logAudit(supabase, adminEmail, action, entityType, entityId, details = {}) {
   try {
