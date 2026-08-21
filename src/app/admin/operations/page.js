@@ -365,7 +365,7 @@ export default function OperationsHeadDashboard() {
             <RefreshCw size={14} /> Refresh Stream
           </button>
           <Link
-            href="/growth"
+            href="/admin/growth"
             style={{
               background: 'linear-gradient(135deg, #d4a359 0%, #b8863b 100%)',
               color: '#120b06',

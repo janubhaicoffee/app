@@ -560,7 +560,7 @@ export default function ManagerDashboard() {
             <span>{aiAnalyzing ? 'AI Scanning Register...' : 'Snap & Digest Register Photo'}</span>
           </button>
           <Link
-            href="/operations"
+            href="/admin/operations"
             className="btn-glass-secondary"
             style={{
               padding: '10px 16px',

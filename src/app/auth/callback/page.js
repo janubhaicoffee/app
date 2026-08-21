@@ -24,15 +24,15 @@ function CallbackContent() {
           
           if (searchParams.get('redirect')) {
             router.push(searchParams.get('redirect'));
-          } else if (role === 'superadmin') {
+          } else if (role === 'superadmin' || role === 'owner') {
             router.push('/admin');
-          } else if (role === 'operations_head' || role === 'operations') {
-            router.push('/operations');
-          } else if (role === 'growth') {
-            router.push('/growth');
-          } else if (role === 'manager') {
-            router.push('/manager');
-          } else if (role === 'staff') {
+          } else if (role === 'operations_head' || role === 'operations' || role === 'operation_manager') {
+            router.push('/admin/operations');
+          } else if (role === 'growth' || role === 'brand_leader') {
+            router.push('/admin/growth');
+          } else if (role === 'manager' || role === 'store_manager') {
+            router.push('/admin/manager');
+          } else if (role === 'staff' || role === 'cashier' || role === 'barista') {
             router.push('/pos/dashboard');
           } else {
             router.push('/account');

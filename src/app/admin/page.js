@@ -32,6 +32,9 @@ import {
   Video,
   ShoppingBag,
   Sparkles,
+  Shield,
+  Activity,
+  Calendar,
 } from 'lucide-react';
 
 function AnimatedNumber({ value, isCurrency = false }) {
@@ -263,20 +266,23 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-            <Link href="/admin/outlets/operations" className="admin-btn admin-btn-sm">
-              <Store size={14} /> Operations Hub
+            <Link href="/admin/operations" className="admin-btn admin-btn-sm">
+              <Shield size={14} /> Operations Book
             </Link>
-            <Link href="/admin/outlets/transfers" className="admin-btn-outline admin-btn-sm">
-              <ArrowLeftRight size={14} /> Stock Transfers
+            <Link href="/admin/manager" className="admin-btn-outline admin-btn-sm">
+              <Store size={14} /> Manager Feed
             </Link>
-            <Link href="/admin/outlets/purchase-orders" className="admin-btn-outline admin-btn-sm">
-              <ShoppingBag size={14} /> Purchase Orders
+            <Link href="/admin/growth" className="admin-btn-outline admin-btn-sm">
+              <Activity size={14} /> Growth & BD
+            </Link>
+            <Link href="/admin/events" className="admin-btn-outline admin-btn-sm">
+              <Calendar size={14} /> Events & RSVPs
+            </Link>
+            <Link href="/admin/outlets/operations" className="admin-btn-outline admin-btn-sm">
+              <Store size={14} /> Outlets Hub
             </Link>
             <Link href="/admin/outlets/checklists" className="admin-btn-outline admin-btn-sm">
               <ClipboardCheck size={14} /> SOP Audits
-            </Link>
-            <Link href="/admin/outlets/surveillance" className="admin-btn-outline admin-btn-sm">
-              <Video size={14} /> Surveillance
             </Link>
           </div>
         </div>
